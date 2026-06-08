@@ -10,6 +10,7 @@ import { registerAuthRoutes } from './http/routes/auth.routes.js'
 import { registerAccountRoutes } from './http/routes/accounts.routes.js'
 import { registerMatchRoutes } from './http/routes/match.routes.js'
 import { registerPresetRoutes } from './http/routes/presets.routes.js'
+import { registerLogRoutes } from './http/routes/log.routes.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -42,6 +43,7 @@ export function buildApp(db: DB): FastifyInstance {
   registerAccountRoutes(app, db)
   registerMatchRoutes(app, db)
   registerPresetRoutes(app, db)
+  registerLogRoutes(app, db)
 
   return app
 }
