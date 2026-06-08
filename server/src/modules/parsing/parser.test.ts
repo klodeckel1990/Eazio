@@ -20,4 +20,14 @@ describe('ingredient parser', () => {
     const lines = parseIngredients('80g Haferflocken\n200ml Milch, 1 Banane\n\n')
     expect(lines.map((l) => l.name)).toEqual(['Haferflocken', 'Milch', 'Banane'])
   })
+
+  it('treats x as a count multiplier', () => {
+    const p = parseLine('2x Brötchen')
+    expect({ qty: p.qty, unit: p.unit, name: p.name }).toEqual({ qty: 2, unit: null, name: 'Brötchen' })
+  })
+
+  it('drops a quantity+unit chunk that has no ingredient name', () => {
+    expect(parseIngredients('200ml')).toEqual([])
+    expect(parseIngredients('80g Haferflocken, 200ml')).toHaveLength(1)
+  })
 })

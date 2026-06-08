@@ -11,6 +11,8 @@ const KNOWN_UNITS = new Set([
   'scheibe', 'scheiben', 'prise', 'prisen', 'becher', 'glas', 'dose', 'tasse',
 ])
 
+// NOTE: simple fractions ("1/2 Apfel") are not parsed — the "/2" stays in the
+// name and the user corrects it in the review UI. Decimal qty ("0,5") works.
 const NUM = String.raw`(\d+(?:[.,]\d+)?)`
 const LEADING = new RegExp(`^${NUM}\\s*([a-zà-ÿ]+)?\\s*(.*)$`, 'i')
 const TRAILING = new RegExp(`^(.*?)\\s+${NUM}\\s*([a-zà-ÿ]+)?\\s*$`, 'i')
@@ -25,8 +27,14 @@ export function parseLine(raw: string): ParsedLine {
     const n = lead[1]!
     const word = (lead[2] ?? '').toLowerCase()
     const rest = (lead[3] ?? '').trim()
+    if (word === 'x') {
+      // count multiplier, e.g. "2x Brötchen"
+      return { raw, qty: num(n), unit: null, name: rest }
+    }
     if (word && KNOWN_UNITS.has(word)) {
-      return { raw, qty: num(n), unit: word, name: rest || word }
+      // A quantity+unit with no ingredient name (e.g. "200ml") leaves an empty
+      // name; parseIngredients() drops such chunks.
+      return { raw, qty: num(n), unit: word, name: rest }
     }
     return { raw, qty: num(n), unit: null, name: `${lead[2] ?? ''} ${rest}`.trim() }
   }
@@ -50,4 +58,5 @@ export function parseIngredients(text: string): ParsedLine[] {
     .map((c) => c.trim())
     .filter((c) => c.length > 0)
     .map(parseLine)
+    .filter((l) => l.name.length > 0)
 }
