@@ -1,9 +1,10 @@
 import type { FastifyInstance } from 'fastify'
+import { timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../../config/env.js'
 import type { DB } from '../../db/client.js'
 import { createUser, findUserByUsername, findUserById } from '../../modules/auth/users.repo.js'
-import { verifyPassword } from '../../modules/auth/password.js'
+import { verifyPassword, dummyVerifyHash } from '../../modules/auth/password.js'
 import { createSession, deleteSession, SESSION_COOKIE } from '../../modules/auth/sessions.js'
 
 const BootstrapSchema = z.object({
@@ -17,18 +18,29 @@ const LoginSchema = z.object({
   password: z.string().min(1),
 })
 
+/** Length-checked, constant-time string comparison for secret tokens. */
+function timingSafeStringEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a)
+  const bb = Buffer.from(b)
+  return ab.length === bb.length && timingSafeEqual(ab, bb)
+}
+
 export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
-  app.post('/api/auth/bootstrap', async (req, reply) => {
-    const body = BootstrapSchema.parse(req.body)
-    if (body.token !== env.ADMIN_BOOTSTRAP) {
-      return reply.status(403).send({ error: 'forbidden' })
-    }
-    if (findUserByUsername(db, body.username)) {
-      return reply.status(409).send({ error: 'username_taken' })
-    }
-    const user = await createUser(db, body.username, body.password)
-    return reply.status(201).send(user)
-  })
+  app.post(
+    '/api/auth/bootstrap',
+    { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } },
+    async (req, reply) => {
+      const body = BootstrapSchema.parse(req.body)
+      if (!timingSafeStringEqual(body.token, env.ADMIN_BOOTSTRAP)) {
+        return reply.status(403).send({ error: 'forbidden' })
+      }
+      if (findUserByUsername(db, body.username)) {
+        return reply.status(409).send({ error: 'username_taken' })
+      }
+      const user = await createUser(db, body.username, body.password)
+      return reply.status(201).send(user)
+    },
+  )
 
   app.post(
     '/api/auth/login',
@@ -36,7 +48,11 @@ export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
     async (req, reply) => {
       const body = LoginSchema.parse(req.body)
       const user = findUserByUsername(db, body.username)
-      if (!user || !(await verifyPassword(user.passwordHash, body.password))) {
+      // Always run argon2 (dummy hash when the user is unknown) to keep login
+      // timing constant and avoid username enumeration.
+      const hash = user?.passwordHash ?? (await dummyVerifyHash())
+      const passwordOk = await verifyPassword(hash, body.password)
+      if (!user || !passwordOk) {
         return reply.status(401).send({ error: 'invalid_credentials' })
       }
       const session = createSession(db, user.id)
@@ -58,7 +74,12 @@ export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
       const unsigned = req.unsignCookie(raw)
       if (unsigned.valid && unsigned.value) deleteSession(db, unsigned.value)
     }
-    reply.clearCookie(SESSION_COOKIE, { path: '/' })
+    reply.clearCookie(SESSION_COOKIE, {
+      path: '/',
+      httpOnly: true,
+      secure: env.COOKIE_SECURE,
+      sameSite: 'lax',
+    })
     return reply.status(204).send()
   })
 

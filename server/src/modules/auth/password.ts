@@ -11,3 +11,15 @@ export async function verifyPassword(hash: string, password: string): Promise<bo
     return false
   }
 }
+
+let cachedDummyHash: Promise<string> | null = null
+
+/**
+ * Lazily-computed, cached argon2 hash of a fixed dummy value. Verifying a
+ * supplied password against it when the user is not found equalizes login
+ * timing and prevents username enumeration via response latency.
+ */
+export function dummyVerifyHash(): Promise<string> {
+  cachedDummyHash ??= hashPassword('__eazio_timing_dummy__')
+  return cachedDummyHash
+}
