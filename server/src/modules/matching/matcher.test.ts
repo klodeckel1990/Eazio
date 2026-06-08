@@ -57,4 +57,13 @@ describe('matchText', () => {
     expect(lines[0]!.unit).toBe('serving')
     expect(lines[0]!.amountGrams).toBeNull()
   })
+
+  it('keeps best-score selection when the alias product is absent from results', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'jens', 'pw-123456')
+    upsertAlias(db, user.id, 'haferflocken', { productId: 'gone' })
+    const lines = await matchText(clientReturning([product('p1', 'Haferflocken')]), db, user.id, 'Haferflocken')
+    expect(lines[0]!.selectedProductId).toBe('p1')
+    expect(lines[0]!.candidates[0]!.productId).toBe('p1')
+  })
 })

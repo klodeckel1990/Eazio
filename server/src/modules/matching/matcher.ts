@@ -88,7 +88,7 @@ export async function matchText(
       const idx = candidates.findIndex((c) => c.productId === alias.productId)
       if (idx >= 0) {
         const [pick] = candidates.splice(idx, 1)
-        candidates = [pick!, ...candidates]
+        candidates.unshift(pick!)
         selectedProductId = pick!.productId
       }
     }
