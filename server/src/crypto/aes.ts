@@ -19,6 +19,9 @@ export function encrypt(plaintext: string): string {
 /** Reverses encrypt(). Throws if the auth tag does not verify. */
 export function decrypt(payload: string): string {
   const buf = Buffer.from(payload, 'base64')
+  if (buf.length < IV_LEN + TAG_LEN) {
+    throw new Error('decrypt: payload too short')
+  }
   const iv = buf.subarray(0, IV_LEN)
   const tag = buf.subarray(IV_LEN, IV_LEN + TAG_LEN)
   const ct = buf.subarray(IV_LEN + TAG_LEN)

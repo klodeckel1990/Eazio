@@ -3,13 +3,15 @@
 import 'dotenv/config'
 import { z } from 'zod'
 
+// Accept common truthy spellings so Docker-style `COOKIE_SECURE=1` works as expected.
+const TRUE_VALUES = new Set(['true', '1', 'yes', 'on'])
 const boolish = z
   .union([z.boolean(), z.string()])
-  .transform((v) => (typeof v === 'boolean' ? v : v.toLowerCase() === 'true'))
+  .transform((v) => (typeof v === 'boolean' ? v : TRUE_VALUES.has(v.trim().toLowerCase())))
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().default(3000),
+  PORT: z.coerce.number().int().min(0).max(65535).default(3000),
   DATABASE_PATH: z.string().default('./data/eazio.db'),
   MASTER_KEY: z
     .string()

@@ -7,5 +7,7 @@ describe('env config', () => {
     expect(env.DATABASE_PATH).toBe(':memory:')
     expect(Buffer.from(env.MASTER_KEY, 'base64').length).toBe(32)
     expect(env.YAZIO_COUNTRIES).toBe('DE')
+    expect(env.PORT).toBe(0)
+    expect(env.COOKIE_SECURE).toBe(false)
   })
 })
