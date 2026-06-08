@@ -9,6 +9,7 @@ import { registerHealthRoutes } from './http/routes/health.routes.js'
 import { registerAuthRoutes } from './http/routes/auth.routes.js'
 import { registerAccountRoutes } from './http/routes/accounts.routes.js'
 import { registerMatchRoutes } from './http/routes/match.routes.js'
+import { registerPresetRoutes } from './http/routes/presets.routes.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -40,6 +41,7 @@ export function buildApp(db: DB): FastifyInstance {
   registerAuthRoutes(app, db)
   registerAccountRoutes(app, db)
   registerMatchRoutes(app, db)
+  registerPresetRoutes(app, db)
 
   return app
 }
