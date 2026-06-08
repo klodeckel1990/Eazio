@@ -1,0 +1,14 @@
+{
+  "name": "eazio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["server"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "npm run dev --workspace server",
+    "build": "npm run build --workspace server",
+    "test": "npm run test --workspace server",
+    "lint": "npm run typecheck --workspace server"
+  }
+}
