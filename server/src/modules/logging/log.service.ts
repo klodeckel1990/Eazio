@@ -36,16 +36,33 @@ export async function submitLog(
   input: SubmitInput,
 ): Promise<SubmitResult> {
   const consumedIds: string[] = []
-  for (const line of input.lines) {
-    const item = buildConsumedItem(line, input.date, input.daytime)
-    await client.user.addConsumedItem(item)
-    consumedIds.push(item.id)
-    upsertAlias(db, userId, normalizeName(line.name), {
-      productId: line.productId,
-      defaultServing: line.serving ?? null,
-      defaultServingQuantity: line.servingQuantity ?? null,
-      defaultAmountG: line.amountGrams,
-    })
+  try {
+    for (const line of input.lines) {
+      const item = buildConsumedItem(line, input.date, input.daytime)
+      await client.user.addConsumedItem(item)
+      consumedIds.push(item.id)
+      upsertAlias(db, userId, normalizeName(line.name), {
+        productId: line.productId,
+        defaultServing: line.serving ?? null,
+        defaultServingQuantity: line.servingQuantity ?? null,
+        defaultAmountG: line.amountGrams,
+      })
+    }
+  } catch (err) {
+    // A line failed after earlier lines were already written to Yazio. Record an
+    // 'error' event with the items logged so far so the user can still undo them.
+    if (consumedIds.length > 0) {
+      createLogEvent(db, {
+        userId,
+        yazioAccountId: accountId,
+        date: input.date,
+        daytime: input.daytime,
+        status: 'error',
+        items: input.lines.slice(0, consumedIds.length),
+        consumedIds,
+      })
+    }
+    throw err
   }
   const logId = createLogEvent(db, {
     userId,
@@ -66,6 +83,5 @@ export async function undoLog(client: LogClient, db: DB, userId: string, logId: 
   for (const id of ids) {
     await client.user.removeConsumedItem(id)
   }
-  markUndone(db, userId, logId)
-  return true
+  return markUndone(db, userId, logId)
 }
