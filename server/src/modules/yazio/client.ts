@@ -37,6 +37,9 @@ export function buildYazioClient(db: DB, account: AccountRecord): Yazio {
     updateTokens(db, account.userId, account.id, encrypt(JSON.stringify(yazioToken)))
   }
 
+  // Pass BOTH credentials and the token resolver: the library serves a valid
+  // cached token first (no re-login) and falls back to the credentials
+  // (password grant) only when the resolver returns null or the token expired.
   const init: YazioInit = {
     credentials: creds,
     token: tokenResolver,
