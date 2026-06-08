@@ -9,8 +9,12 @@ export function Nav() {
       <NavLink to="/">Tracker</NavLink>
       <NavLink to="/accounts">Konten</NavLink>
       <NavLink to="/presets">Presets</NavLink>
-      <button type="button" onClick={() => { void logout() }}>Abmelden</button>
-      {user && <span>{user.username}</span>}
+      {user && (
+        <>
+          <span>{user.username}</span>
+          <button type="button" onClick={() => { void logout() }}>Abmelden</button>
+        </>
+      )}
     </nav>
   )
 }

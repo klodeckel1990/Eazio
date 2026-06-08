@@ -15,7 +15,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.auth.me().then(setUser).catch(() => setUser(null)).finally(() => setLoading(false))
+    let alive = true
+    api.auth
+      .me()
+      .then((u) => { if (alive) setUser(u) })
+      .catch(() => { if (alive) setUser(null) })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => {
+      alive = false
+    }
   }, [])
 
   const login = async (username: string, password: string) => {

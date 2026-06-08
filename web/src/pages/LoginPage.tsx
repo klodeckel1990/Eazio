@@ -4,12 +4,13 @@ import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 
 export function LoginPage() {
-  const { user, login } = useAuth()
+  const { user, login, loading } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
 
+  if (loading) return null
   if (user) return <Navigate to="/" replace />
 
   const handleSubmit = async (e: FormEvent) => {
@@ -30,18 +31,20 @@ export function LoginPage() {
   return (
     <div className="container">
       <form onSubmit={handleSubmit}>
+        <label htmlFor="username">Benutzername</label>
         <input
+          id="username"
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Benutzername"
           autoComplete="username"
         />
+        <label htmlFor="password">Passwort</label>
         <input
+          id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Passwort"
           autoComplete="current-password"
         />
         <button type="submit">Anmelden</button>
