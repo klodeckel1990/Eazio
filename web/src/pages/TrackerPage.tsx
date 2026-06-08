@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { Account, Daytime, LogResult, MatchLine } from '../api/types'
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
@@ -14,9 +14,10 @@ let _rowSeq = 0
 const nextKey = (): string => `row-${_rowSeq++}`
 
 export function TrackerPage() {
+  const seeded = (useLocation().state as { presetText?: string } | null)?.presetText ?? ''
   const [accounts, setAccounts] = useState<Account[] | null>(null)
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
-  const [text, setText] = useState('')
+  const [text, setText] = useState(seeded)
   const [matching, setMatching] = useState(false)
   const [lines, setLines] = useState<MatchLine[]>([])
   const [rows, setRows] = useState<RowState[]>([])
