@@ -1,5 +1,7 @@
 # ---- builder ----
-FROM node:22-bookworm-slim AS builder
+# Full image (not -slim) so native modules (better-sqlite3, argon2) can compile
+# from source if a prebuilt binary for this ABI is unavailable.
+FROM node:22-bookworm AS builder
 WORKDIR /app
 
 # Install deps (cached on lockfile). Native modules (better-sqlite3, argon2)
