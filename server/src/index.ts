@@ -1,23 +1,17 @@
-import { mkdirSync } from 'node:fs'
-import path from 'node:path'
 import { env } from './config/env.js'
-import { createDb, runMigrations } from './db/client.js'
+import { createDb, runMigrations, ensureDbDir } from './db/client.js'
 import { buildApp } from './app.js'
-
-function ensureDbDir(dbPath: string): void {
-  if (dbPath === ':memory:') return
-  mkdirSync(path.dirname(path.resolve(dbPath)), { recursive: true })
-}
 
 async function main(): Promise<void> {
   ensureDbDir(env.DATABASE_PATH)
-  const { db } = createDb(env.DATABASE_PATH)
+  const { db, sqlite } = createDb(env.DATABASE_PATH)
   runMigrations(db)
 
   const app = buildApp(db)
 
   const shutdown = async (): Promise<void> => {
     await app.close()
+    sqlite.close()
     process.exit(0)
   }
   process.on('SIGTERM', () => void shutdown())

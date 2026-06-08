@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import Database from 'better-sqlite3'
 import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
@@ -23,4 +24,10 @@ export function runMigrations(db: DB): void {
   // migrate() reads the underlying connection from the Drizzle wrapper's
   // session; `db` must be a BetterSQLite3Database created via createDb().
   migrate(db, { migrationsFolder: MIGRATIONS_DIR })
+}
+
+/** Creates the parent directory for a file-based SQLite path (no-op for :memory:). */
+export function ensureDbDir(dbPath: string): void {
+  if (dbPath === ':memory:') return
+  mkdirSync(path.dirname(path.resolve(dbPath)), { recursive: true })
 }
