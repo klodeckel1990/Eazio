@@ -1,6 +1,10 @@
 import Fastify, { type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
 import rateLimit from '@fastify/rate-limit'
+import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import fastifyStatic from '@fastify/static'
 import { env } from './config/env.js'
 import type { DB } from './db/client.js'
 import { getSession, SESSION_COOKIE } from './modules/auth/sessions.js'
@@ -44,6 +48,15 @@ export function buildApp(db: DB): FastifyInstance {
   registerMatchRoutes(app, db)
   registerPresetRoutes(app, db)
   registerLogRoutes(app, db)
+
+  const webDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist')
+  if (existsSync(webDir)) {
+    void app.register(fastifyStatic, { root: webDir, wildcard: false })
+    app.setNotFoundHandler((req, reply) => {
+      if (req.url.startsWith('/api/')) return reply.status(404).send({ error: 'not_found' })
+      return reply.sendFile('index.html')
+    })
+  }
 
   return app
 }
