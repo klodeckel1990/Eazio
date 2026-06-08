@@ -22,7 +22,7 @@ declare module 'fastify' {
   }
 }
 
-export function buildApp(db: DB): FastifyInstance {
+export function buildApp(db: DB, opts: { webDir?: string } = {}): FastifyInstance {
   const app = Fastify({ logger: env.NODE_ENV !== 'test' })
 
   app.register(cookie, { secret: env.SESSION_SECRET })
@@ -49,7 +49,8 @@ export function buildApp(db: DB): FastifyInstance {
   registerPresetRoutes(app, db)
   registerLogRoutes(app, db)
 
-  const webDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist')
+  const webDir =
+    opts.webDir ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist')
   if (existsSync(webDir)) {
     void app.register(fastifyStatic, { root: webDir, wildcard: false })
     app.setNotFoundHandler((req, reply) => {
