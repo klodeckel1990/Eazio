@@ -15,11 +15,6 @@ import type { YazioToken } from './types.js'
 // YazioInit is the first constructor parameter type, derived from the library itself.
 type YazioInit = ConstructorParameters<typeof Yazio>[0]
 
-// Yazio is a class but in tests it is mocked as a plain function (Vitest v4 arrow fn mock).
-// Casting to a factory type (via `unknown`) avoids `any` and works with both the real class
-// (JavaScript `new` and plain calls are equivalent when the function sets up `this`) and the mock.
-type YazioFactory = (init: YazioInit) => Yazio
-
 /** Builds a Yazio client for a stored account with persistent token caching. */
 export function buildYazioClient(db: DB, account: AccountRecord): Yazio {
   const creds = getCredentials(account)
@@ -48,7 +43,7 @@ export function buildYazioClient(db: DB, account: AccountRecord): Yazio {
     onRefresh,
   }
 
-  return (Yazio as unknown as YazioFactory)(init)
+  return new Yazio(init)
 }
 
 /** Confirms a client can authenticate by fetching the user profile. */
@@ -64,5 +59,5 @@ export async function verifyConnection(client: Yazio): Promise<boolean> {
 /** One-shot credential check (no token persistence) used when linking an account. */
 export function verifyCredentials(creds: StoredCredentials): Promise<boolean> {
   const init: YazioInit = { credentials: creds }
-  return verifyConnection((Yazio as unknown as YazioFactory)(init))
+  return verifyConnection(new Yazio(init))
 }

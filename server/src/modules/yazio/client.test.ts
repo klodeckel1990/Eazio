@@ -3,10 +3,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Capture the init object the Yazio constructor receives, and let tests drive user.get().
 const userGet = vi.fn()
 let lastInit: any = null
+// NOTE: a regular `function` (not an arrow) so the mock is constructable with
+// `new` — the real Yazio is an ES6 class and MUST be invoked with `new`.
 vi.mock('yazio', () => ({
-  Yazio: vi.fn().mockImplementation((init: any) => {
+  Yazio: vi.fn().mockImplementation(function (
+    this: { user: { get: typeof userGet } },
+    init: unknown,
+  ) {
     lastInit = init
-    return { user: { get: userGet } }
+    this.user = { get: userGet }
   }),
 }))
 
