@@ -213,7 +213,7 @@ export function TrackerPage() {
           <h3>Zutaten</h3>
           {lines.map((line, i) => (
             <IngredientRow
-              key={i}
+              key={keys[i] ?? i}
               line={line}
               value={rows[i] ?? { productId: '', grams: 0 }}
               onChange={v => handleRowChange(i, v)}
