@@ -53,4 +53,14 @@ describe('POST /api/log', () => {
     expect(log.statusCode).toBe(201)
     expect(['breakfast', 'lunch', 'dinner', 'snack']).toContain(log.json().daytime)
   })
+
+  it('400 when serving is set without servingQuantity', async () => {
+    const { db, app, cookie, userId } = await authed()
+    createAccount(db, userId, 'Me', { username: 'me@x.de', password: 'secret' })
+    const res = await app.inject({
+      method: 'POST', url: '/api/log', headers: { cookie },
+      payload: { lines: [{ productId: 'p1', name: 'X', amountGrams: 80, serving: 'portion' }] },
+    })
+    expect(res.statusCode).toBe(400)
+  })
 })

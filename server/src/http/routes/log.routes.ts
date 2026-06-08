@@ -9,13 +9,18 @@ import { submitLog, undoLog, type LogClient } from '../../modules/logging/log.se
 import { getLogEvent } from '../../modules/logging/log-events.repo.js'
 import { resolveDaytime, dateInTz, type Daytime } from '../../modules/meals/daytime.js'
 
-const LineSchema = z.object({
-  productId: z.string().min(1),
-  name: z.string().min(1).max(200),
-  amountGrams: z.number().nonnegative(),
-  serving: z.string().nullish(),
-  servingQuantity: z.number().nullish(),
-})
+const LineSchema = z
+  .object({
+    productId: z.string().min(1),
+    name: z.string().min(1).max(200),
+    amountGrams: z.number().nonnegative(),
+    serving: z.string().nullish(),
+    servingQuantity: z.number().nullish(),
+  })
+  // Yazio requires serving + serving_quantity to be both set or both null.
+  .refine((l) => (l.serving == null) === (l.servingQuantity == null), {
+    message: 'serving and servingQuantity must both be set or both omitted',
+  })
 
 const LogSchema = z.object({
   accountId: z.string().min(1).optional(),

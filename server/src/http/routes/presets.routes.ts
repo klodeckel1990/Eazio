@@ -4,13 +4,18 @@ import type { DB } from '../../db/client.js'
 import { requireAuth } from '../auth-guard.js'
 import { createPreset, listPresets, getPreset, deletePreset } from '../../modules/presets/presets.repo.js'
 
-const ItemSchema = z.object({
-  rawText: z.string().min(1).max(200),
-  productId: z.string().min(1),
-  serving: z.string().nullish(),
-  servingQuantity: z.number().nullish(),
-  amountG: z.number().nonnegative(),
-})
+const ItemSchema = z
+  .object({
+    rawText: z.string().min(1).max(200),
+    productId: z.string().min(1),
+    serving: z.string().nullish(),
+    servingQuantity: z.number().nullish(),
+    amountG: z.number().nonnegative(),
+  })
+  // Yazio requires serving + serving_quantity to be both set or both null.
+  .refine((it) => (it.serving == null) === (it.servingQuantity == null), {
+    message: 'serving and servingQuantity must both be set or both omitted',
+  })
 
 const CreateSchema = z.object({
   name: z.string().min(1).max(64),
