@@ -8,6 +8,7 @@ import { registerErrorHandler } from './http/errors.js'
 import { registerHealthRoutes } from './http/routes/health.routes.js'
 import { registerAuthRoutes } from './http/routes/auth.routes.js'
 import { registerAccountRoutes } from './http/routes/accounts.routes.js'
+import { registerMatchRoutes } from './http/routes/match.routes.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -38,6 +39,7 @@ export function buildApp(db: DB): FastifyInstance {
   registerHealthRoutes(app)
   registerAuthRoutes(app, db)
   registerAccountRoutes(app, db)
+  registerMatchRoutes(app, db)
 
   return app
 }
