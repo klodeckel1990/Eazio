@@ -4,7 +4,7 @@ import type { DB } from '../../db/client.js'
 import { sessions } from '../../db/schema.js'
 
 export const SESSION_COOKIE = 'sid'
-const TTL_MS = 1000 * 60 * 60 * 24 * 30 // 30 Tage
+const TTL_MS = 1000 * 60 * 60 * 24 * 30 // 30 days
 
 export interface Session {
   id: string

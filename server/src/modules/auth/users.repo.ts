@@ -20,6 +20,12 @@ export function findUserByUsername(db: DB, username: string) {
   return db.select().from(users).where(eq(users.username, username)).get()
 }
 
-export function findUserById(db: DB, id: string) {
-  return db.select().from(users).where(eq(users.id, id)).get()
+// Projects only public columns so callers (e.g. the /me route) can never
+// accidentally serialize the password hash.
+export function findUserById(db: DB, id: string): PublicUser | undefined {
+  return db
+    .select({ id: users.id, username: users.username })
+    .from(users)
+    .where(eq(users.id, id))
+    .get()
 }

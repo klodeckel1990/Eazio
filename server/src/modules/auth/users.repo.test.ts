@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { randomUUID } from 'node:crypto'
 import { createTestDb } from '../../db/test-db.js'
 import { createUser, findUserByUsername, findUserById } from './users.repo.js'
 
@@ -20,5 +21,11 @@ describe('users repo', () => {
     const db = createTestDb()
     await createUser(db, 'dup', 'pw-123456')
     await expect(createUser(db, 'dup', 'pw-123456')).rejects.toThrow()
+  })
+
+  it('returns undefined for a non-existent user', () => {
+    const db = createTestDb()
+    expect(findUserByUsername(db, 'nobody')).toBeUndefined()
+    expect(findUserById(db, randomUUID())).toBeUndefined()
   })
 })
