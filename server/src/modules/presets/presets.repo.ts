@@ -89,15 +89,16 @@ export function getPreset(db: DB, userId: string, id: string): PresetWithItems |
 }
 
 export function deletePreset(db: DB, userId: string, id: string): boolean {
-  const preset = db
-    .select({ id: presets.id })
-    .from(presets)
-    .where(and(eq(presets.id, id), eq(presets.userId, userId)))
-    .get()
-  if (!preset) return false
-  db.transaction((tx) => {
+  // Ownership check + deletes in one transaction (no TOCTOU window).
+  return db.transaction((tx) => {
+    const preset = tx
+      .select({ id: presets.id })
+      .from(presets)
+      .where(and(eq(presets.id, id), eq(presets.userId, userId)))
+      .get()
+    if (!preset) return false
     tx.delete(presetItems).where(eq(presetItems.presetId, id)).run()
     tx.delete(presets).where(eq(presets.id, id)).run()
+    return true
   })
-  return true
 }

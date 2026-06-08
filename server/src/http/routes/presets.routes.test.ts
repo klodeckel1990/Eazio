@@ -40,4 +40,19 @@ describe('presets routes', () => {
     const dup = await app.inject({ method: 'POST', url: '/api/presets', headers: { cookie }, payload: body })
     expect(dup.statusCode).toBe(409)
   })
+
+  it('does not expose another user’s preset', async () => {
+    const { app, cookie } = await authed() // jens
+    const id = (await app.inject({ method: 'POST', url: '/api/presets', headers: { cookie }, payload: body })).json().id as string
+
+    // second user on the same app/db
+    await app.inject({ method: 'POST', url: '/api/auth/bootstrap', payload: { token: BOOTSTRAP, username: 'mara', password: 'pw-123456' } })
+    const login2 = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { username: 'mara', password: 'pw-123456' } })
+    const cookie2 = `${SESSION_COOKIE}=${login2.cookies.find((c) => c.name === SESSION_COOKIE)!.value}`
+
+    expect((await app.inject({ method: 'GET', url: `/api/presets/${id}`, headers: { cookie: cookie2 } })).statusCode).toBe(404)
+    expect((await app.inject({ method: 'DELETE', url: `/api/presets/${id}`, headers: { cookie: cookie2 } })).statusCode).toBe(404)
+    // owner still has it
+    expect((await app.inject({ method: 'GET', url: `/api/presets/${id}`, headers: { cookie } })).statusCode).toBe(200)
+  })
 })
