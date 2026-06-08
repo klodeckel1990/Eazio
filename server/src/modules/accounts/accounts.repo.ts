@@ -82,7 +82,7 @@ export function setDefaultAccount(db: DB, userId: string, id: string): boolean {
     tx
       .update(yazioAccounts)
       .set({ isDefault: true, updatedAt: Date.now() })
-      .where(eq(yazioAccounts.id, id))
+      .where(and(eq(yazioAccounts.id, id), eq(yazioAccounts.userId, userId)))
       .run()
   })
   return true
@@ -91,12 +91,13 @@ export function setDefaultAccount(db: DB, userId: string, id: string): boolean {
 export function removeAccount(db: DB, userId: string, id: string): boolean {
   const acc = getAccount(db, userId, id)
   if (!acc) return false
-  db.delete(yazioAccounts).where(eq(yazioAccounts.id, id)).run()
+  db.delete(yazioAccounts).where(and(eq(yazioAccounts.id, id), eq(yazioAccounts.userId, userId))).run()
   if (acc.isDefault) {
     const next = db
       .select({ id: yazioAccounts.id })
       .from(yazioAccounts)
       .where(eq(yazioAccounts.userId, userId))
+      .orderBy(yazioAccounts.updatedAt)
       .get()
     if (next) {
       db.update(yazioAccounts).set({ isDefault: true }).where(eq(yazioAccounts.id, next.id)).run()
@@ -109,9 +110,9 @@ export function getCredentials(account: AccountRecord): StoredCredentials {
   return JSON.parse(decrypt(account.encCredentials)) as StoredCredentials
 }
 
-export function updateTokens(db: DB, accountId: string, encTokens: string): void {
+export function updateTokens(db: DB, userId: string, accountId: string, encTokens: string): void {
   db.update(yazioAccounts)
     .set({ encTokens, updatedAt: Date.now() })
-    .where(eq(yazioAccounts.id, accountId))
+    .where(and(eq(yazioAccounts.id, accountId), eq(yazioAccounts.userId, userId)))
     .run()
 }

@@ -33,6 +33,7 @@ describe('accounts repo', () => {
     const b = createAccount(db, user.id, 'B', { username: 'b', password: 'pb' })
     expect(a.isDefault).toBe(true)
     expect(b.isDefault).toBe(false)
+    expect(getAccount(db, user.id, b.id)?.isDefault).toBe(false)
 
     expect(setDefaultAccount(db, user.id, b.id)).toBe(true)
     expect(getDefaultAccount(db, user.id)?.id).toBe(b.id)
@@ -51,7 +52,10 @@ describe('accounts repo', () => {
     expect(setDefaultAccount(db, u2.id, a.id)).toBe(false)
     expect(removeAccount(db, u2.id, a.id)).toBe(false)
 
-    updateTokens(db, a.id, 'enc-token-blob')
+    updateTokens(db, u1.id, a.id, 'enc-token-blob')
+    expect(getAccount(db, u1.id, a.id)?.encTokens).toBe('enc-token-blob')
+    // a cross-user updateTokens must not modify u1's account
+    updateTokens(db, u2.id, a.id, 'hacked')
     expect(getAccount(db, u1.id, a.id)?.encTokens).toBe('enc-token-blob')
   })
 })
