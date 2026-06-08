@@ -13,4 +13,16 @@ describe('db client + migrations', () => {
       ['aliases', 'log_events', 'preset_items', 'presets', 'sessions', 'users', 'yazio_accounts'].sort(),
     )
   })
+
+  it('applies the expected columns for key tables', () => {
+    const db = createTestDb()
+    const userCols = db
+      .all<{ name: string }>(sql`PRAGMA table_info(users)`)
+      .map((r) => r.name)
+    expect(userCols).toContain('password_hash')
+    const accountCols = db
+      .all<{ name: string }>(sql`PRAGMA table_info(yazio_accounts)`)
+      .map((r) => r.name)
+    expect(accountCols).toContain('enc_credentials')
+  })
 })

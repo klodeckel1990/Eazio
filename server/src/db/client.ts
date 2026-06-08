@@ -20,5 +20,7 @@ export function createDb(dbPath: string): { db: DB; sqlite: Database.Database } 
 }
 
 export function runMigrations(db: DB): void {
+  // migrate() reads the underlying connection from the Drizzle wrapper's
+  // session; `db` must be a BetterSQLite3Database created via createDb().
   migrate(db, { migrationsFolder: MIGRATIONS_DIR })
 }
