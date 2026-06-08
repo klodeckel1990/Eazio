@@ -1,0 +1,29 @@
+services:
+  eazio:
+    build: .
+    image: eazio:latest
+    container_name: eazio
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_PATH: /data/eazio.db
+      COOKIE_SECURE: "true"
+    volumes:
+      - eazio-data:/data
+    networks:
+      - proxy
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  proxy:
+    external: true
+    name: ${NPM_NETWORK:-npm_default}
+
+volumes:
+  eazio-data:
