@@ -7,8 +7,8 @@ import { listAccounts, setDefaultAccount, removeAccount } from '../../modules/ac
 
 const LinkSchema = z.object({
   label: z.string().min(1).max(64),
-  username: z.string().min(1),
-  password: z.string().min(1),
+  username: z.string().min(1).max(256),
+  password: z.string().min(1).max(256),
 })
 
 const IdParams = z.object({ id: z.string().min(1) })
