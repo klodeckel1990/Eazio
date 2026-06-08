@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import type { MatchLine } from '../api/types'
 import { scaleNutrition, round } from '../lib/nutrition'
 
@@ -19,13 +20,15 @@ export function IngredientRow({ line, value, onChange, onRemove }: IngredientRow
     nutrientSummary = '–'
   }
 
-  const gramsInputId = `grams-${line.raw}`
+  const fieldId = useId()
+  const gramsInputId = `${fieldId}-grams`
 
   return (
     <div className="ingredient-row">
       <small className="muted">{line.raw}</small>
 
       <select
+        aria-label="Produkt"
         value={value.productId}
         onChange={e => onChange({ productId: e.target.value, grams: value.grams })}
       >

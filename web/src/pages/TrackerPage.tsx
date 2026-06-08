@@ -10,6 +10,9 @@ interface RowState {
   grams: number
 }
 
+let _rowSeq = 0
+const nextKey = (): string => `row-${_rowSeq++}`
+
 export function TrackerPage() {
   const [accounts, setAccounts] = useState<Account[] | null>(null)
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
@@ -17,6 +20,7 @@ export function TrackerPage() {
   const [matching, setMatching] = useState(false)
   const [lines, setLines] = useState<MatchLine[]>([])
   const [rows, setRows] = useState<RowState[]>([])
+  const [keys, setKeys] = useState<string[]>([])
   const [daytime, setDaytime] = useState<Daytime>(defaultDaytime())
   const [logging, setLogging] = useState(false)
   const [logResult, setLogResult] = useState<LogResult | null>(null)
@@ -66,6 +70,7 @@ export function TrackerPage() {
     try {
       const res = await api.match(text, selectedAccountId || undefined)
       setLines(res.lines)
+      setKeys(res.lines.map(() => nextKey()))
       setRows(res.lines.map(l => {
         const sel = l.selectedProductId
           ? l.candidates.find(c => c.productId === l.selectedProductId)
@@ -97,6 +102,7 @@ export function TrackerPage() {
   const handleRowRemove = (index: number) => {
     setLines(prev => prev.filter((_, i) => i !== index))
     setRows(prev => prev.filter((_, i) => i !== index))
+    setKeys(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleLog = async () => {
@@ -230,7 +236,7 @@ export function TrackerPage() {
           <button
             type="button"
             onClick={() => { void handleLog() }}
-            disabled={rows.length === 0 || logging}
+            disabled={rows.length === 0 || logging || matching}
           >
             {logging ? 'Loggen…' : 'Loggen'}
           </button>
