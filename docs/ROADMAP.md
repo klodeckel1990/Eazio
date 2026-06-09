@@ -14,7 +14,7 @@ vorbereiten) · Umbenennung vor Store-Launch (Bundle-IDs!).
 | # | Phase | Inhalt | Status |
 |---|-------|--------|--------|
 | 1 | Bearer-Auth | Opake Tokens (sha256-Hash in `sessions`, 90 d gleitend) neben Cookie, CORS für Capacitor-Origins, CSP/Helmet, Geräteliste + Remote-Revoke | ✅ 09.06.2026 |
-| 2 | Eigene Food-DB | `foods`-Tabelle (bls/off/custom), BLS-4.0-Import (CC BY 4.0, Excel), FTS5-Suche (Umlaute/Komposita), OFF-Barcode-Cache, Custom Foods | offen |
+| 2 | Eigene Food-DB | `foods`-Tabelle (bls/off/custom), BLS-4.0-Import (CC BY 4.0, Excel), FTS5-Suche (Umlaute/Komposita), OFF-Barcode-Cache, Custom Foods | ✅ 09.06.2026 |
 | 3 | Tagebuch | `diary_entries` (denormalisierte Nährwert-Snapshots) als Quelle der Wahrheit, Ziele/Wasser/Streak, asynchroner Yazio-Mirror (`pending→mirrored/skipped/failed`), `GET /api/widget/summary`, TrackerPage-Umbau | offen |
 | 4 | PWA | vite-plugin-pwa, Offline-Lesen (NetworkFirst für Diary, SWR für Foods) | offen |
 | 5 | Capacitor-Shell | `app/`-Workspace, TestFlight/Internal Testing, ML-Kit-Barcode-Scanner, `SharedAuth`-Plugin (Shared Keychain/App Group) — **braucht neuen Namen** | offen |
@@ -28,8 +28,9 @@ Parallel zu 2–4: Namensfindung (Shortlist + Domain-/Markencheck; „Eazio" ist
 - **foods**: `unique(source, sourceId)`; ~10 Nährwert-Spalten (kcal, Makros, Salz) + `nutrientsJson`
   für die restlichen ~128 BLS-Nährstoffe; `servingsJson`; FTS5 `unicode61 remove_diacritics 2` +
   `searchTerms` (ue-Varianten, Dekomposita). Ranking: Custom > Aliase > BLS > OFF + Nutzungshäufigkeit.
-- **BLS-Import**: `server/scripts/import-bls.ts`, idempotent über `bls:<SBLS>`-IDs.
-  ⚠️ Vor Implementierung: Excel herunterladen und Nährstoff-Codes verifizieren.
+- **BLS-Import**: verifiziert — BLS 4.0 nutzt EuroFIR-Codes (ENERCC, PROT625, CHO, …), nicht die
+  alten BLS-3.x-Codes. Pipeline: `scripts/convert-bls.ts` (xlsx → `seeds/bls-4.0.json.gz`, committed)
+  → `node dist/scripts/import-bls.js` (idempotent, auch im Container). `TR`/`<LOD`/`<LOQ` → 0.
 - **diary_entries**: Snapshots statt Joins (stabile Historie trotz OFF-Refreshes); Mirror läuft
   nach Commit via `setImmediate`, niemals blockierend; „skipped" ist sichtbarer Zustand.
   Legacy `aliases`/`log_events` bleiben für den Mirror; neues Lernen in `food_aliases`.
