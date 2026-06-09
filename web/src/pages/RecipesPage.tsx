@@ -178,6 +178,13 @@ export function RecipesPage() {
 
       {error && <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>}
 
+      {importing && (
+        <p className="banner info">
+          <span className="spinner" />
+          <span className="banner-text">Rezept wird importiert … das kann ein paar Sekunden dauern.</span>
+        </p>
+      )}
+
       {/* Import */}
       <div className="card pad-lg stack">
         <h2 className="section-title">Importieren</h2>

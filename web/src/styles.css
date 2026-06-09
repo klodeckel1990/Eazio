@@ -591,6 +591,7 @@ select {
 .banner svg { width: 20px; height: 20px; flex: none; }
 .banner.error { background: var(--danger-100); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
 .banner.success { background: var(--primary-100); color: var(--primary-700); border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent); }
+.banner.info { background: var(--primary-050); color: var(--primary-700); border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); }
 .banner .banner-text { flex: 1; }
 
 .error { color: var(--danger); font-size: 0.9rem; }
