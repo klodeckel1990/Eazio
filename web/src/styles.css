@@ -309,6 +309,9 @@ button { font: inherit; color: inherit; }
 .btn-danger { background: transparent; border-color: var(--line-2); color: var(--danger); }
 .btn-danger:hover { background: var(--danger-100); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
 
+.btn-soft { background: var(--primary-100); border-color: transparent; color: var(--primary-700); }
+.btn-soft:hover { background: var(--primary-050); }
+
 .btn-block { width: 100%; }
 .btn-lg { padding: 0.9rem 1.3rem; font-size: 1rem; }
 .btn-sm { padding: 0.45rem 0.8rem; font-size: 0.85rem; }
@@ -860,6 +863,31 @@ input[type='search']:focus {
 .detail-title { font-family: var(--font-display); font-size: clamp(1.7rem, 7vw, 2.3rem); line-height: 1.1; font-variation-settings: 'opsz' 100; }
 .detail-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; }
 .row-actions { display: flex; gap: 0.5rem; }
+.small { font-size: 0.82rem; }
+.muted.small a, .small a { color: var(--primary-700); font-weight: 600; }
+
+/* ---- Selectable option list (settings) ----------------------------------- */
+.opt-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.8rem 0.9rem;
+  border: 1.5px solid var(--line-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.opt:hover { border-color: color-mix(in srgb, var(--primary) 40%, var(--line-2)); }
+.opt.is-active { border-color: var(--primary); background: var(--primary-050); box-shadow: var(--ring); }
+.opt .opt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.opt-title { font-weight: 650; }
+.opt-desc { color: var(--ink-2); font-size: 0.84rem; }
+.opt > svg { width: 20px; height: 20px; color: var(--primary); flex: none; }
 
 /* ---- Desktop ≥720px: nav moves to top bar, tab bar hidden ---------------- */
 @media (min-width: 720px) {

@@ -56,6 +56,11 @@ export interface RecipeDetail extends RecipeSummary {
   sourceType: string
   ingredients: RecipeIngredient[]
   steps: string[]
+  shareToken: string
 }
 
-export interface UserSettings { iosShortcutHintDismissed: boolean }
+export type ShoppingListFormat = 'plain' | 'checklist' | 'bring'
+export interface UserSettings {
+  iosShortcutHintDismissed: boolean
+  shoppingListFormat: ShoppingListFormat
+}

@@ -143,6 +143,40 @@ function parseSteps(raw: string | null): string[] {
   }
 }
 
+export interface PublicRecipe {
+  title: string
+  servings: number | null
+  steps: string[]
+  hasImage: boolean
+  ingredients: ExtractedIngredient[]
+}
+
+/** Unscoped lookup for the token-gated public recipe page (no userId — the
+ *  share token gates access). Returns only what the JSON-LD page needs. */
+export function getPublicRecipe(db: DB, id: string): PublicRecipe | null {
+  const row = db.select().from(recipes).where(eq(recipes.id, id)).get()
+  if (!row) return null
+  const items = db
+    .select()
+    .from(recipeIngredients)
+    .where(eq(recipeIngredients.recipeId, id))
+    .orderBy(asc(recipeIngredients.position))
+    .all()
+  return {
+    title: row.title,
+    servings: row.servings,
+    steps: parseSteps(row.steps),
+    hasImage: row.imageMime != null,
+    ingredients: items.map((it) => ({ raw: it.raw, quantity: it.quantity, unit: it.unit, name: it.name })),
+  }
+}
+
+/** Unscoped image-mime lookup for the token-gated public image route. */
+export function getRecipeImageMimeById(db: DB, id: string): string | null {
+  const row = db.select({ imageMime: recipes.imageMime }).from(recipes).where(eq(recipes.id, id)).get()
+  return row?.imageMime ?? null
+}
+
 export function removeRecipe(db: DB, userId: string, id: string): boolean {
   const row = db
     .select({ id: recipes.id })

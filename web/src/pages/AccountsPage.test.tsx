@@ -7,6 +7,8 @@ const list = vi.fn()
 const link = vi.fn()
 const setDefault = vi.fn()
 const remove = vi.fn()
+const settingsGet = vi.fn()
+const settingsUpdate = vi.fn()
 
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {
@@ -24,6 +26,10 @@ vi.mock('../api/client', () => ({
       setDefault: (...a: unknown[]) => setDefault(...a),
       remove: (...a: unknown[]) => remove(...a),
     },
+    settings: {
+      get: () => settingsGet(),
+      update: (...a: unknown[]) => settingsUpdate(...a),
+    },
   },
 }))
 
@@ -32,10 +38,14 @@ beforeEach(() => {
   link.mockReset()
   setDefault.mockReset()
   remove.mockReset()
+  settingsGet.mockReset()
+  settingsUpdate.mockReset()
   list.mockResolvedValue([])
   link.mockResolvedValue({ id: 'a1', label: 'Me', yazioUsername: 'me@x.de', isDefault: true })
   setDefault.mockResolvedValue(undefined)
   remove.mockResolvedValue(undefined)
+  settingsGet.mockResolvedValue({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain' })
+  settingsUpdate.mockResolvedValue({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain' })
 })
 
 describe('AccountsPage', () => {

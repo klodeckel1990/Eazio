@@ -218,3 +218,22 @@ export function IconChevronLeft(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+export function IconCopy(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <rect x="9" y="9" width="11" height="11" rx="2.5" />
+      <path d="M5 15.5A2 2 0 0 1 4 14V5.5A1.5 1.5 0 0 1 5.5 4H14a2 2 0 0 1 1.5 1" />
+    </Svg>
+  )
+}
+
+export function IconCart(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M3 4h2l2.2 11.2a1.5 1.5 0 0 0 1.5 1.3h8.1a1.5 1.5 0 0 0 1.5-1.2L21 8H6" />
+      <circle cx="9.5" cy="20" r="1.4" />
+      <circle cx="18" cy="20" r="1.4" />
+    </Svg>
+  )
+}

@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError } from '../api/client'
-import type { Account } from '../api/types'
-import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck } from '../components/icons'
+import type { Account, ShoppingListFormat } from '../api/types'
+import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck, IconCart } from '../components/icons'
+
+const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }[] = [
+  { value: 'plain', title: 'Klartext', desc: 'Einfache Liste – ideal für WhatsApp & Notizen.' },
+  { value: 'checklist', title: 'Abhakbare Liste', desc: 'Mit ☐ zum Abhaken (iOS-Notizen, WhatsApp).' },
+  { value: 'bring', title: 'Bring!', desc: 'Direkt in die Bring!-Einkaufsliste übernehmen.' },
+]
 
 export function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[] | null>(null)
@@ -11,6 +17,7 @@ export function AccountsPage() {
   const [linkError, setLinkError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [hintReenabled, setHintReenabled] = useState(false)
+  const [format, setFormat] = useState<ShoppingListFormat | null>(null)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -20,7 +27,13 @@ export function AccountsPage() {
 
   useEffect(() => {
     loadAccounts()
+    api.settings.get().then((s) => setFormat(s.shoppingListFormat)).catch(() => {})
   }, [])
+
+  const selectFormat = (next: ShoppingListFormat) => {
+    setFormat(next)
+    api.settings.update({ shoppingListFormat: next }).catch(() => {})
+  }
 
   const handleLink = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -187,6 +200,31 @@ export function AccountsPage() {
             <IconShare /> Teilen-Anleitung erneut anzeigen
           </button>
         )}
+      </div>
+
+      <div className="card stack">
+        <h2 className="section-title"><IconCart /> Einkaufsliste</h2>
+        <p className="muted">
+          Format, in dem die Zutaten eines Rezepts für die Einkaufsliste kopiert werden.
+        </p>
+        <div className="opt-list" role="radiogroup" aria-label="Einkaufslisten-Format">
+          {FORMAT_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={format === o.value}
+              className={`opt ${format === o.value ? 'is-active' : ''}`}
+              onClick={() => selectFormat(o.value)}
+            >
+              <span className="opt-main">
+                <span className="opt-title">{o.title}</span>
+                <span className="opt-desc">{o.desc}</span>
+              </span>
+              {format === o.value && <IconCheck />}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )

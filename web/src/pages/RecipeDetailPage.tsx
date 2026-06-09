@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
-import type { RecipeDetail, RecipeIngredient } from '../api/types'
+import type { RecipeDetail, RecipeIngredient, ShoppingListFormat } from '../api/types'
 import { buildTrackerText } from '../lib/recipe'
-import { IconAlert, IconBowl, IconChevronLeft, IconClock, IconHeart, IconHeartFilled, IconTrash } from '../components/icons'
+import { buildShoppingText, bringDeeplink, copyText, SHOPPING_FORMAT_LABEL } from '../lib/shoppingList'
+import { IconAlert, IconBowl, IconCart, IconCheck, IconChevronLeft, IconClock, IconCopy, IconHeart, IconHeartFilled, IconTrash } from '../components/icons'
 
 const FACTORS = [
   { label: 'Ganzes', value: 1 },
@@ -22,6 +23,8 @@ export function RecipeDetailPage() {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [factor, setFactor] = useState(1)
+  const [format, setFormat] = useState<ShoppingListFormat>('plain')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     api.recipes
@@ -29,6 +32,24 @@ export function RecipeDetailPage() {
       .then(setRecipe)
       .catch((e) => setError(e instanceof ApiError && e.status === 404 ? 'Rezept nicht gefunden.' : 'Rezept konnte nicht geladen werden.'))
   }, [id])
+
+  useEffect(() => {
+    api.settings.get().then((s) => setFormat(s.shoppingListFormat)).catch(() => {})
+  }, [])
+
+  const copyShoppingList = async () => {
+    if (!recipe) return
+    if (format === 'bring') {
+      const publicUrl = `${window.location.origin}/r/${recipe.id}?t=${encodeURIComponent(recipe.shareToken)}`
+      window.location.href = bringDeeplink(publicUrl, recipe.servings)
+      return
+    }
+    const ok = await copyText(buildShoppingText(recipe.title, recipe.ingredients, format))
+    if (ok) {
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    }
+  }
 
   const toggleFav = async () => {
     if (!recipe) return
@@ -114,6 +135,22 @@ export function RecipeDetailPage() {
               </ol>
             </section>
           )}
+
+          <div className="card stack">
+            <span className="label">Einkaufsliste</span>
+            <button type="button" className="btn btn-soft btn-block" onClick={() => { void copyShoppingList() }}>
+              {format === 'bring' ? (
+                <><IconCart /> Zu Bring! hinzufügen</>
+              ) : copied ? (
+                <><IconCheck /> Kopiert!</>
+              ) : (
+                <><IconCopy /> Zutaten kopieren</>
+              )}
+            </button>
+            <span className="muted small">
+              Format: {SHOPPING_FORMAT_LABEL[format]} · <Link to="/accounts">in Einstellungen ändern</Link>
+            </span>
+          </div>
 
           <div className="card pad-lg stack">
             <span className="label">Wie viel möchtest du tracken?</span>
