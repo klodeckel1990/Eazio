@@ -87,3 +87,27 @@ export const sessions = sqliteTable('sessions', {
     .references(() => users.id),
   expiresAt: integer('expires_at').notNull(),
 })
+
+export const recipes = sqliteTable('recipes', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  title: text('title').notNull(),
+  sourceUrl: text('source_url'),
+  sourceType: text('source_type').notNull(), // link|text
+  servings: integer('servings'),
+  createdAt: integer('created_at').notNull(),
+})
+
+export const recipeIngredients = sqliteTable('recipe_ingredients', {
+  id: text('id').primaryKey(),
+  recipeId: text('recipe_id')
+    .notNull()
+    .references(() => recipes.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  raw: text('raw').notNull(),
+  quantity: text('quantity').notNull(), // string ("", "2-3", "1/2"); scaled at track time
+  unit: text('unit').notNull(),
+  name: text('name').notNull(),
+})

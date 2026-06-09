@@ -49,7 +49,7 @@ export function buildApp(db: DB, opts: { webDir?: string } = {}): FastifyInstanc
   registerMatchRoutes(app, db)
   registerPresetRoutes(app, db)
   registerLogRoutes(app, db)
-  registerRecipeRoutes(app)
+  registerRecipeRoutes(app, db)
 
   const webDir =
     opts.webDir ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist')
