@@ -121,6 +121,26 @@ export function TrackerPage() {
     setKeys(prev => prev.filter((_, i) => i !== index))
   }
 
+  // Re-search a single line with a user-edited query and swap in fresh candidates.
+  const handleResearch = async (index: number, query: string) => {
+    setError(null)
+    try {
+      const { candidates } = await api.search(query, selectedAccountId || undefined)
+      setLines(prev => prev.map((l, i) => (i === index ? { ...l, candidates } : l)))
+      setRows(prev => prev.map((r, i) => (
+        i === index
+          ? { productId: candidates[0]?.productId ?? '', grams: r.grams > 0 ? r.grams : (candidates[0]?.referenceAmount ?? 0) }
+          : r
+      )))
+    } catch (e) {
+      if (e instanceof ApiError) {
+        setError(e.message)
+      } else {
+        throw e
+      }
+    }
+  }
+
   const handleLog = async () => {
     if (rows.length === 0 || logging) return
     setError(null)
@@ -275,6 +295,7 @@ export function TrackerPage() {
                 value={rows[i] ?? { productId: '', grams: 0 }}
                 onChange={v => handleRowChange(i, v)}
                 onRemove={() => handleRowRemove(i)}
+                onResearch={q => handleResearch(i, q)}
               />
             ))}
           </div>

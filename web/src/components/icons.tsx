@@ -145,3 +145,12 @@ export function IconWand(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+export function IconSearch(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M20 20l-4.2-4.2" />
+    </Svg>
+  )
+}

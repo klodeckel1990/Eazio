@@ -52,3 +52,29 @@ describe('POST /api/match', () => {
     expect(body.lines[0].candidates[0].productId).toBe('p1')
   })
 })
+
+describe('POST /api/search', () => {
+  it('401 without auth', async () => {
+    const app = buildApp(createTestDb())
+    const res = await app.inject({ method: 'POST', url: '/api/search', payload: { query: 'Banane' } })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('409 when the user has no account', async () => {
+    const { app, cookie } = await authed()
+    const res = await app.inject({ method: 'POST', url: '/api/search', headers: { cookie }, payload: { query: 'Banane' } })
+    expect(res.statusCode).toBe(409)
+  })
+
+  it('returns candidates for a verbatim manual query', async () => {
+    const { db, app, cookie, userId } = await authed()
+    createAccount(db, userId, 'Me', { username: 'me@x.de', password: 'secret' })
+    search.mockResolvedValue([
+      { product_id: 'b1', name: 'Banane', producer: 'X', is_verified: true, base_unit: 'g', amount: 100, serving: 'portion', serving_quantity: 1, nutrients: { 'energy.energy': 0.9, 'nutrient.carb': 0.2, 'nutrient.protein': 0.01, 'nutrient.fat': 0 } },
+    ])
+    const res = await app.inject({ method: 'POST', url: '/api/search', headers: { cookie }, payload: { query: 'Banane' } })
+    expect(res.statusCode).toBe(200)
+    expect(search).toHaveBeenCalledWith(expect.objectContaining({ query: 'Banane' }))
+    expect(res.json().candidates[0].productId).toBe('b1')
+  })
+})

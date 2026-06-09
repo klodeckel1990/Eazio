@@ -502,6 +502,9 @@ select {
   align-items: flex-end;
 }
 .ingredient .ing-controls .grow { flex: 1; min-width: 150px; }
+.ingredient .ing-search { display: flex; gap: 0.5rem; align-items: center; }
+.ingredient .ing-search input { flex: 1; min-width: 0; }
+.ingredient .ing-search .btn-icon { flex: none; }
 
 /* macro pills */
 .macros { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }

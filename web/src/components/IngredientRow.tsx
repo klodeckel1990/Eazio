@@ -1,23 +1,38 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import type { MatchLine } from '../api/types'
 import { scaleNutrition, round } from '../lib/nutrition'
-import { IconClose } from './icons'
+import { IconClose, IconSearch } from './icons'
 
 export interface IngredientRowProps {
   line: MatchLine
   value: { productId: string; grams: number }
   onChange: (value: { productId: string; grams: number }) => void
   onRemove: () => void
+  /** Re-run a Yazio search for this line with a user-edited query. */
+  onResearch?: (query: string) => Promise<void>
 }
 
-export function IngredientRow({ line, value, onChange, onRemove }: IngredientRowProps) {
+export function IngredientRow({ line, value, onChange, onRemove, onResearch }: IngredientRowProps) {
   const sel = line.candidates.find(c => c.productId === value.productId)
   const n = sel ? scaleNutrition(sel.nutrientsPerReference, sel.referenceAmount, value.grams) : null
 
   const fieldId = useId()
   const gramsInputId = `${fieldId}-grams`
 
+  const [query, setQuery] = useState(line.name)
+  const [searching, setSearching] = useState(false)
+
   const setGrams = (grams: number) => onChange({ productId: value.productId, grams: Math.max(0, grams) })
+
+  const runSearch = async () => {
+    if (!onResearch || !query.trim() || searching) return
+    setSearching(true)
+    try {
+      await onResearch(query.trim())
+    } finally {
+      setSearching(false)
+    }
+  }
 
   return (
     <div className="ingredient">
@@ -33,6 +48,34 @@ export function IngredientRow({ line, value, onChange, onRemove }: IngredientRow
           <IconClose />
         </button>
       </div>
+
+      {onResearch && (
+        <div className="ing-search">
+          <input
+            type="text"
+            aria-label="Suchbegriff"
+            placeholder="Produkt suchen…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void runSearch()
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="btn btn-icon btn-ghost"
+            onClick={() => { void runSearch() }}
+            disabled={searching || !query.trim()}
+            aria-label="Neu suchen"
+            title="Neu suchen"
+          >
+            {searching ? <span className="spinner" /> : <IconSearch />}
+          </button>
+        </div>
+      )}
 
       <div className="ing-controls">
         <div className="field grow">
@@ -72,7 +115,9 @@ export function IngredientRow({ line, value, onChange, onRemove }: IngredientRow
         </div>
       </div>
 
-      {n ? (
+      {line.candidates.length === 0 ? (
+        <span className="muted">Keine Treffer – Suchbegriff oben anpassen und ⏎.</span>
+      ) : n ? (
         <div className="macros">
           <span className="macro kcal"><span className="v">{n.kcal}</span><span className="u">kcal</span></span>
           <span className="macro carb"><span className="v">{round(n.carb)}</span><span className="u">g KH</span></span>

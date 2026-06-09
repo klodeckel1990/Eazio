@@ -1,5 +1,5 @@
 import type {
-  Account, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
+  Account, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
 } from './types'
 
 export class ApiError extends Error {
@@ -39,6 +39,8 @@ export const api = {
     remove: (id: string) => req<void>('DELETE', `/accounts/${id}`),
   },
   match: (text: string, accountId?: string) => req<MatchResponse>('POST', '/match', { text, accountId }),
+  search: (query: string, accountId?: string) =>
+    req<{ accountId: string; candidates: Candidate[] }>('POST', '/search', { query, accountId }),
   log: (payload: { accountId?: string; date?: string; daytime?: Daytime; lines: LogLine[] }) =>
     req<LogResult>('POST', '/log', payload),
   undo: (logId: string) => req<void>('POST', `/log/${logId}/undo`),
