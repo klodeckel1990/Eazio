@@ -2,7 +2,7 @@ import type { DB } from '../../db/client.js'
 import { env } from '../../config/env.js'
 import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
-import { normalizeName } from './normalize.js'
+import { normalizeName, buildSearchQuery } from './normalize.js'
 import { getAlias } from '../learning/aliases.repo.js'
 
 export interface SearchResult {
@@ -74,20 +74,25 @@ function toCandidate(r: SearchResult): ProductCandidate {
 
 const split = (s: string): string[] => s.split(',').map((x) => x.trim()).filter(Boolean)
 
+/** Searches Yazio for a single query and maps the top-10 results to candidates. */
+export async function searchCandidates(client: SearchClient, query: string): Promise<ProductCandidate[]> {
+  const countries = split(env.YAZIO_COUNTRIES)
+  const locales = split(env.YAZIO_LOCALES)
+  const results = await client.products.search({ query, countries, locales })
+  return results.slice(0, 10).map(toCandidate)
+}
+
 export async function matchText(
   client: SearchClient,
   db: DB,
   userId: string,
   text: string,
 ): Promise<MatchedLine[]> {
-  const countries = split(env.YAZIO_COUNTRIES)
-  const locales = split(env.YAZIO_LOCALES)
   const out: MatchedLine[] = []
 
   for (const line of parseIngredients(text)) {
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
-    const results = await client.products.search({ query: line.name, countries, locales })
-    let candidates = results.slice(0, 10).map(toCandidate)
+    let candidates = await searchCandidates(client, buildSearchQuery(line.name))
 
     let selectedProductId = candidates[0]?.productId ?? null
     const alias = getAlias(db, userId, normalizeName(line.name))
