@@ -8,9 +8,13 @@ describe('resolveAmount', () => {
     expect(resolveAmount(200, 'ml')).toEqual({ normalizedUnit: 'ml', amountGrams: 200 })
     expect(resolveAmount(2, 'l')).toEqual({ normalizedUnit: 'ml', amountGrams: 2000 })
   })
+  it('converts spoon measures to approximate grams', () => {
+    expect(resolveAmount(2, 'el')).toEqual({ normalizedUnit: 'g', amountGrams: 30 })
+    expect(resolveAmount(1, 'tl')).toEqual({ normalizedUnit: 'g', amountGrams: 5 })
+  })
   it('treats piece/unknown/none as a serving (grams resolved later)', () => {
     expect(resolveAmount(1, null)).toEqual({ normalizedUnit: 'serving', amountGrams: null })
-    expect(resolveAmount(2, 'el')).toEqual({ normalizedUnit: 'serving', amountGrams: null })
+    expect(resolveAmount(1, 'stück')).toEqual({ normalizedUnit: 'serving', amountGrams: null })
     expect(resolveAmount(null, null)).toEqual({ normalizedUnit: 'serving', amountGrams: null })
   })
 })
