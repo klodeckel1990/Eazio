@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import type { ComponentType, SVGProps } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { IconBowl, IconBook, IconWand, IconBookmark, IconSettings, IconLeaf, IconLogout } from './icons'
+import { IconBowl, IconBook, IconWand, IconBookmark, IconSettings, IconLogout } from './icons'
 
 interface NavItem {
   to: string
@@ -24,8 +24,8 @@ export function AppBar() {
   return (
     <header className="appbar">
       <NavLink to="/" className="brand">
-        <span className="leaf"><IconLeaf /></span>
-        eazio
+        <img className="brand-icon" src="/icon-192.png" alt="" />
+        Tellerwert
       </NavLink>
 
       <nav className="appbar-nav" aria-label="Hauptnavigation">

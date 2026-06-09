@@ -21,7 +21,10 @@ vorbereiten) · Umbenennung vor Store-Launch (Bundle-IDs!).
 | 6 | Widgets + Live Activities | WidgetKit/Glance: Kalorienring + interaktives Wasser-Widget; Live Activity (Fasten/Tagesbilanz) + APNs-Pipeline | offen |
 | 7 | Launch-Paket | Hosting-Migration (EU-Cloud, Postgres), DSGVO, Premium/IAP | offen |
 
-Parallel zu 2–4: Namensfindung (Shortlist + Domain-/Markencheck; „Eazio" ist zu nah an Yazio).
+~~Parallel zu 2–4: Namensfindung~~ → **Entschieden (09.06.2026): „Tellerwert"**. Logos liegen in
+`docs/brand/` (App-Icon + Full Logo), Web-Branding umgestellt. Offen: tellerwert.de registrieren
+(war frei lt. DENIC), tellerwert.app prüfen, DPMA-Markenrecherche vor Store-Launch.
+Bundle-ID-Vorschlag für Phase 5: `de.tellerwert.app`.
 
 ## Architektur-Eckpunkte (Phase 2–6, durchdesignt)
 

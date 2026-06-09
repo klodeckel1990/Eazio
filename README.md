@@ -1,9 +1,14 @@
-# 🥗 eazio
+<p align="center"><img src="docs/brand/app-icon-1024.png" alt="Tellerwert" width="120" /></p>
 
-**Dein entspannter, selbst-gehosteter Begleiter für [Yazio](https://www.yazio.com/).**
-Mahlzeiten in Sekunden tracken, Rezepte aus Social Media & Blogs importieren und Einkaufslisten erstellen – mobile-first, warm und ohne Schnickschnack.
+# Tellerwert
 
-> Privates Projekt. eazio ist **kein** offizielles Yazio-Produkt und nutzt dein eigenes Yazio-Konto über dessen inoffizielle API.
+**Dein entspanntes Ernährungstagebuch.**
+Mahlzeiten in Sekunden tracken (eigene Lebensmitteldatenbank auf Basis von BLS 4.0 + Open Food Facts), Rezepte aus Social Media & Blogs importieren und Einkaufslisten erstellen – mobile-first, warm und ohne Schnickschnack.
+
+> Tellerwert (vormals „eazio") entwickelt sich zur eigenständigen iOS/Android-App — Roadmap in [docs/ROADMAP.md](docs/ROADMAP.md).
+> Die optionale Yazio-Verknüpfung nutzt dein eigenes Konto über dessen inoffizielle API; Tellerwert ist **kein** offizielles Yazio-Produkt.
+>
+> Nährwertdaten: Max Rubner-Institut (2025), Bundeslebensmittelschlüssel (BLS) 4.0, CC BY 4.0 · Open Food Facts, ODbL.
 
 ---
 

@@ -1,5 +1,5 @@
 /* ============================================================================
-   Eazio — "Fresh Market" design system
+   Tellerwert — "Fresh Market" design system
    Warm, food/health aesthetic · mobile-first · Fraunces + Hanken Grotesk
    ========================================================================== */
 
@@ -156,6 +156,12 @@ button { font: inherit; color: inherit; }
   box-shadow: var(--sh-1), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .brand .leaf svg { width: 20px; height: 20px; }
+.brand-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  box-shadow: var(--sh-1);
+}
 
 /* desktop inline nav (hidden on mobile) */
 .appbar-nav { display: none; gap: 0.25rem; }
@@ -689,6 +695,12 @@ select {
   box-shadow: var(--sh-2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .auth-brand .leaf svg { width: 32px; height: 32px; }
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  box-shadow: var(--sh-2);
+}
 .auth-brand h1 {
   font-variation-settings: 'opsz' 144;
   font-size: 2.2rem;

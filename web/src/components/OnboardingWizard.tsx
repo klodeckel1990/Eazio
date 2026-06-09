@@ -12,13 +12,13 @@ interface Step {
 const STEPS: Step[] = [
   {
     Icon: IconLeaf,
-    title: 'Willkommen bei eazio',
-    body: 'Dein entspannter Begleiter für Yazio: Mahlzeiten in Sekunden tracken, Rezepte importieren und Einkaufslisten erstellen. Eine kurze Tour gefällig?',
+    title: 'Willkommen bei Tellerwert',
+    body: 'Dein entspanntes Ernährungstagebuch: Mahlzeiten in Sekunden tracken, Rezepte importieren und Einkaufslisten erstellen. Eine kurze Tour gefällig?',
   },
   {
     Icon: IconBowl,
     title: 'Schnell tracken',
-    body: 'Tippe oder füge deine Zutaten als Text ein – z. B. „100 g Haferflocken, 1 Banane". eazio erkennt Mengen und Einheiten (auch EL/TL), ignoriert Gewürze ohne kcal und matcht alles automatisch auf Yazio-Produkte. Dann mit einem Tipp loggen.',
+    body: 'Tippe oder füge deine Zutaten als Text ein – z. B. „100 g Haferflocken, 1 Banane". Tellerwert erkennt Mengen und Einheiten (auch EL/TL), ignoriert Gewürze ohne kcal und matcht alles automatisch. Dann mit einem Tipp loggen.',
   },
   {
     Icon: IconWand,

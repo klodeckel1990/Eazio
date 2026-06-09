@@ -153,7 +153,7 @@ export function ImportPage() {
           <span className="d-title"><IconShare /> Vom iPhone teilen</span>
           <p className="muted">
             Teile Rezepte direkt aus Instagram: Kurzbefehl einmal hinzufügen, dann erscheint
-            „Rezept zu Eazio" in Instagrams Teilen-Menü.
+            „Rezept zu Tellerwert" in Instagrams Teilen-Menü.
           </p>
           <a className="btn btn-primary btn-sm" href={SHORTCUT_URL} target="_blank" rel="noreferrer" style={{ alignSelf: 'flex-start' }}>
             <IconShare /> Kurzbefehl hinzufügen

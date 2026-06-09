@@ -1,7 +1,7 @@
 {
-  "name": "Eazio",
-  "short_name": "Eazio",
-  "description": "Dein entspannter Yazio-Begleiter zum schnellen Tracken.",
+  "name": "Tellerwert",
+  "short_name": "Tellerwert",
+  "description": "Dein entspanntes Ernährungstagebuch.",
   "lang": "de",
   "start_url": "/",
   "scope": "/",
@@ -9,7 +9,6 @@
   "background_color": "#fbf6ee",
   "theme_color": "#fbf6ee",
   "icons": [
-    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any" },
     { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
     { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
   ],

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
-import { IconLeaf, IconAlert } from '../components/icons'
+import { IconAlert } from '../components/icons'
 
 export function LoginPage() {
   const { user, login, loading } = useAuth()
@@ -39,9 +39,9 @@ export function LoginPage() {
     <div className="auth">
       <form className="auth-card" onSubmit={(e) => { void handleSubmit(e) }}>
         <div className="auth-brand">
-          <span className="leaf"><IconLeaf /></span>
-          <h1>eazio</h1>
-          <p>Dein entspannter Yazio-Begleiter.</p>
+          <img className="auth-logo" src="/icon-192.png" alt="" />
+          <h1>Tellerwert</h1>
+          <p>Dein entspanntes Ernährungstagebuch.</p>
         </div>
 
         <div className="field">

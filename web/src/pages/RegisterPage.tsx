@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
-import { IconLeaf, IconAlert } from '../components/icons'
+import { IconAlert } from '../components/icons'
 
 function errorMessage(err: ApiError): string {
   if (err.status === 429) return 'Zu viele Versuche. Bitte später erneut probieren.'
@@ -53,8 +53,8 @@ export function RegisterPage() {
     <div className="auth">
       <form className="auth-card" onSubmit={(e) => { void handleSubmit(e) }}>
         <div className="auth-brand">
-          <span className="leaf"><IconLeaf /></span>
-          <h1>eazio</h1>
+          <img className="auth-logo" src="/icon-192.png" alt="" />
+          <h1>Tellerwert</h1>
           <p>Erstelle dein Konto.</p>
         </div>
 
