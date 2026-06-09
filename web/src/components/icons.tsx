@@ -154,3 +154,13 @@ export function IconSearch(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+export function IconBook(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M5 5a2 2 0 0 1 2-2h11v15H7a2 2 0 0 0-2 2Z" />
+      <path d="M5 19a2 2 0 0 1 2-2h11" />
+      <path d="M9 7.5h6M9 10.5h5" />
+    </Svg>
+  )
+}

@@ -29,3 +29,18 @@ export interface LogLine { productId: string; name: string; amountGrams: number;
 export interface Preset { id: string; name: string }
 export interface PresetItem { position: number; rawText: string; productId: string; serving: string | null; servingQuantity: number | null; amountG: number }
 export interface PresetWithItems extends Preset { items: PresetItem[] }
+
+export interface RecipeIngredient { raw: string; quantity: string; unit: string; name: string }
+export interface ImportedRecipe {
+  title: string | null
+  servings: number | null
+  sourceUrl: string | null
+  source: 'link' | 'text'
+  ingredients: RecipeIngredient[]
+}
+export interface RecipeSummary { id: string; title: string; servings: number | null }
+export interface RecipeDetail extends RecipeSummary {
+  sourceUrl: string | null
+  sourceType: string
+  ingredients: RecipeIngredient[]
+}

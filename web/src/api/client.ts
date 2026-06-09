@@ -1,5 +1,6 @@
 import type {
   Account, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
+  ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient,
 } from './types'
 
 export class ApiError extends Error {
@@ -50,5 +51,19 @@ export const api = {
       req<Preset>('POST', '/presets', { name, items }),
     get: (id: string) => req<PresetWithItems>('GET', `/presets/${id}`),
     remove: (id: string) => req<void>('DELETE', `/presets/${id}`),
+  },
+  recipes: {
+    import: (input: { url?: string; text?: string }) =>
+      req<ImportedRecipe>('POST', '/recipes/import', input),
+    create: (recipe: {
+      title: string | null
+      servings: number | null
+      sourceUrl: string | null
+      sourceType: 'link' | 'text'
+      ingredients: RecipeIngredient[]
+    }) => req<RecipeSummary>('POST', '/recipes', recipe),
+    list: () => req<RecipeSummary[]>('GET', '/recipes'),
+    get: (id: string) => req<RecipeDetail>('GET', `/recipes/${id}`),
+    remove: (id: string) => req<void>('DELETE', `/recipes/${id}`),
   },
 }

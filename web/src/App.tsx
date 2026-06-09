@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage'
 import { TrackerPage } from './pages/TrackerPage'
 import { AccountsPage } from './pages/AccountsPage'
 import { PresetsPage } from './pages/PresetsPage'
+import { RecipesPage } from './pages/RecipesPage'
 
 function Shell() {
   return (
@@ -28,6 +29,7 @@ export function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Shell />}>
               <Route path="/" element={<TrackerPage />} />
+              <Route path="/recipes" element={<RecipesPage />} />
               <Route path="/accounts" element={<AccountsPage />} />
               <Route path="/presets" element={<PresetsPage />} />
             </Route>
