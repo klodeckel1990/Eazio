@@ -19,8 +19,32 @@ const TRAILING = new RegExp(`^(.*?)\\s+${NUM}\\s*([a-zà-ÿ]+)?\\s*$`, 'i')
 
 const num = (s: string): number => parseFloat(s.replace(',', '.'))
 
+// Parenthetical asides are alternatives/notes ("(Honig, Ahornsirup)", "(alternativ …)"),
+// not part of the product name — drop them before searching.
+const stripParens = (s: string): string => s.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim()
+
+// Split into ingredient chunks on newlines, semicolons and TOP-LEVEL commas only;
+// commas inside parentheses stay put so "(Honig, Ahornsirup, …)" is not torn apart.
+function splitChunks(text: string): string[] {
+  const chunks: string[] = []
+  let buf = ''
+  let depth = 0
+  for (const ch of text) {
+    if (ch === '(' || ch === '[') depth++
+    else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1)
+    else if (ch === '\n' || ch === ';' || (ch === ',' && depth === 0)) {
+      chunks.push(buf)
+      buf = ''
+      continue
+    }
+    buf += ch
+  }
+  chunks.push(buf)
+  return chunks
+}
+
 export function parseLine(raw: string): ParsedLine {
-  const chunk = raw.trim()
+  const chunk = stripParens(raw.trim())
 
   const lead = LEADING.exec(chunk)
   if (lead) {
@@ -53,8 +77,7 @@ export function parseLine(raw: string): ParsedLine {
 }
 
 export function parseIngredients(text: string): ParsedLine[] {
-  return text
-    .split(/[\n,;]+/)
+  return splitChunks(text)
     .map((c) => c.trim())
     .filter((c) => c.length > 0)
     .map(parseLine)

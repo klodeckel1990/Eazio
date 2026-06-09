@@ -30,4 +30,16 @@ describe('ingredient parser', () => {
     expect(parseIngredients('200ml')).toEqual([])
     expect(parseIngredients('80g Haferflocken, 200ml')).toHaveLength(1)
   })
+
+  it('does not split on commas inside parentheses', () => {
+    const lines = parseIngredients('2 EL flüssige Süße (Honig, Ahornsirup, Reissirup)')
+    expect(lines).toHaveLength(1)
+    expect(lines[0]!.name).toBe('flüssige Süße')
+  })
+
+  it('strips parenthetical asides from the name but keeps raw', () => {
+    const p = parseLine('1 kleine reife Banane (alternativ mehr Süße)')
+    expect(p.name).toBe('kleine reife Banane')
+    expect(p.raw).toBe('1 kleine reife Banane (alternativ mehr Süße)')
+  })
 })
