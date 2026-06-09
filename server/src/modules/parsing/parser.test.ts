@@ -42,4 +42,14 @@ describe('ingredient parser', () => {
     expect(p.name).toBe('kleine reife Banane')
     expect(p.raw).toBe('1 kleine reife Banane (alternativ mehr Süße)')
   })
+
+  it('recombines quantity / unit / name split across lines (copy-paste)', () => {
+    const text = '150\ng\nHeidelbeeren (frisch oder TK)\n1\nkleine Birne\n2\nEL\nMandeln'
+    const lines = parseIngredients(text)
+    expect(lines.map((l) => ({ qty: l.qty, unit: l.unit, name: l.name }))).toEqual([
+      { qty: 150, unit: 'g', name: 'Heidelbeeren' },
+      { qty: 1, unit: null, name: 'kleine Birne' },
+      { qty: 2, unit: 'el', name: 'Mandeln' },
+    ])
+  })
 })

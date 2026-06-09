@@ -23,24 +23,52 @@ const num = (s: string): number => parseFloat(s.replace(',', '.'))
 // not part of the product name — drop them before searching.
 const stripParens = (s: string): string => s.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim()
 
-// Split into ingredient chunks on newlines, semicolons and TOP-LEVEL commas only;
-// commas inside parentheses stay put so "(Honig, Ahornsirup, …)" is not torn apart.
-function splitChunks(text: string): string[] {
-  const chunks: string[] = []
+const isBareNumber = (s: string): boolean => /^\d+(?:[.,]\d+)?$/.test(s)
+const isBareUnit = (s: string): boolean => KNOWN_UNITS.has(s.toLowerCase())
+
+// Some recipe sites render "150 / g / Heidelbeeren" as separate elements, so a
+// copy-paste arrives with the quantity, unit and name on their own lines. Re-join
+// a bare-number line (and an optional following bare-unit line) with the next
+// content line so "150\ng\nHeidelbeeren" becomes "150 g Heidelbeeren".
+function recombineVertical(rawLines: string[]): string[] {
+  const out: string[] = []
+  let prefix = ''
+  for (const raw of rawLines) {
+    const line = raw.trim()
+    if (line === '') continue
+    if (isBareNumber(line)) {
+      if (prefix) out.push(prefix) // flush a dangling number (parseLine drops it)
+      prefix = line
+    } else if (isBareUnit(line)) {
+      if (prefix) prefix = `${prefix} ${line}`
+      // a bare unit with no pending quantity is paste noise — drop it
+    } else {
+      out.push(prefix ? `${prefix} ${line}` : line)
+      prefix = ''
+    }
+  }
+  if (prefix) out.push(prefix)
+  return out
+}
+
+// Splits one line on top-level commas/semicolons; commas inside parentheses stay
+// put so "(Honig, Ahornsirup, …)" is not torn apart.
+function splitTopLevel(line: string): string[] {
+  const parts: string[] = []
   let buf = ''
   let depth = 0
-  for (const ch of text) {
+  for (const ch of line) {
     if (ch === '(' || ch === '[') depth++
     else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1)
-    else if (ch === '\n' || ch === ';' || (ch === ',' && depth === 0)) {
-      chunks.push(buf)
+    else if ((ch === ',' || ch === ';') && depth === 0) {
+      parts.push(buf)
       buf = ''
       continue
     }
     buf += ch
   }
-  chunks.push(buf)
-  return chunks
+  parts.push(buf)
+  return parts
 }
 
 export function parseLine(raw: string): ParsedLine {
@@ -77,7 +105,8 @@ export function parseLine(raw: string): ParsedLine {
 }
 
 export function parseIngredients(text: string): ParsedLine[] {
-  return splitChunks(text)
+  return recombineVertical(text.split(/\r?\n/))
+    .flatMap((line) => splitTopLevel(line))
     .map((c) => c.trim())
     .filter((c) => c.length > 0)
     .map(parseLine)
