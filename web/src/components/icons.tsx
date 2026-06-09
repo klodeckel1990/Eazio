@@ -164,3 +164,13 @@ export function IconBook(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+export function IconShare(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M12 15V4" />
+      <path d="M8.5 7.5 12 4l3.5 3.5" />
+      <path d="M6 12v6.5A1.5 1.5 0 0 0 7.5 20h9a1.5 1.5 0 0 0 1.5-1.5V12" />
+    </Svg>
+  )
+}

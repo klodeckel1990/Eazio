@@ -3,7 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { ImportedRecipe, RecipeDetail, RecipeIngredient, RecipeSummary } from '../api/types'
 import { buildTrackerText } from '../lib/recipe'
-import { IconBook, IconWand, IconBowl, IconTrash, IconCheck, IconClose, IconAlert } from '../components/icons'
+import { IconBook, IconWand, IconBowl, IconTrash, IconCheck, IconClose, IconAlert, IconShare } from '../components/icons'
+
+const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/e9161889953d4685b6e2a9fd181cf41d'
+const HINT_KEY = 'eazio:ios-shortcut-hint'
+const IS_IOS =
+  typeof navigator !== 'undefined' &&
+  (/ip(hone|ad|od)/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
 
 const FACTORS = [
   { label: 'Ganzes', value: 1 },
@@ -43,6 +50,23 @@ export function RecipesPage() {
   const [input, setInput] = useState('')
   const [importing, setImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [hintDismissed, setHintDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(HINT_KEY) === 'done'
+    } catch {
+      return false
+    }
+  })
+  const showHint = IS_IOS && !hintDismissed
+  const dismissHint = () => {
+    try {
+      localStorage.setItem(HINT_KEY, 'done')
+    } catch {
+      /* ignore (private mode) */
+    }
+    setHintDismissed(true)
+  }
 
   // editable preview
   const [preview, setPreview] = useState<ImportedRecipe | null>(null)
@@ -74,8 +98,10 @@ export function RecipesPage() {
       setIngredients(r.ingredients)
       setSteps(r.steps)
     } catch (e) {
-      if (e instanceof ApiError) setImportError(importErrorMessage(e.message))
-      else throw e
+      if (e instanceof ApiError) {
+        setImportError(importErrorMessage(e.message))
+        setImportOpen(true) // reveal the manual controls so the user can retry/paste
+      } else throw e
     } finally {
       setImporting(false)
     }
@@ -185,48 +211,77 @@ export function RecipesPage() {
         </p>
       )}
 
-      {/* Import */}
-      <div className="card pad-lg stack">
-        <h2 className="section-title">Importieren</h2>
-        <div className="seg" role="group" aria-label="Importquelle">
-          <button type="button" aria-pressed={mode === 'text'} onClick={() => setMode('text')}>Text einfügen</button>
-          <button type="button" aria-pressed={mode === 'link'} onClick={() => setMode('link')}>Link</button>
+      {importError && <p className="banner error"><IconAlert /><span className="banner-text">{importError}</span></p>}
+
+      {showHint && (
+        <div className="card stack">
+          <span className="d-title"><IconShare /> Vom iPhone teilen</span>
+          <p className="muted">
+            Teile Rezepte direkt aus Instagram: Kurzbefehl einmal hinzufügen, dann erscheint
+            „Rezept zu Eazio" in Instagrams Teilen-Menü.
+          </p>
+          <a className="btn btn-primary btn-sm" href={SHORTCUT_URL} target="_blank" rel="noreferrer" style={{ alignSelf: 'flex-start' }}>
+            <IconShare /> Kurzbefehl hinzufügen
+          </a>
+          <ol className="recipe-list">
+            <li>Oben „Kurzbefehl hinzufügen" tippen und in der Kurzbefehle-App bestätigen.</li>
+            <li>In Instagram beim Reel auf Teilen → „Rezept zu Eazio".</li>
+          </ol>
+          <label className="hint-check">
+            <input type="checkbox" onChange={(e) => { if (e.target.checked) dismissHint() }} />
+            Eingerichtet – diesen Hinweis ausblenden
+          </label>
         </div>
-        {mode === 'link' ? (
-          <div className="field">
-            <label htmlFor="rec-url">Rezept-Link</label>
-            <input
-              id="rec-url"
-              type="text"
-              inputMode="url"
-              autoCapitalize="none"
-              placeholder="https://… (Instagram, Blog, Webseite)"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <span className="muted">Instagram-Reels werden automatisch geladen; klappt das mal nicht, einfach die Caption als Text einfügen.</span>
-          </div>
-        ) : (
-          <div className="field">
-            <label htmlFor="rec-text">Rezept-Text / Caption</label>
-            <textarea
-              id="rec-text"
-              rows={6}
-              placeholder={'Titel, Zutaten und Zubereitung hier einfügen…'}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-          </div>
-        )}
-        {importError && <p className="banner error"><IconAlert /><span className="banner-text">{importError}</span></p>}
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
-          onClick={() => { void handleImport() }}
-          disabled={importing || !input.trim()}
-        >
-          {importing ? <><span className="spinner" /> Importieren…</> : <><IconWand /> Importieren</>}
+      )}
+
+      {/* Manual import — collapsible secondary path */}
+      <div className="card stack">
+        <button type="button" className="disclosure" aria-expanded={importOpen} onClick={() => setImportOpen((o) => !o)}>
+          <span className="d-title"><IconWand /> Manuell importieren</span>
+          <span className="d-toggle" aria-hidden="true">{importOpen ? '−' : '+'}</span>
         </button>
+        {importOpen && (
+          <>
+            <div className="seg" role="group" aria-label="Importquelle">
+              <button type="button" aria-pressed={mode === 'text'} onClick={() => setMode('text')}>Text einfügen</button>
+              <button type="button" aria-pressed={mode === 'link'} onClick={() => setMode('link')}>Link</button>
+            </div>
+            {mode === 'link' ? (
+              <div className="field">
+                <label htmlFor="rec-url">Rezept-Link</label>
+                <input
+                  id="rec-url"
+                  type="text"
+                  inputMode="url"
+                  autoCapitalize="none"
+                  placeholder="https://… (Instagram, Blog, Webseite)"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
+                <span className="muted">Instagram-Reels werden automatisch geladen; klappt das mal nicht, einfach die Caption als Text einfügen.</span>
+              </div>
+            ) : (
+              <div className="field">
+                <label htmlFor="rec-text">Rezept-Text / Caption</label>
+                <textarea
+                  id="rec-text"
+                  rows={6}
+                  placeholder={'Titel, Zutaten und Zubereitung hier einfügen…'}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                />
+              </div>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={() => { void handleImport() }}
+              disabled={importing || !input.trim()}
+            >
+              {importing ? <><span className="spinner" /> Importieren…</> : <><IconWand /> Importieren</>}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Preview */}
