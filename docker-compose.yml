@@ -7,7 +7,9 @@ services:
     env_file: .env
     environment:
       DATABASE_PATH: /data/eazio.db
-      COOKIE_SECURE: "true"
+      # COOKIE_SECURE is driven by .env (server-only). Default in env.ts is true;
+      # set COOKIE_SECURE=false in .env where the client can't keep a Secure cookie
+      # (e.g. TLS-intercepting networks that make the browser distrust the connection).
     ports:
       # Nginx Proxy Manager forwards a domain to http://<host-ip>:${EAZIO_PORT}.
       # Host-port keeps it robust regardless of which docker network NPM runs on
