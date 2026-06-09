@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { IconLeaf, IconAlert } from '../components/icons'
@@ -7,13 +7,15 @@ import { IconLeaf, IconAlert } from '../components/icons'
 export function LoginPage() {
   const { user, login, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as { from?: string } | null)?.from ?? '/'
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   if (loading) return null
-  if (user) return <Navigate to="/" replace />
+  if (user) return <Navigate to={from} replace />
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -21,7 +23,7 @@ export function LoginPage() {
     setSubmitting(true)
     try {
       await login(username, password)
-      navigate('/', { replace: true })
+      navigate(from, { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
         setError('Anmeldung fehlgeschlagen')
