@@ -8,22 +8,18 @@ services:
     environment:
       DATABASE_PATH: /data/eazio.db
       COOKIE_SECURE: "true"
+    ports:
+      # Nginx Proxy Manager forwards a domain to http://<host-ip>:${EAZIO_PORT}.
+      # Host-port keeps it robust regardless of which docker network NPM runs on
+      # (NPM here is on the default bridge, which has no name resolution).
+      - "${EAZIO_PORT:-8413}:3000"
     volumes:
       - eazio-data:/data
-    networks:
-      - proxy
-    expose:
-      - "3000"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       retries: 3
-
-networks:
-  proxy:
-    external: true
-    name: ${NPM_NETWORK:-npm_default}
 
 volumes:
   eazio-data:
