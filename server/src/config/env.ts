@@ -28,6 +28,11 @@ const schema = z.object({
   COOKIE_SECURE: boolish.default(true),
   YAZIO_COUNTRIES: z.string().default('DE'),
   YAZIO_LOCALES: z.string().default('de_DE,de_US'),
+  // Recipe import (LLM ingredient extraction). Optional so the server boots and
+  // tests run without it; the import route checks at runtime and returns a clear
+  // error when it's missing.
+  ANTHROPIC_API_KEY: z.string().optional(),
+  RECIPE_LLM_MODEL: z.string().default('claude-haiku-4-5'),
 })
 
 const parsed = schema.safeParse(process.env)
