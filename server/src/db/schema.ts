@@ -99,6 +99,44 @@ export const sessions = sqliteTable('sessions', {
   expiresAt: integer('expires_at').notNull(),
 })
 
+// Unified food storage: BLS 4.0 import ('bls'), Open Food Facts barcode cache
+// ('off') and user-created entries ('custom'). Summable day-view nutrients are
+// columns (per 100 g/ml); the long tail lives in nutrientsJson keyed by
+// EuroFIR component codes (VITC, CA, …). The companion FTS5 table foods_fts
+// (raw SQL, migration 0007) indexes name/searchTerms/brand via triggers.
+export const foods = sqliteTable(
+  'foods',
+  {
+    id: text('id').primaryKey(), // 'bls:<SBLS>' | uuid
+    source: text('source').notNull(), // bls|off|custom
+    sourceId: text('source_id'), // BLS code | OFF barcode
+    ownerUserId: text('owner_user_id').references(() => users.id), // custom only
+    barcode: text('barcode'), // EAN-8/13
+    name: text('name').notNull(),
+    brand: text('brand'),
+    category: text('category'), // BLS group letter / OFF category slug
+    searchTerms: text('search_terms'), // normalized variants feeding the FTS index
+    baseUnit: text('base_unit').notNull().default('g'), // g|ml
+    kcal: real('kcal').notNull(),
+    protein: real('protein'),
+    fat: real('fat'),
+    saturatedFat: real('saturated_fat'),
+    carbs: real('carbs'),
+    sugar: real('sugar'),
+    fiber: real('fiber'),
+    salt: real('salt'),
+    sodium: real('sodium'), // mg/100g (salt is g/100g)
+    alcohol: real('alcohol'),
+    nutrientsJson: text('nutrients_json'),
+    servingsJson: text('servings_json'), // [{label, grams}]
+    version: integer('version').notNull().default(1),
+    deletedAt: integer('deleted_at'), // soft delete for custom foods
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [unique().on(t.source, t.sourceId)],
+)
+
 export const recipes = sqliteTable('recipes', {
   id: text('id').primaryKey(),
   userId: text('user_id')

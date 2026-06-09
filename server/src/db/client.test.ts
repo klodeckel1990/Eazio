@@ -3,15 +3,18 @@ import { sql } from 'drizzle-orm'
 import { createTestDb } from './test-db.js'
 
 describe('db client + migrations', () => {
-  it('creates all 9 tables in an in-memory db', () => {
+  it('creates all app tables in an in-memory db', () => {
     const db = createTestDb()
+    // foods_fts is an FTS5 virtual table; its shadow tables (foods_fts_*) are
+    // SQLite implementation details and excluded here.
     const rows = db.all<{ name: string }>(
-      sql`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '__drizzle%'`,
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '__drizzle%' AND name NOT LIKE 'foods_fts%'`,
     )
     const names = rows.map((r) => r.name).sort()
     expect(names).toEqual(
       [
         'aliases',
+        'foods',
         'log_events',
         'preset_items',
         'presets',
@@ -22,6 +25,19 @@ describe('db client + migrations', () => {
         'yazio_accounts',
       ].sort(),
     )
+  })
+
+  it('creates the foods FTS index with sync triggers', () => {
+    const db = createTestDb()
+    const fts = db.all<{ name: string }>(
+      sql`SELECT name FROM sqlite_master WHERE type='table' AND name = 'foods_fts'`,
+    )
+    expect(fts).toHaveLength(1)
+    const triggers = db
+      .all<{ name: string }>(sql`SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'foods_fts_%'`)
+      .map((r) => r.name)
+      .sort()
+    expect(triggers).toEqual(['foods_fts_ad', 'foods_fts_ai', 'foods_fts_au'])
   })
 
   it('applies the expected columns for key tables', () => {

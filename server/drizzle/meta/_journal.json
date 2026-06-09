@@ -50,6 +50,13 @@
       "when": 1781034900000,
       "tag": "0006_bearer_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1781036400000,
+      "tag": "0007_foods",
+      "breakpoints": true
     }
   ]
 }
