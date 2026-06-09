@@ -29,6 +29,9 @@ function importErrorMessage(code: string): string {
   }
 }
 
+const ingredientLine = (ing: RecipeIngredient): string =>
+  [ing.quantity, ing.unit, ing.name].filter(Boolean).join(' ')
+
 export function RecipesPage() {
   const navigate = useNavigate()
   const [recipes, setRecipes] = useState<RecipeSummary[] | null>(null)
@@ -45,13 +48,14 @@ export function RecipesPage() {
   const [title, setTitle] = useState('')
   const [servings, setServings] = useState('')
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([])
+  const [steps, setSteps] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
 
-  // tracking
-  const [trackId, setTrackId] = useState<string | null>(null)
-  const [trackDetail, setTrackDetail] = useState<RecipeDetail | null>(null)
+  // expand / track
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [detail, setDetail] = useState<RecipeDetail | null>(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
   const [factor, setFactor] = useState(1)
-  const [loadingTrack, setLoadingTrack] = useState(false)
 
   const loadRecipes = () => {
     api.recipes.list().then(setRecipes).catch(() => setRecipes([]))
@@ -68,6 +72,7 @@ export function RecipesPage() {
       setTitle(r.title ?? '')
       setServings(r.servings ? String(r.servings) : '')
       setIngredients(r.ingredients)
+      setSteps(r.steps)
     } catch (e) {
       if (e instanceof ApiError) setImportError(importErrorMessage(e.message))
       else throw e
@@ -89,6 +94,7 @@ export function RecipesPage() {
         sourceUrl: preview?.sourceUrl ?? null,
         sourceType: preview?.source ?? 'text',
         ingredients,
+        steps,
       })
       setPreview(null)
       setInput('')
@@ -104,7 +110,7 @@ export function RecipesPage() {
   const handleDelete = async (id: string) => {
     try {
       await api.recipes.remove(id)
-      if (trackId === id) setTrackId(null)
+      if (expandedId === id) setExpandedId(null)
       loadRecipes()
     } catch (e) {
       if (e instanceof ApiError) setError(e.message)
@@ -112,44 +118,42 @@ export function RecipesPage() {
     }
   }
 
-  const startTrack = async (id: string) => {
-    if (trackId === id) {
-      setTrackId(null)
+  const toggleExpand = async (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null)
       return
     }
     setError(null)
     setFactor(1)
-    setTrackId(id)
-    setTrackDetail(null)
-    setLoadingTrack(true)
+    setExpandedId(id)
+    setDetail(null)
+    setLoadingDetail(true)
     try {
-      setTrackDetail(await api.recipes.get(id))
+      setDetail(await api.recipes.get(id))
     } catch (e) {
-      setTrackId(null)
+      setExpandedId(null)
       if (e instanceof ApiError) setError(e.message)
       else throw e
     } finally {
-      setLoadingTrack(false)
+      setLoadingDetail(false)
     }
   }
 
   const confirmTrack = () => {
-    if (!trackDetail) return
-    const presetText = buildTrackerText(trackDetail.ingredients, factor)
-    navigate('/', { state: { presetText } })
+    if (!detail) return
+    navigate('/', { state: { presetText: buildTrackerText(detail.ingredients, factor) } })
   }
 
   return (
     <div className="page">
       <header className="page-head">
         <h1>Rezepte</h1>
-        <span className="sub">Aus Instagram, Blogs oder Text importieren – und portionsweise tracken.</span>
+        <span className="sub">Aus Instagram, Blogs oder Text importieren – mit Kochschritten und portionsweisem Tracken.</span>
       </header>
 
-      {error && (
-        <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>
-      )}
+      {error && <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>}
 
+      {/* Import */}
       <div className="card pad-lg stack">
         <h2 className="section-title">Importieren</h2>
         <div className="seg" role="group" aria-label="Importquelle">
@@ -164,11 +168,11 @@ export function RecipesPage() {
               type="text"
               inputMode="url"
               autoCapitalize="none"
-              placeholder="https://… (Blog/Webseite)"
+              placeholder="https://… (Instagram, Blog, Webseite)"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <span className="muted">Instagram lädt oft nicht automatisch – dann einfach die Caption als Text einfügen.</span>
+            <span className="muted">Instagram-Reels werden automatisch geladen; klappt das mal nicht, einfach die Caption als Text einfügen.</span>
           </div>
         ) : (
           <div className="field">
@@ -176,15 +180,13 @@ export function RecipesPage() {
             <textarea
               id="rec-text"
               rows={6}
-              placeholder={'Titel und Zutatenliste hier einfügen…'}
+              placeholder={'Titel, Zutaten und Zubereitung hier einfügen…'}
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
           </div>
         )}
-        {importError && (
-          <p className="banner error"><IconAlert /><span className="banner-text">{importError}</span></p>
-        )}
+        {importError && <p className="banner error"><IconAlert /><span className="banner-text">{importError}</span></p>}
         <button
           type="button"
           className="btn btn-primary btn-block"
@@ -195,6 +197,7 @@ export function RecipesPage() {
         </button>
       </div>
 
+      {/* Preview */}
       {preview && (
         <div className="card pad-lg stack">
           <h2 className="section-title">Vorschau</h2>
@@ -206,21 +209,15 @@ export function RecipesPage() {
             <label htmlFor="prev-serv">Portionen</label>
             <input id="prev-serv" type="number" inputMode="numeric" value={servings} onChange={(e) => setServings(e.target.value)} placeholder="z. B. 4" style={{ width: '8rem' }} />
           </div>
+
           <div className="field">
             <span className="label">Zutaten ({ingredients.length})</span>
             <ul className="list">
               {ingredients.map((ing, i) => (
                 <li key={i}>
                   <div className="row-card" style={{ padding: '0.5rem 0.75rem' }}>
-                    <span className="row-main">
-                      <span className="row-title"><span className="text">{[ing.quantity, ing.unit, ing.name].filter(Boolean).join(' ')}</span></span>
-                    </span>
-                    <button
-                      type="button"
-                      className="btn btn-icon btn-ghost btn-sm"
-                      aria-label="Zutat entfernen"
-                      onClick={() => setIngredients((prev) => prev.filter((_, j) => j !== i))}
-                    >
+                    <span className="row-main"><span className="row-title"><span className="text">{ingredientLine(ing)}</span></span></span>
+                    <button type="button" className="btn btn-icon btn-ghost btn-sm" aria-label="Zutat entfernen" onClick={() => setIngredients((p) => p.filter((_, j) => j !== i))}>
                       <IconClose />
                     </button>
                   </div>
@@ -228,6 +225,23 @@ export function RecipesPage() {
               ))}
             </ul>
           </div>
+
+          {steps.length > 0 && (
+            <div className="field">
+              <span className="label">Kochschritte ({steps.length})</span>
+              <ol className="recipe-list steps">
+                {steps.map((s, i) => (
+                  <li key={i}>
+                    {s}{' '}
+                    <button type="button" className="btn btn-icon btn-ghost btn-sm" aria-label="Schritt entfernen" style={{ verticalAlign: 'middle' }} onClick={() => setSteps((p) => p.filter((_, j) => j !== i))}>
+                      <IconClose />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
           <div className="btn-row">
             <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={() => { void handleSave() }} disabled={saving || ingredients.length === 0}>
               <IconCheck /> {saving ? 'Speichern…' : 'Speichern'}
@@ -237,6 +251,7 @@ export function RecipesPage() {
         </div>
       )}
 
+      {/* Saved recipes */}
       <h2 className="section-title">Gespeicherte Rezepte</h2>
       {recipes === null ? (
         <p className="loading-inline"><span className="spinner" /> Lade Rezepte…</p>
@@ -257,8 +272,8 @@ export function RecipesPage() {
                   {r.servings != null && <div className="row-sub">{r.servings} Portionen</div>}
                 </div>
                 <div className="row-actions">
-                  <button type="button" className="btn btn-primary btn-sm" onClick={() => { void startTrack(r.id) }}>
-                    <IconBowl /> Tracken
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => { void toggleExpand(r.id) }}>
+                    {expandedId === r.id ? 'Schließen' : 'Öffnen'}
                   </button>
                   <button type="button" className="btn btn-icon btn-danger" aria-label={`${r.title} löschen`} onClick={() => { void handleDelete(r.id) }}>
                     <IconTrash />
@@ -266,12 +281,30 @@ export function RecipesPage() {
                 </div>
               </div>
 
-              {trackId === r.id && (
+              {expandedId === r.id && (
                 <div className="card stack" style={{ marginTop: '0.5rem' }}>
-                  {loadingTrack ? (
+                  {loadingDetail ? (
                     <p className="loading-inline"><span className="spinner" /> Lade…</p>
-                  ) : trackDetail ? (
+                  ) : detail ? (
                     <>
+                      <div>
+                        <span className="label">Zutaten</span>
+                        <ul className="recipe-list">
+                          {detail.ingredients.map((ing, i) => (
+                            <li key={i}>{ingredientLine(ing)}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {detail.steps.length > 0 && (
+                        <div>
+                          <span className="label">Kochschritte</span>
+                          <ol className="recipe-list steps">
+                            {detail.steps.map((s, i) => <li key={i}>{s}</li>)}
+                          </ol>
+                        </div>
+                      )}
+
                       <span className="label">Wie viel vom Rezept tracken?</span>
                       <div className="seg" role="group" aria-label="Portionsanteil">
                         {FACTORS.map((f) => (
@@ -299,12 +332,9 @@ export function RecipesPage() {
                       {r.servings != null && (
                         <span className="muted">≈ {Math.round(r.servings * factor * 100) / 100} {Math.abs(r.servings * factor - 1) < 0.001 ? 'Portion' : 'Portionen'}</span>
                       )}
-                      <div className="btn-row">
-                        <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={confirmTrack}>
-                          <IconBowl /> In den Tracker
-                        </button>
-                        <button type="button" className="btn btn-ghost" onClick={() => setTrackId(null)}>Abbrechen</button>
-                      </div>
+                      <button type="button" className="btn btn-primary btn-block" onClick={confirmTrack}>
+                        <IconBowl /> In den Tracker
+                      </button>
                     </>
                   ) : null}
                 </div>

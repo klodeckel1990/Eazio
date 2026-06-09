@@ -17,4 +17,6 @@ export interface ImportedRecipe {
   sourceUrl: string | null
   source: 'link' | 'text'
   ingredients: ExtractedIngredient[]
+  /** Ordered preparation steps. */
+  steps: string[]
 }

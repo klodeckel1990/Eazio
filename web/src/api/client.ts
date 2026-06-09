@@ -61,6 +61,7 @@ export const api = {
       sourceUrl: string | null
       sourceType: 'link' | 'text'
       ingredients: RecipeIngredient[]
+      steps: string[]
     }) => req<RecipeSummary>('POST', '/recipes', recipe),
     list: () => req<RecipeSummary[]>('GET', '/recipes'),
     get: (id: string) => req<RecipeDetail>('GET', `/recipes/${id}`),

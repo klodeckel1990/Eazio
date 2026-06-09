@@ -37,10 +37,12 @@ export interface ImportedRecipe {
   sourceUrl: string | null
   source: 'link' | 'text'
   ingredients: RecipeIngredient[]
+  steps: string[]
 }
 export interface RecipeSummary { id: string; title: string; servings: number | null }
 export interface RecipeDetail extends RecipeSummary {
   sourceUrl: string | null
   sourceType: string
   ingredients: RecipeIngredient[]
+  steps: string[]
 }

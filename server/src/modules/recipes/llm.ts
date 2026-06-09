@@ -7,6 +7,7 @@ export interface LlmRecipe {
   title: string | null
   servings: number | null
   ingredients: ExtractedIngredient[]
+  steps: string[]
 }
 
 const SYSTEM = `Du extrahierst die Zutatenliste aus Rezept-Text (deutsch oder englisch, beliebiges Format: Blog-Artikel, Social-Media-Caption, eingefügter Text).
@@ -15,6 +16,7 @@ Gib zurück:
 - title: der Rezept-Titel, oder "" wenn keiner erkennbar ist.
 - servings: Anzahl der Portionen als ganze Zahl, oder 0 wenn nicht angegeben.
 - ingredients: ein Eintrag pro Zutat.
+- steps: die Zubereitungsschritte als kurze Strings in Reihenfolge; leeres Array, wenn keine erkennbar sind.
 
 Pro Zutat:
 - raw: die ursprüngliche Zeile, so wie sie im Text steht.
@@ -24,7 +26,7 @@ Pro Zutat:
 
 Regeln:
 - Bei "X oder Y"-Alternativen nimm X als name, behalte den vollen Text in raw.
-- Lass Nicht-Zutaten weg: Zubereitungsschritte, Überschriften, Einleitung, Hashtags, Links, Emojis, Nährwert-Angaben.
+- Zubereitungsschritte gehören in steps, NICHT in ingredients. Lass Überschriften, Einleitung, Hashtags, Links, Emojis und Nährwert-Angaben ganz weg.
 - Erfinde nichts. Extrahiere nur, was im Text steht.
 - Behalte die Originalsprache der Zutaten-Namen.`
 
@@ -50,8 +52,12 @@ const SCHEMA = {
         required: ['raw', 'quantity', 'unit', 'name'],
       },
     },
+    steps: {
+      type: 'array',
+      items: { type: 'string' },
+    },
   },
-  required: ['title', 'servings', 'ingredients'],
+  required: ['title', 'servings', 'ingredients', 'steps'],
 }
 
 /** Extracts a normalized ingredient list from arbitrary recipe text via Claude. */
@@ -123,7 +129,11 @@ function parseRecipe(res: Anthropic.Message): LlmRecipe | null {
     })
   }
 
+  const steps = Array.isArray(o.steps)
+    ? o.steps.filter((s): s is string => typeof s === 'string' && s.trim().length > 0).map((s) => s.trim())
+    : []
+
   const title = typeof o.title === 'string' && o.title.trim() ? o.title.trim() : null
   const servings = typeof o.servings === 'number' && o.servings > 0 ? Math.round(o.servings) : null
-  return { title, servings, ingredients }
+  return { title, servings, ingredients, steps }
 }

@@ -10,6 +10,7 @@ export interface CreateRecipeInput {
   sourceUrl: string | null
   sourceType: string
   ingredients: ExtractedIngredient[]
+  steps: string[]
 }
 
 export interface RecipeSummary {
@@ -22,6 +23,7 @@ export interface RecipeDetail extends RecipeSummary {
   sourceUrl: string | null
   sourceType: string
   ingredients: ExtractedIngredient[]
+  steps: string[]
 }
 
 export function createRecipe(db: DB, userId: string, input: CreateRecipeInput): RecipeSummary {
@@ -35,6 +37,7 @@ export function createRecipe(db: DB, userId: string, input: CreateRecipeInput): 
         sourceUrl: input.sourceUrl,
         sourceType: input.sourceType,
         servings: input.servings,
+        steps: JSON.stringify(input.steps),
         createdAt: Date.now(),
       })
       .run()
@@ -83,12 +86,23 @@ export function getRecipe(db: DB, userId: string, id: string): RecipeDetail | nu
     servings: row.servings,
     sourceUrl: row.sourceUrl,
     sourceType: row.sourceType,
+    steps: parseSteps(row.steps),
     ingredients: items.map((it) => ({
       raw: it.raw,
       quantity: it.quantity,
       unit: it.unit,
       name: it.name,
     })),
+  }
+}
+
+function parseSteps(raw: string | null): string[] {
+  if (!raw) return []
+  try {
+    const v = JSON.parse(raw)
+    return Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string') : []
+  } catch {
+    return []
   }
 }
 

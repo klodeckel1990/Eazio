@@ -32,6 +32,7 @@ const SaveSchema = z.object({
   sourceUrl: z.string().max(2000).nullable().optional(),
   sourceType: z.enum(['link', 'text']).default('text'),
   ingredients: z.array(IngredientSchema).min(1).max(100),
+  steps: z.array(z.string().max(2000)).max(100).default([]),
 })
 
 const IdParams = z.object({ id: z.string().min(1) })
@@ -62,6 +63,7 @@ export function registerRecipeRoutes(app: FastifyInstance, db: DB): void {
       sourceUrl: body.sourceUrl ?? null,
       sourceType: body.sourceType,
       ingredients: body.ingredients,
+      steps: body.steps,
     })
     return reply.status(201).send(summary)
   })

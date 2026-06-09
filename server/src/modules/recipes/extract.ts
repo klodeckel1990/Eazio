@@ -3,6 +3,8 @@ export interface ExtractResult {
   servings: number | null
   /** Ingredient strings from schema.org JSON-LD; empty when none were found. */
   ingredients: string[]
+  /** Preparation steps from schema.org recipeInstructions; empty when none. */
+  instructions: string[]
   /** Fallback page text for the LLM when no structured ingredients exist. */
   text: string | null
 }
@@ -21,12 +23,47 @@ export function extractFromHtml(html: string): ExtractResult {
         title: typeof recipe.name === 'string' && recipe.name.trim() ? recipe.name.trim() : null,
         servings: parseYield(recipe.recipeYield),
         ingredients,
+        instructions: toInstructionSteps(recipe.recipeInstructions),
         text: null,
       }
     }
   }
   const text = htmlToText(html) || ogDescription(html)
-  return { title: null, servings: null, ingredients: [], text }
+  return { title: null, servings: null, ingredients: [], instructions: [], text }
+}
+
+/** recipeInstructions is polymorphic: string, string[], HowToStep[], or HowToSection[]. */
+function toInstructionSteps(v: unknown): string[] {
+  const out: string[] = []
+  walkInstructions(v, out)
+  return out
+}
+
+function walkInstructions(v: unknown, out: string[]): void {
+  if (!v) return
+  if (typeof v === 'string') {
+    for (const part of v.split(/\n+/)) {
+      const t = part.trim()
+      if (t) out.push(t)
+    }
+    return
+  }
+  if (Array.isArray(v)) {
+    for (const item of v) walkInstructions(item, out)
+    return
+  }
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    if (Array.isArray(o.itemListElement)) {
+      walkInstructions(o.itemListElement, out) // HowToSection
+      return
+    }
+    const text = typeof o.text === 'string' ? o.text : typeof o.name === 'string' ? o.name : null
+    if (text) {
+      const t = text.trim()
+      if (t) out.push(t)
+    }
+  }
 }
 
 function findJsonLdRecipe(html: string): Record<string, unknown> | null {

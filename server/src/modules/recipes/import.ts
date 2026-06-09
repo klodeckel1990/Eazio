@@ -19,6 +19,7 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
   let llmInput: string
   let jsonLdTitle: string | null = null
   let jsonLdServings: number | null = null
+  let jsonLdInstructions: string[] = []
   let sourceUrl: string | null = null
   let source: 'link' | 'text'
 
@@ -34,6 +35,7 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
       if (extracted.ingredients.length > 0) {
         jsonLdTitle = extracted.title
         jsonLdServings = extracted.servings
+        jsonLdInstructions = extracted.instructions
         llmInput = extracted.ingredients.join('\n')
       } else {
         llmInput = extracted.text ?? ''
@@ -61,5 +63,6 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
     sourceUrl,
     source,
     ingredients: llm.ingredients,
+    steps: jsonLdInstructions.length > 0 ? jsonLdInstructions : llm.steps,
   }
 }

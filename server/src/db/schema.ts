@@ -97,6 +97,7 @@ export const recipes = sqliteTable('recipes', {
   sourceUrl: text('source_url'),
   sourceType: text('source_type').notNull(), // link|text
   servings: integer('servings'),
+  steps: text('steps'), // JSON-encoded string[] of preparation steps
   createdAt: integer('created_at').notNull(),
 })
 
