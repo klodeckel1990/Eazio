@@ -45,22 +45,29 @@ export interface MatchedLine {
   selectedProductId: string | null
 }
 
+/** Rounds to 2 decimals to drop float noise from the per-unit × amount scaling. */
+const round2 = (x: number): number => Math.round(x * 100) / 100
+
 function toCandidate(r: SearchResult): ProductCandidate {
   const n = r.nutrients
+  // Yazio search returns nutrient values per 1 base unit (g/ml). Scale them by the
+  // reference amount so nutrientsPerReference is genuinely "per referenceAmount" —
+  // the frontend then scales referenceAmount → the user's entered grams.
+  const amount = r.amount
   return {
     productId: r.product_id,
     name: r.name,
     producer: r.producer,
     isVerified: r.is_verified,
     baseUnit: r.base_unit,
-    referenceAmount: r.amount,
+    referenceAmount: amount,
     serving: r.serving,
     servingQuantity: r.serving_quantity,
     nutrientsPerReference: {
-      kcal: n['energy.energy'] ?? 0,
-      carb: n['nutrient.carb'] ?? 0,
-      protein: n['nutrient.protein'] ?? 0,
-      fat: n['nutrient.fat'] ?? 0,
+      kcal: round2((n['energy.energy'] ?? 0) * amount),
+      carb: round2((n['nutrient.carb'] ?? 0) * amount),
+      protein: round2((n['nutrient.protein'] ?? 0) * amount),
+      fat: round2((n['nutrient.fat'] ?? 0) * amount),
     },
   }
 }

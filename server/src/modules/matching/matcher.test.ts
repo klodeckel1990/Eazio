@@ -4,13 +4,15 @@ import { createUser } from '../auth/users.repo.js'
 import { upsertAlias } from '../learning/aliases.repo.js'
 import { matchText, type SearchClient } from './matcher.js'
 
+// Yazio search returns nutrients per 1 g. With amount=100 the reference (100 g)
+// scales to 350 kcal / 60 carb / 12 protein / 7 fat in toCandidate.
 function product(id: string, name: string, extra: Partial<Record<string, number>> = {}) {
   return {
     product_id: id, name, producer: 'ACME', is_verified: true,
     base_unit: 'g', amount: 100, serving: 'portion', serving_quantity: 1,
     nutrients: {
-      'energy.energy': extra.energy ?? 350, 'nutrient.carb': 60,
-      'nutrient.protein': 12, 'nutrient.fat': 7,
+      'energy.energy': extra.energy ?? 3.5, 'nutrient.carb': 0.6,
+      'nutrient.protein': 0.12, 'nutrient.fat': 0.07,
     },
   }
 }
