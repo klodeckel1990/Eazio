@@ -1,0 +1,21 @@
+{
+  "name": "Eazio",
+  "short_name": "Eazio",
+  "description": "Dein entspannter Yazio-Begleiter zum schnellen Tracken.",
+  "lang": "de",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbf6ee",
+  "theme_color": "#fbf6ee",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ],
+  "share_target": {
+    "action": "/recipes",
+    "method": "GET",
+    "params": { "url": "import", "text": "import" }
+  }
+}
