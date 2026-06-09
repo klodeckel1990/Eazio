@@ -183,3 +183,38 @@ export function IconSettings(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+export function IconClock(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 1.8" />
+    </Svg>
+  )
+}
+
+const HEART = 'M12 21s-6.7-4.35-9.33-8.5C.9 9.27 2.4 5.5 6 5.5c2.04 0 3.27 1.2 4 2.2.73-1 1.96-2.2 4-2.2 3.6 0 5.1 3.77 3.33 7C18.7 16.65 12 21 12 21Z'
+
+export function IconHeart(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d={HEART} />
+    </Svg>
+  )
+}
+
+export function IconHeartFilled(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg fill="currentColor" stroke="none" {...props}>
+      <path d={HEART} />
+    </Svg>
+  )
+}
+
+export function IconChevronLeft(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M15 5l-7 7 7 7" />
+    </Svg>
+  )
+}

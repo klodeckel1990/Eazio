@@ -60,12 +60,18 @@ export const api = {
       servings: number | null
       sourceUrl: string | null
       sourceType: 'link' | 'text'
+      imageUrl: string | null
+      difficulty: string | null
+      totalMinutes: number | null
       ingredients: RecipeIngredient[]
       steps: string[]
     }) => req<RecipeSummary>('POST', '/recipes', recipe),
     list: () => req<RecipeSummary[]>('GET', '/recipes'),
     get: (id: string) => req<RecipeDetail>('GET', `/recipes/${id}`),
     remove: (id: string) => req<void>('DELETE', `/recipes/${id}`),
+    setFavorite: (id: string, isFavorite: boolean) =>
+      req<void>('PATCH', `/recipes/${id}`, { isFavorite }),
+    imageUrl: (id: string) => `/api/recipes/${id}/image`,
   },
   settings: {
     get: () => req<UserSettings>('GET', '/settings'),

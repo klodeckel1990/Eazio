@@ -14,8 +14,8 @@
     { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
   ],
   "share_target": {
-    "action": "/recipes",
+    "action": "/import",
     "method": "GET",
-    "params": { "url": "import", "text": "import" }
+    "params": { "url": "import", "text": "import_text" }
   }
 }

@@ -36,10 +36,21 @@ export interface ImportedRecipe {
   servings: number | null
   sourceUrl: string | null
   source: 'link' | 'text'
+  imageUrl: string | null
+  difficulty: string | null
+  totalMinutes: number | null
   ingredients: RecipeIngredient[]
   steps: string[]
 }
-export interface RecipeSummary { id: string; title: string; servings: number | null }
+export interface RecipeSummary {
+  id: string
+  title: string
+  servings: number | null
+  difficulty: string | null
+  totalMinutes: number | null
+  isFavorite: boolean
+  hasImage: boolean
+}
 export interface RecipeDetail extends RecipeSummary {
   sourceUrl: string | null
   sourceType: string

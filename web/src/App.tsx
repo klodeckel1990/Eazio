@@ -7,6 +7,8 @@ import { TrackerPage } from './pages/TrackerPage'
 import { AccountsPage } from './pages/AccountsPage'
 import { PresetsPage } from './pages/PresetsPage'
 import { RecipesPage } from './pages/RecipesPage'
+import { RecipeDetailPage } from './pages/RecipeDetailPage'
+import { ImportPage } from './pages/ImportPage'
 
 function Shell() {
   return (
@@ -30,6 +32,8 @@ export function App() {
             <Route element={<Shell />}>
               <Route path="/" element={<TrackerPage />} />
               <Route path="/recipes" element={<RecipesPage />} />
+              <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+              <Route path="/import" element={<ImportPage />} />
               <Route path="/accounts" element={<AccountsPage />} />
               <Route path="/presets" element={<PresetsPage />} />
             </Route>
