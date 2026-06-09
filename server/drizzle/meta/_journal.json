@@ -43,6 +43,13 @@
       "when": 1780941219781,
       "tag": "0005_user_email",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1781034900000,
+      "tag": "0006_bearer_tokens",
+      "breakpoints": true
     }
   ]
 }

@@ -157,4 +157,115 @@ describe('auth routes', () => {
     })
     expect(res.statusCode).toBe(401)
   })
+
+  it('issues a bearer token on login that works on /me and dies on logout', async () => {
+    const app = buildApp(createTestDb())
+    await bootstrap(app)
+
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'jens', password: 'pw-123456', deviceName: 'iPhone', platform: 'ios' },
+    })
+    expect(login.statusCode).toBe(200)
+    const { token } = login.json() as { token: string }
+    expect(token).toMatch(/^eaz_/)
+    const auth = { authorization: `Bearer ${token}` }
+
+    const me = await app.inject({ method: 'GET', url: '/api/auth/me', headers: auth })
+    expect(me.statusCode).toBe(200)
+    expect(me.json()).toMatchObject({ username: 'jens' })
+
+    expect((await app.inject({ method: 'POST', url: '/api/auth/logout', headers: auth })).statusCode).toBe(204)
+    expect((await app.inject({ method: 'GET', url: '/api/auth/me', headers: auth })).statusCode).toBe(401)
+  })
+
+  it('returns a bearer token on registration', async () => {
+    const app = buildApp(createTestDb())
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'tokenuser', email: 'token@example.com', password: 'pw-123456', platform: 'web' },
+    })
+    expect(res.statusCode).toBe(201)
+    const { token } = res.json() as { token: string }
+    const me = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { authorization: `Bearer ${token}` },
+    })
+    expect(me.statusCode).toBe(200)
+    expect(me.json()).toMatchObject({ username: 'tokenuser' })
+  })
+
+  it('rejects an invalid bearer token on /me', async () => {
+    const app = buildApp(createTestDb())
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { authorization: 'Bearer eaz_definitely-not-valid' },
+    })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('lists sessions and revokes another device', async () => {
+    const app = buildApp(createTestDb())
+    await bootstrap(app)
+    const loginAs = (deviceName: string, platform: string) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        payload: { username: 'jens', password: 'pw-123456', deviceName, platform },
+      })
+    const phone = (await loginAs('iPhone', 'ios')).json() as { token: string }
+    const web = (await loginAs('Web', 'web')).json() as { token: string }
+    const webAuth = { authorization: `Bearer ${web.token}` }
+
+    const list = await app.inject({ method: 'GET', url: '/api/auth/sessions', headers: webAuth })
+    expect(list.statusCode).toBe(200)
+    const devices = list.json() as { id: string; deviceName: string }[]
+    expect(devices).toHaveLength(2)
+
+    const phoneSession = devices.find((d) => d.deviceName === 'iPhone')!
+    const del = await app.inject({
+      method: 'DELETE',
+      url: `/api/auth/sessions/${phoneSession.id}`,
+      headers: webAuth,
+    })
+    expect(del.statusCode).toBe(204)
+
+    // The phone's token is dead, the web token still works.
+    expect(
+      (await app.inject({ method: 'GET', url: '/api/auth/me', headers: { authorization: `Bearer ${phone.token}` } }))
+        .statusCode,
+    ).toBe(401)
+    expect((await app.inject({ method: 'GET', url: '/api/auth/me', headers: webAuth })).statusCode).toBe(200)
+  })
+
+  it("cannot revoke another user's session", async () => {
+    const app = buildApp(createTestDb())
+    await bootstrap(app, 'usera')
+    await bootstrap(app, 'userb')
+    const login = (username: string) =>
+      app.inject({ method: 'POST', url: '/api/auth/login', payload: { username, password: 'pw-123456' } })
+    const a = (await login('usera')).json() as { token: string }
+    const b = (await login('userb')).json() as { token: string }
+
+    const aSessions = (
+      await app.inject({ method: 'GET', url: '/api/auth/sessions', headers: { authorization: `Bearer ${a.token}` } })
+    ).json() as { id: string }[]
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/auth/sessions/${aSessions[0]!.id}`,
+      headers: { authorization: `Bearer ${b.token}` },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('requires auth for the session list', async () => {
+    const app = buildApp(createTestDb())
+    const res = await app.inject({ method: 'GET', url: '/api/auth/sessions' })
+    expect(res.statusCode).toBe(401)
+  })
 })

@@ -1,5 +1,5 @@
 import type {
-  Account, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
+  Account, AuthResponse, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
 } from './types'
 
@@ -10,16 +10,48 @@ export class ApiError extends Error {
   }
 }
 
+// Same-origin ('' = relative /api) on the web; the Capacitor build bakes in an
+// absolute URL via VITE_API_BASE.
+const API_BASE: string = import.meta.env.VITE_API_BASE ?? ''
+const TOKEN_KEY = 'eazio.token'
+
+// Storage access can throw (private mode) or be absent (tests) — degrade to
+// an in-memory token rather than crashing on import.
+function readStoredToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+let token: string | null = readStoredToken()
+
+export function setToken(next: string | null): void {
+  token = next
+  try {
+    if (next) localStorage.setItem(TOKEN_KEY, next)
+    else localStorage.removeItem(TOKEN_KEY)
+  } catch {
+    // in-memory only
+  }
+}
+
 async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`/api${path}`, {
+  const headers: Record<string, string> = {}
+  if (body !== undefined) headers['content-type'] = 'application/json'
+  if (token) headers.authorization = `Bearer ${token}`
+  const res = await fetch(`${API_BASE}/api${path}`, {
     method,
     credentials: 'include',
-    headers: body !== undefined ? { 'content-type': 'application/json' } : undefined,
+    headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
   if (res.status === 204) return undefined as T
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
+    // A 401 with a token means the session was revoked or expired server-side.
+    if (res.status === 401 && token && path !== '/auth/login') setToken(null)
     const code = (data as { error?: string }).error ?? `http_${res.status}`
     throw new ApiError(res.status, code)
   }
@@ -29,9 +61,10 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
 export const api = {
   auth: {
     me: () => req<User>('GET', '/auth/me'),
-    login: (username: string, password: string) => req<User>('POST', '/auth/login', { username, password }),
+    login: (username: string, password: string) =>
+      req<AuthResponse>('POST', '/auth/login', { username, password, platform: 'web' }),
     register: (username: string, email: string, password: string) =>
-      req<User>('POST', '/auth/register', { username, email, password }),
+      req<AuthResponse>('POST', '/auth/register', { username, email, password, platform: 'web' }),
     logout: () => req<void>('POST', '/auth/logout'),
   },
   accounts: {

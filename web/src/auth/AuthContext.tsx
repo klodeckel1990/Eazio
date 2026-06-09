@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { api, ApiError } from '../api/client'
+import { api, ApiError, setToken } from '../api/client'
 import type { User } from '../api/types'
 
 interface AuthState {
@@ -28,13 +28,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (username: string, password: string) => {
-    setUser(await api.auth.login(username, password))
+    const res = await api.auth.login(username, password)
+    setToken(res.token)
+    setUser({ id: res.id, username: res.username })
   }
   const register = async (username: string, email: string, password: string) => {
-    setUser(await api.auth.register(username, email, password))
+    const res = await api.auth.register(username, email, password)
+    setToken(res.token)
+    setUser({ id: res.id, username: res.username })
   }
   const logout = async () => {
     await api.auth.logout().catch((e) => { if (!(e instanceof ApiError)) throw e })
+    setToken(null)
     setUser(null)
   }
   return <Ctx.Provider value={{ user, loading, login, register, logout }}>{children}</Ctx.Provider>

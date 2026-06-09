@@ -26,6 +26,9 @@ const schema = z.object({
   ADMIN_BOOTSTRAP: z.string().min(8, 'ADMIN_BOOTSTRAP must be at least 8 chars'),
   TZ: z.string().default('Europe/Berlin'),
   COOKIE_SECURE: boolish.default(true),
+  // Extra CORS origins (CSV) beyond the built-in Capacitor/dev allowlist,
+  // e.g. a staging web origin hitting the API cross-origin.
+  CORS_EXTRA_ORIGINS: z.string().optional(),
   YAZIO_COUNTRIES: z.string().default('DE'),
   YAZIO_LOCALES: z.string().default('de_DE,de_US'),
   // Recipe import (LLM ingredient extraction). Optional so the server boots and

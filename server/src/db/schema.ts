@@ -88,6 +88,14 @@ export const sessions = sqliteTable('sessions', {
   userId: text('user_id')
     .notNull()
     .references(() => users.id),
+  // sha256 hex of the bearer token; null for cookie-only sessions. The raw
+  // token is never stored — a DB leak must not leak usable credentials.
+  tokenHash: text('token_hash').unique(),
+  kind: text('kind').notNull().default('cookie'), // cookie|bearer
+  deviceName: text('device_name'),
+  platform: text('platform'), // web|ios|android
+  createdAt: integer('created_at').notNull().default(0),
+  lastUsedAt: integer('last_used_at'),
   expiresAt: integer('expires_at').notNull(),
 })
 

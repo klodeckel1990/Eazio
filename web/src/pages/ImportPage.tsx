@@ -52,7 +52,7 @@ export function ImportPage() {
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const showHint = IS_IOS && settings != null && !settings.iosShortcutHintDismissed
   const dismissHint = () => {
-    setSettings((s) => (s ? { ...s, iosShortcutHintDismissed: true } : { iosShortcutHintDismissed: true }))
+    setSettings((s) => (s ? { ...s, iosShortcutHintDismissed: true } : s))
     api.settings.update({ iosShortcutHintDismissed: true }).catch(() => {})
   }
 
@@ -82,7 +82,9 @@ export function ImportPage() {
   }
 
   useEffect(() => {
-    api.settings.get().then(setSettings).catch(() => setSettings({ iosShortcutHintDismissed: false }))
+    api.settings.get().then(setSettings).catch(() =>
+      setSettings({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain', onboardingDone: true }),
+    )
   }, [])
 
   useEffect(() => {

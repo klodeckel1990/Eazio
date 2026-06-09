@@ -5,7 +5,15 @@ import { env } from '../../config/env.js'
 import type { DB } from '../../db/client.js'
 import { createUser, findUserByUsername, findUserByEmail, findUserById } from '../../modules/auth/users.repo.js'
 import { verifyPassword, dummyVerifyHash } from '../../modules/auth/password.js'
-import { createSession, deleteSession, SESSION_COOKIE } from '../../modules/auth/sessions.js'
+import {
+  createBearerSession,
+  deleteSession,
+  deleteSessionByToken,
+  deleteUserSession,
+  listUserSessions,
+  SESSION_COOKIE,
+} from '../../modules/auth/sessions.js'
+import { requireAuth } from '../auth-guard.js'
 
 const BootstrapSchema = z.object({
   token: z.string(),
@@ -13,7 +21,13 @@ const BootstrapSchema = z.object({
   password: z.string().min(8).max(256),
 })
 
-const RegisterSchema = z.object({
+// Optional client self-description, shown in the device/session list.
+const DeviceSchema = z.object({
+  deviceName: z.string().trim().min(1).max(64).optional(),
+  platform: z.enum(['web', 'ios', 'android']).optional(),
+})
+
+const RegisterSchema = DeviceSchema.extend({
   username: z.string().trim().min(3).max(64),
   email: z.string().trim().toLowerCase().email().max(254),
   password: z.string().min(8).max(256),
@@ -27,7 +41,7 @@ const SESSION_COOKIE_OPTS = {
   maxAge: 60 * 60 * 24 * 30,
 }
 
-const LoginSchema = z.object({
+const LoginSchema = DeviceSchema.extend({
   username: z.string().min(1),
   password: z.string().min(1),
 })
@@ -69,9 +83,11 @@ export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
         return reply.status(409).send({ error: 'email_taken' })
       }
       const user = await createUser(db, body.username, body.password, body.email)
-      const session = createSession(db, user.id)
+      // One session row, reachable both ways: the id backs the (transitional)
+      // cookie, the token backs Authorization: Bearer. Logout revokes both.
+      const { token, session } = createBearerSession(db, user.id, body)
       reply.setCookie(SESSION_COOKIE, session.id, { ...SESSION_COOKIE_OPTS, secure: env.COOKIE_SECURE })
-      return reply.status(201).send({ id: user.id, username: user.username })
+      return reply.status(201).send({ id: user.id, username: user.username, token })
     },
   )
 
@@ -88,24 +104,22 @@ export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
       if (!user || !passwordOk) {
         return reply.status(401).send({ error: 'invalid_credentials' })
       }
-      const session = createSession(db, user.id)
-      reply.setCookie(SESSION_COOKIE, session.id, {
-        signed: true,
-        httpOnly: true,
-        secure: env.COOKIE_SECURE,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 24 * 30,
-      })
-      return reply.status(200).send({ id: user.id, username: user.username })
+      const { token, session } = createBearerSession(db, user.id, body)
+      reply.setCookie(SESSION_COOKIE, session.id, { ...SESSION_COOKIE_OPTS, secure: env.COOKIE_SECURE })
+      return reply.status(200).send({ id: user.id, username: user.username, token })
     },
   )
 
   app.post('/api/auth/logout', async (req, reply) => {
-    const raw = req.cookies[SESSION_COOKIE]
-    if (raw) {
-      const unsigned = req.unsignCookie(raw)
-      if (unsigned.valid && unsigned.value) deleteSession(db, unsigned.value)
+    const auth = req.headers.authorization
+    if (auth?.startsWith('Bearer ')) {
+      deleteSessionByToken(db, auth.slice('Bearer '.length))
+    } else {
+      const raw = req.cookies[SESSION_COOKIE]
+      if (raw) {
+        const unsigned = req.unsignCookie(raw)
+        if (unsigned.valid && unsigned.value) deleteSession(db, unsigned.value)
+      }
     }
     reply.clearCookie(SESSION_COOKIE, {
       path: '/',
@@ -113,6 +127,20 @@ export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
       secure: env.COOKIE_SECURE,
       sameSite: 'lax',
     })
+    return reply.status(204).send()
+  })
+
+  // Device/session management — the basis for "angemeldete Geräte" in settings
+  // and for revoking a lost phone remotely.
+  app.get('/api/auth/sessions', { preHandler: requireAuth }, async (req, reply) => {
+    return reply.send(listUserSessions(db, req.user!.id))
+  })
+
+  app.delete('/api/auth/sessions/:id', { preHandler: requireAuth }, async (req, reply) => {
+    const { id } = z.object({ id: z.string() }).parse(req.params)
+    if (!deleteUserSession(db, req.user!.id, id)) {
+      return reply.status(404).send({ error: 'not_found' })
+    }
     return reply.status(204).send()
   })
 

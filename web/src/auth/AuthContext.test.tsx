@@ -12,6 +12,7 @@ vi.mock('../api/client', () => ({
       this.status = status
     }
   },
+  setToken: vi.fn(),
   api: {
     auth: {
       me: vi.fn(),
@@ -75,7 +76,7 @@ describe('AuthProvider', () => {
 
   it('login() sets user to the returned value', async () => {
     vi.mocked(api.auth.me).mockRejectedValue(new Error('401'))
-    vi.mocked(api.auth.login).mockResolvedValue({ id: '1', username: 'jens' })
+    vi.mocked(api.auth.login).mockResolvedValue({ id: '1', username: 'jens', token: 'eaz_test-token' })
 
     render(
       <AuthProvider>

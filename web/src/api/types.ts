@@ -1,4 +1,6 @@
 export interface User { id: string; username: string }
+// Login/register response: user plus the bearer token (returned exactly once).
+export interface AuthResponse extends User { token: string }
 export interface Account { id: string; label: string; yazioUsername: string; isDefault: boolean }
 export interface Nutrition { kcal: number; carb: number; protein: number; fat: number }
 export type Daytime = 'breakfast' | 'lunch' | 'dinner' | 'snack'

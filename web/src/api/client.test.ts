@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { api, ApiError } from './client'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { api, ApiError, setToken } from './client'
 
 const fetchMock = vi.fn()
 beforeEach(() => { fetchMock.mockReset(); vi.stubGlobal('fetch', fetchMock) })
@@ -35,5 +35,27 @@ describe('api client', () => {
   it('returns undefined for 204', async () => {
     fetchMock.mockResolvedValueOnce({ ok: true, status: 204, json: () => Promise.reject(new Error('no body')) })
     await expect(api.auth.logout()).resolves.toBeUndefined()
+  })
+
+  describe('bearer token', () => {
+    afterEach(() => setToken(null))
+
+    it('sends the Authorization header once a token is set', async () => {
+      setToken('eaz_test-token')
+      fetchMock.mockResolvedValueOnce(ok({ id: 'u1', username: 'jens' }))
+      await api.auth.me()
+      const [, init] = fetchMock.mock.calls[0]!
+      expect(init.headers.authorization).toBe('Bearer eaz_test-token')
+    })
+
+    it('drops the token after a 401 with a stale token', async () => {
+      setToken('eaz_stale-token')
+      fetchMock.mockResolvedValue(ok({ error: 'unauthenticated' }, 401))
+      await expect(api.auth.me()).rejects.toMatchObject({ status: 401 })
+      fetchMock.mockResolvedValueOnce(ok({ id: 'u1', username: 'jens' }))
+      await api.auth.me()
+      const [, init] = fetchMock.mock.calls[1]!
+      expect(init.headers.authorization).toBeUndefined()
+    })
   })
 })
