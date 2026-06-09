@@ -66,4 +66,99 @@ export interface UserSettings {
   iosShortcutHintDismissed: boolean
   shoppingListFormat: ShoppingListFormat
   onboardingDone: boolean
+  mirrorToYazio: boolean
+}
+
+// --- own food database & diary (Phase 3) -----------------------------------
+
+export interface ServingDef { label: string; grams: number }
+
+export interface FoodSummary {
+  id: string
+  source: 'bls' | 'off' | 'custom'
+  name: string
+  brand: string | null
+  category: string | null
+  barcode: string | null
+  baseUnit: string
+  kcal: number
+  protein: number | null
+  fat: number | null
+  saturatedFat: number | null
+  carbs: number | null
+  sugar: number | null
+  fiber: number | null
+  salt: number | null
+  servings: ServingDef[]
+  isOwn: boolean
+}
+
+export interface FoodMatchLine {
+  raw: string
+  name: string
+  qty: number | null
+  unit: 'g' | 'ml' | 'serving'
+  amountGrams: number | null
+  suggestedAmountG: number
+  candidates: FoodSummary[]
+  selectedFoodId: string | null
+}
+
+export interface DiaryEntry {
+  id: string
+  date: string
+  daytime: Daytime
+  foodId: string | null
+  nameSnapshot: string
+  amountG: number
+  kcal: number
+  protein: number | null
+  fat: number | null
+  carbs: number | null
+  sugar: number | null
+  fiber: number | null
+  origin: string
+  mirrorStatus: 'pending' | 'mirrored' | 'skipped' | 'failed' | null
+  createdAt: number
+}
+
+export interface Streak {
+  currentStreak: number
+  longestStreak: number
+  lastLoggedDate: string | null
+}
+
+export interface Goals {
+  kcalTarget: number
+  proteinG: number | null
+  fatG: number | null
+  carbsG: number | null
+  waterMl: number
+  weightKg: number | null
+  weightGoalKg: number | null
+}
+
+export interface DiaryDay {
+  date: string
+  defaultDaytime: Daytime
+  entries: DiaryEntry[]
+  totals: { kcal: number; protein: number; fat: number; carbs: number; sugar: number; fiber: number }
+  goals: Goals
+  remainingKcal: number
+  water: { totalMl: number; entries: { id: string; ml: number }[] }
+  streak: Streak
+}
+
+export interface DiaryLogLine {
+  foodId: string
+  amountG: number
+  rawText?: string
+}
+
+export interface DiaryLogResult {
+  date: string
+  daytime: Daytime
+  entries: DiaryEntry[]
+  streak: Streak
+  mirrorQueued: boolean
 }

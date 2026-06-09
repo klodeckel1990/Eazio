@@ -12,12 +12,16 @@ export interface UserSettings {
   shoppingListFormat: ShoppingListFormat
   /** The first-login onboarding wizard has been completed or skipped. */
   onboardingDone: boolean
+  /** Mirror diary entries to the linked default Yazio account (transition aid).
+   *  Defaults to true so existing Yazio users keep their data flowing. */
+  mirrorToYazio: boolean
 }
 
 const DEFAULTS: UserSettings = {
   iosShortcutHintDismissed: false,
   shoppingListFormat: 'plain',
   onboardingDone: false,
+  mirrorToYazio: true,
 }
 
 export function getSettings(db: DB, userId: string): UserSettings {
@@ -42,6 +46,7 @@ function parseSettings(raw: string | null): UserSettings {
         ? (fmt as ShoppingListFormat)
         : 'plain',
       onboardingDone: o.onboardingDone === true,
+      mirrorToYazio: o.mirrorToYazio !== false,
     }
   } catch {
     return { ...DEFAULTS }

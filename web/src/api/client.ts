@@ -1,6 +1,7 @@
 import type {
   Account, AuthResponse, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
+  DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
 } from './types'
 
 export class ApiError extends Error {
@@ -111,5 +112,26 @@ export const api = {
   settings: {
     get: () => req<UserSettings>('GET', '/settings'),
     update: (patch: Partial<UserSettings>) => req<UserSettings>('PATCH', '/settings', patch),
+  },
+  foods: {
+    search: (q: string, limit = 10) =>
+      req<{ results: FoodSummary[] }>('GET', `/foods/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+    match: (text: string) => req<{ lines: FoodMatchLine[] }>('POST', '/foods/match', { text }),
+    barcode: (ean: string) => req<FoodSummary>('GET', `/foods/barcode/${ean}`),
+  },
+  diary: {
+    day: (date?: string) => req<DiaryDay>('GET', date ? `/diary?date=${date}` : '/diary'),
+    log: (payload: { date?: string; daytime?: Daytime; origin?: string; lines: DiaryLogLine[] }) =>
+      req<DiaryLogResult>('POST', '/diary/entries', payload),
+    updateEntry: (id: string, patch: { amountG?: number; daytime?: Daytime; date?: string }) =>
+      req<DiaryEntry>('PATCH', `/diary/entries/${id}`, patch),
+    removeEntry: (id: string) => req<void>('DELETE', `/diary/entries/${id}`),
+    addWater: (ml: number, date?: string) =>
+      req<{ id: string; ml: number }>('POST', '/diary/water', { ml, date }),
+    removeWater: (id: string) => req<void>('DELETE', `/diary/water/${id}`),
+  },
+  goals: {
+    get: () => req<Goals>('GET', '/goals'),
+    update: (patch: Partial<Goals>) => req<Goals>('PUT', '/goals', patch),
   },
 }

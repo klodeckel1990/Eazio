@@ -9,6 +9,10 @@ import {
 } from './foods.repo.js'
 import { fetchOffProduct, type FetchOffProduct } from './off.client.js'
 import { mapOffProduct } from './off.mapper.js'
+import { parseIngredients } from '../parsing/parser.js'
+import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
+import { buildSearchQuery, isSeasoning, normalizeName } from '../matching/normalize.js'
+import { getFoodAlias } from './food-aliases.repo.js'
 
 // Cached OFF rows older than this are refreshed in the background on access.
 const OFF_REFRESH_MS = 1000 * 60 * 60 * 24 * 30
@@ -115,6 +119,64 @@ export async function lookupBarcode(
   upsertSourcedFood(db, food)
   const row = findFoodByBarcode(db, ean, userId)
   return row ? toDetail(row, userId) : null
+}
+
+export interface FoodMatchLine {
+  raw: string
+  name: string
+  qty: number | null
+  unit: NormalizedUnit
+  /** Grams parsed from the text (null when the unit was a serving/count). */
+  amountGrams: number | null
+  /** What the UI should preselect: parsed grams, learned default, first serving, else 100. */
+  suggestedAmountG: number
+  candidates: FoodSummary[]
+  selectedFoodId: string | null
+}
+
+/**
+ * Bulk text matching for the tracker: parse pasted ingredients, drop pure
+ * seasonings, look up each line in the user's learned aliases and the foods
+ * FTS index. Mirrors the legacy Yazio matchText flow, but against our data.
+ */
+export function matchFoodText(db: DB, userId: string, text: string): FoodMatchLine[] {
+  const out: FoodMatchLine[] = []
+  for (const line of parseIngredients(text)) {
+    if (isSeasoning(line.name)) continue
+    const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
+    const candidates = search(db, userId, buildSearchQuery(line.name), 10)
+
+    let selectedFoodId = candidates[0]?.id ?? null
+    let aliasDefaultG: number | null = null
+    const alias = getFoodAlias(db, userId, normalizeName(line.name))
+    if (alias) {
+      const idx = candidates.findIndex((c) => c.id === alias.foodId)
+      if (idx >= 0) {
+        const [pick] = candidates.splice(idx, 1)
+        candidates.unshift(pick!)
+        selectedFoodId = pick!.id
+        aliasDefaultG = alias.defaultAmountG
+      }
+    }
+
+    // count units ("2 Stück") scale the per-piece default when one is known
+    const qtyFactor = normalizedUnit === 'serving' && line.qty ? line.qty : 1
+    const perPiece = aliasDefaultG ?? candidates[0]?.servings[0]?.grams ?? null
+    const suggestedAmountG =
+      amountGrams ?? (perPiece !== null ? Math.round(perPiece * qtyFactor) : 100)
+
+    out.push({
+      raw: line.raw,
+      name: line.name,
+      qty: line.qty,
+      unit: normalizedUnit,
+      amountGrams,
+      suggestedAmountG,
+      candidates,
+      selectedFoodId,
+    })
+  }
+  return out
 }
 
 async function refreshOffFood(db: DB, ean: string, fetchProduct: FetchOffProduct): Promise<void> {

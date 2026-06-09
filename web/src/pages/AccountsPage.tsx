@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError } from '../api/client'
-import type { Account, ShoppingListFormat } from '../api/types'
+import type { Account, Goals, ShoppingListFormat } from '../api/types'
 import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck, IconCart } from '../components/icons'
 
 const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }[] = [
@@ -18,6 +18,9 @@ export function AccountsPage() {
   const [submitting, setSubmitting] = useState(false)
   const [hintReenabled, setHintReenabled] = useState(false)
   const [format, setFormat] = useState<ShoppingListFormat | null>(null)
+  const [goals, setGoals] = useState<Goals | null>(null)
+  const [goalsSaved, setGoalsSaved] = useState(false)
+  const [mirror, setMirror] = useState<boolean | null>(null)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -27,12 +30,36 @@ export function AccountsPage() {
 
   useEffect(() => {
     loadAccounts()
-    api.settings.get().then((s) => setFormat(s.shoppingListFormat)).catch(() => {})
+    api.settings.get().then((s) => { setFormat(s.shoppingListFormat); setMirror(s.mirrorToYazio) }).catch(() => {})
+    api.goals.get().then(setGoals).catch(() => {})
   }, [])
 
   const selectFormat = (next: ShoppingListFormat) => {
     setFormat(next)
     api.settings.update({ shoppingListFormat: next }).catch(() => {})
+  }
+
+  const toggleMirror = () => {
+    if (mirror === null) return
+    const next = !mirror
+    setMirror(next)
+    api.settings.update({ mirrorToYazio: next }).catch(() => {})
+  }
+
+  const saveGoals = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!goals) return
+    setGoalsSaved(false)
+    try {
+      setGoals(await api.goals.update({
+        kcalTarget: goals.kcalTarget,
+        waterMl: goals.waterMl,
+        proteinG: goals.proteinG,
+      }))
+      setGoalsSaved(true)
+    } catch (err) {
+      if (!(err instanceof ApiError)) throw err
+    }
   }
 
   const handleLink = async (e: React.FormEvent) => {
@@ -81,6 +108,56 @@ export function AccountsPage() {
         <h1>Einstellungen</h1>
         <span className="sub">Yazio-Konten, App-Optionen und mehr.</span>
       </header>
+
+      {goals && (
+        <div className="card pad-lg">
+          <h2 className="section-title">Tagesziele</h2>
+          <form className="stack" style={{ marginTop: '0.6rem' }} onSubmit={(e) => { void saveGoals(e) }}>
+            <div className="field">
+              <label htmlFor="goal-kcal">Kalorienziel (kcal/Tag)</label>
+              <input
+                id="goal-kcal"
+                type="number"
+                inputMode="numeric"
+                min={800}
+                max={10000}
+                value={goals.kcalTarget}
+                onChange={(e) => setGoals({ ...goals, kcalTarget: Number(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="goal-water">Wasserziel (ml/Tag)</label>
+              <input
+                id="goal-water"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={10000}
+                step={250}
+                value={goals.waterMl}
+                onChange={(e) => setGoals({ ...goals, waterMl: Number(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="goal-protein">Proteinziel (g/Tag, optional)</label>
+              <input
+                id="goal-protein"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={1000}
+                value={goals.proteinG ?? ''}
+                placeholder="–"
+                onChange={(e) => setGoals({ ...goals, proteinG: e.target.value === '' ? null : Number(e.target.value) })}
+              />
+            </div>
+            {goalsSaved && (
+              <p className="banner success"><IconCheck /><span className="banner-text">Ziele gespeichert.</span></p>
+            )}
+            <button type="submit" className="btn btn-primary btn-block">Ziele speichern</button>
+          </form>
+        </div>
+      )}
 
       <h2 className="section-title">Yazio-Konten</h2>
 
@@ -131,6 +208,25 @@ export function AccountsPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {accounts !== null && accounts.length > 0 && mirror !== null && (
+        <div className="card water-card">
+          <div>
+            <strong>Zu Yazio spiegeln</strong>
+            <p className="muted" style={{ margin: 0 }}>
+              Geloggte Einträge zusätzlich in dein verknüpftes Yazio-Konto schreiben.
+            </p>
+          </div>
+          <button
+            type="button"
+            className={mirror ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+            aria-pressed={mirror}
+            onClick={toggleMirror}
+          >
+            {mirror ? 'An' : 'Aus'}
+          </button>
+        </div>
       )}
 
       <div className="card pad-lg">

@@ -78,7 +78,9 @@ export interface RankedFood extends FoodRow {
 }
 
 /**
- * FTS5 search ranked by bm25 (name weighted over searchTerms over brand) plus
+ * FTS5 search ranked by bm25 (name 10 / searchTerms 8 / brand 2 — searchTerms
+ * close to name so split compounds like "Hafer Flocken" beat compound dishes
+ * matching in the name) plus
  * a source boost (the user's custom foods first, curated BLS before the OFF
  * cache) and a small name-length penalty so base products ("Banane roh") beat
  * compound dishes. bm25 is negative-is-better, boosts subtract.
@@ -93,13 +95,13 @@ export function searchFoods(db: DB, userId: string, query: string, limit: number
            f.carbs, f.sugar, f.fiber, f.salt, f.sodium, f.alcohol,
            f.nutrients_json AS nutrientsJson, f.servings_json AS servingsJson,
            f.version, f.deleted_at AS deletedAt, f.created_at AS createdAt, f.updated_at AS updatedAt,
-           bm25(foods_fts, 10.0, 5.0, 2.0) AS rank
+           bm25(foods_fts, 10.0, 8.0, 2.0) AS rank
     FROM foods_fts
     JOIN foods f ON f.rowid = foods_fts.rowid
     WHERE foods_fts MATCH ${match}
       AND f.deleted_at IS NULL
       AND (f.source != 'custom' OR f.owner_user_id = ${userId})
-    ORDER BY bm25(foods_fts, 10.0, 5.0, 2.0)
+    ORDER BY bm25(foods_fts, 10.0, 8.0, 2.0)
       + (CASE f.source WHEN 'custom' THEN -3.0 WHEN 'bls' THEN -1.0 ELSE 0.0 END)
       + length(f.name) * 0.02
     LIMIT ${limit}

@@ -9,6 +9,8 @@ const setDefault = vi.fn()
 const remove = vi.fn()
 const settingsGet = vi.fn()
 const settingsUpdate = vi.fn()
+const goalsGet = vi.fn()
+const goalsUpdate = vi.fn()
 
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {
@@ -30,8 +32,22 @@ vi.mock('../api/client', () => ({
       get: () => settingsGet(),
       update: (...a: unknown[]) => settingsUpdate(...a),
     },
+    goals: {
+      get: () => goalsGet(),
+      update: (...a: unknown[]) => goalsUpdate(...a),
+    },
   },
 }))
+
+const TEST_GOALS = {
+  kcalTarget: 2000,
+  proteinG: null,
+  fatG: null,
+  carbsG: null,
+  waterMl: 2000,
+  weightKg: null,
+  weightGoalKg: null,
+}
 
 beforeEach(() => {
   list.mockReset()
@@ -44,8 +60,12 @@ beforeEach(() => {
   link.mockResolvedValue({ id: 'a1', label: 'Me', yazioUsername: 'me@x.de', isDefault: true })
   setDefault.mockResolvedValue(undefined)
   remove.mockResolvedValue(undefined)
-  settingsGet.mockResolvedValue({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain' })
-  settingsUpdate.mockResolvedValue({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain' })
+  settingsGet.mockResolvedValue({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain', mirrorToYazio: true })
+  settingsUpdate.mockResolvedValue({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain', mirrorToYazio: true })
+  goalsGet.mockReset()
+  goalsUpdate.mockReset()
+  goalsGet.mockResolvedValue(TEST_GOALS)
+  goalsUpdate.mockResolvedValue(TEST_GOALS)
 })
 
 describe('AccountsPage', () => {

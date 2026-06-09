@@ -14,6 +14,8 @@ describe('db client + migrations', () => {
     expect(names).toEqual(
       [
         'aliases',
+        'diary_entries',
+        'food_aliases',
         'foods',
         'log_events',
         'preset_items',
@@ -21,7 +23,10 @@ describe('db client + migrations', () => {
         'recipe_ingredients',
         'recipes',
         'sessions',
+        'user_goals',
+        'user_stats',
         'users',
+        'water_entries',
         'yazio_accounts',
       ].sort(),
     )

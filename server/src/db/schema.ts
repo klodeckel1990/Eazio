@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, unique } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, unique, index } from 'drizzle-orm/sqlite-core'
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -135,6 +135,100 @@ export const foods = sqliteTable(
     updatedAt: integer('updated_at').notNull(),
   },
   (t) => [unique().on(t.source, t.sourceId)],
+)
+
+// The diary is the app's source of truth (Yazio is at most a mirror target).
+// Nutrient values are denormalized snapshots for the logged amount — history
+// stays stable even when the referenced food is refreshed or edited later.
+export const diaryEntries = sqliteTable(
+  'diary_entries',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    date: text('date').notNull(), // YYYY-MM-DD (Europe/Berlin)
+    daytime: text('daytime').notNull(), // breakfast|lunch|dinner|snack
+    foodId: text('food_id').references(() => foods.id), // null for free-form entries
+    nameSnapshot: text('name_snapshot').notNull(),
+    amountG: real('amount_g').notNull(),
+    servingLabel: text('serving_label'),
+    servingQuantity: real('serving_quantity'),
+    kcal: real('kcal').notNull(), // snapshot for amountG, not per 100 g
+    protein: real('protein'),
+    fat: real('fat'),
+    carbs: real('carbs'),
+    sugar: real('sugar'),
+    fiber: real('fiber'),
+    origin: text('origin').notNull(), // manual|recipe|preset|photo|yazio_import
+    originRefId: text('origin_ref_id'),
+    mirrorStatus: text('mirror_status'), // null|pending|mirrored|skipped|failed
+    mirrorJson: text('mirror_json'), // {accountId, productId, consumedId, error?}
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [index('diary_user_date_idx').on(t.userId, t.date)],
+)
+
+export const waterEntries = sqliteTable(
+  'water_entries',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    date: text('date').notNull(),
+    ml: integer('ml').notNull(),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [index('water_user_date_idx').on(t.userId, t.date)],
+)
+
+export const userGoals = sqliteTable('user_goals', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id),
+  kcalTarget: integer('kcal_target').notNull().default(2000),
+  proteinG: real('protein_g'),
+  fatG: real('fat_g'),
+  carbsG: real('carbs_g'),
+  waterMl: integer('water_ml').notNull().default(2000),
+  weightKg: real('weight_kg'),
+  weightGoalKg: real('weight_goal_kg'),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+// Maintained incrementally on every diary insert — the widget endpoint must
+// never scan history to compute the streak.
+export const userStats = sqliteTable('user_stats', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id),
+  currentStreak: integer('current_streak').notNull().default(0),
+  longestStreak: integer('longest_streak').notNull().default(0),
+  lastLoggedDate: text('last_logged_date'),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+// Successor of `aliases` (which maps to Yazio product ids and keeps serving
+// the legacy flow + mirror): learned ingredient name → own food.
+export const foodAliases = sqliteTable(
+  'food_aliases',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    normalizedName: text('normalized_name').notNull(),
+    foodId: text('food_id')
+      .notNull()
+      .references(() => foods.id),
+    defaultAmountG: real('default_amount_g'),
+    defaultServingLabel: text('default_serving_label'),
+    hits: integer('hits').notNull().default(1),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [unique().on(t.userId, t.normalizedName)],
 )
 
 export const recipes = sqliteTable('recipes', {

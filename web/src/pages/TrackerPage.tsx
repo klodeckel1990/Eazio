@@ -1,80 +1,44 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
-import type { Account, Daytime, LogResult, MatchLine } from '../api/types'
+import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine } from '../api/types'
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
-import { scaleNutrition, round } from '../lib/nutrition'
-import { IngredientRow } from '../components/IngredientRow'
-import { IconUser, IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark } from '../components/icons'
+import { round } from '../lib/nutrition'
+import { FoodRow } from '../components/FoodRow'
+import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose } from '../components/icons'
 
 interface RowState {
-  productId: string
+  foodId: string
   grams: number
 }
 
 let _rowSeq = 0
 const nextKey = (): string => `row-${_rowSeq++}`
 
+const DAYTIME_ORDER: Daytime[] = ['breakfast', 'lunch', 'dinner', 'snack']
+
 export function TrackerPage() {
   const seeded = (useLocation().state as { presetText?: string } | null)?.presetText ?? ''
-  const [accounts, setAccounts] = useState<Account[] | null>(null)
-  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
+  const [day, setDay] = useState<DiaryDay | null>(null)
   const [text, setText] = useState(seeded)
   const [matching, setMatching] = useState(false)
-  const [lines, setLines] = useState<MatchLine[]>([])
+  const [lines, setLines] = useState<FoodMatchLine[]>([])
   const [rows, setRows] = useState<RowState[]>([])
   const [keys, setKeys] = useState<string[]>([])
   const [daytime, setDaytime] = useState<Daytime>(defaultDaytime())
   const [logging, setLogging] = useState(false)
-  const [logResult, setLogResult] = useState<LogResult | null>(null)
+  const [logResult, setLogResult] = useState<DiaryLogResult | null>(null)
   const [undone, setUndone] = useState(false)
   const [presetSaved, setPresetSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load accounts on mount
-  useEffect(() => {
-    api.accounts.list()
-      .then(accs => {
-        setAccounts(accs)
-        const def = accs.find(a => a.isDefault) ?? accs[0]
-        setSelectedAccountId(def?.id ?? '')
-      })
-      .catch(e => {
-        if (e instanceof ApiError) {
-          setError(e.message)
-        } else {
-          throw e
-        }
-      })
-  }, [])
-
-  // No accounts loaded yet — loading state
-  if (accounts === null) {
-    return (
-      <div className="page">
-        <p className="loading-inline"><span className="spinner" /> Lade Konten…</p>
-      </div>
-    )
+  const refreshDay = () => {
+    api.diary.day()
+      .then(setDay)
+      .catch((e) => { if (e instanceof ApiError) setError(e.message); else throw e })
   }
 
-  // No accounts linked
-  if (accounts.length === 0) {
-    return (
-      <div className="page">
-        <header className="page-head">
-          <h1>Tracker</h1>
-        </header>
-        <div className="empty">
-          <span className="emoji"><IconUser /></span>
-          <h3>Kein Konto verknüpft</h3>
-          <p>Verbinde zuerst dein Yazio-Konto, dann kannst du hier tracken.</p>
-          <Link to="/accounts" className="btn btn-primary" style={{ marginTop: '0.4rem' }}>
-            Zu den Einstellungen
-          </Link>
-        </div>
-      </div>
-    )
-  }
+  useEffect(refreshDay, [])
 
   const handleMatch = async () => {
     if (!text.trim()) return
@@ -84,85 +48,74 @@ export function TrackerPage() {
     setPresetSaved(false)
     setMatching(true)
     try {
-      const res = await api.match(text, selectedAccountId || undefined)
+      const res = await api.foods.match(text)
       setLines(res.lines)
       setKeys(res.lines.map(() => nextKey()))
-      setRows(res.lines.map(l => {
-        const sel = l.selectedProductId
-          ? l.candidates.find(c => c.productId === l.selectedProductId)
-          : l.candidates[0]
-        return {
-          productId: sel?.productId ?? '',
-          grams: l.amountGrams ?? sel?.referenceAmount ?? 0,
-        }
-      }))
+      setRows(res.lines.map((l) => ({
+        foodId: l.selectedFoodId ?? l.candidates[0]?.id ?? '',
+        grams: l.suggestedAmountG,
+      })))
     } catch (e) {
-      if (e instanceof ApiError) {
-        if (e.status === 409) {
-          setError('Kein Yazio-Konto verknüpft. Bitte zuerst ein Konto unter Einstellungen hinzufügen.')
-        } else {
-          setError(e.message)
-        }
-      } else {
-        throw e
-      }
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
     } finally {
       setMatching(false)
     }
   }
 
   const handleRowChange = (index: number, value: RowState) => {
-    setRows(prev => prev.map((r, i) => i === index ? value : r))
+    setRows((prev) => prev.map((r, i) => (i === index ? value : r)))
   }
 
   const handleRowRemove = (index: number) => {
-    setLines(prev => prev.filter((_, i) => i !== index))
-    setRows(prev => prev.filter((_, i) => i !== index))
-    setKeys(prev => prev.filter((_, i) => i !== index))
+    setLines((prev) => prev.filter((_, i) => i !== index))
+    setRows((prev) => prev.filter((_, i) => i !== index))
+    setKeys((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // Re-search a single line with a user-edited query and swap in fresh candidates.
   const handleResearch = async (index: number, query: string) => {
     setError(null)
     try {
-      const { candidates } = await api.search(query, selectedAccountId || undefined)
-      setLines(prev => prev.map((l, i) => (i === index ? { ...l, candidates } : l)))
-      setRows(prev => prev.map((r, i) => (
+      const { results } = await api.foods.search(query)
+      setLines((prev) => prev.map((l, i) => (i === index ? { ...l, candidates: results } : l)))
+      setRows((prev) => prev.map((r, i) => (
         i === index
-          ? { productId: candidates[0]?.productId ?? '', grams: r.grams > 0 ? r.grams : (candidates[0]?.referenceAmount ?? 0) }
+          ? { foodId: results[0]?.id ?? '', grams: r.grams > 0 ? r.grams : (results[0]?.servings[0]?.grams ?? 100) }
           : r
       )))
     } catch (e) {
-      if (e instanceof ApiError) {
-        setError(e.message)
-      } else {
-        throw e
-      }
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
     }
   }
 
+  const loggableRows = rows
+    .map((r, i) => ({ ...r, line: lines[i] }))
+    .filter((r) => r.foodId && r.grams > 0)
+
   const handleLog = async () => {
-    if (rows.length === 0 || logging) return
+    if (loggableRows.length === 0 || logging) return
     setError(null)
     setLogging(true)
     try {
-      const result = await api.log({
-        accountId: selectedAccountId || undefined,
+      const result = await api.diary.log({
         daytime,
-        lines: rows.map((r, i) => ({
-          productId: r.productId,
-          name: lines[i]?.name ?? '',
-          amountGrams: r.grams,
+        lines: loggableRows.map((r) => ({
+          foodId: r.foodId,
+          amountG: r.grams,
+          rawText: r.line?.name,
         })),
       })
       setLogResult(result)
       setUndone(false)
+      setLines([])
+      setRows([])
+      setKeys([])
+      setText('')
+      refreshDay()
     } catch (e) {
-      if (e instanceof ApiError) {
-        setError(e.message)
-      } else {
-        throw e
-      }
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
     } finally {
       setLogging(false)
     }
@@ -171,15 +124,45 @@ export function TrackerPage() {
   const handleUndo = async () => {
     if (!logResult) return
     try {
-      await api.undo(logResult.logId)
+      await Promise.all(logResult.entries.map((en) => api.diary.removeEntry(en.id)))
       setLogResult(null)
       setUndone(true)
+      refreshDay()
     } catch (e) {
-      if (e instanceof ApiError) {
-        setError(e.message)
-      } else {
-        throw e
-      }
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
+    }
+  }
+
+  const handleDeleteEntry = async (id: string) => {
+    try {
+      await api.diary.removeEntry(id)
+      refreshDay()
+    } catch (e) {
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
+    }
+  }
+
+  const handleWater = async (ml: number) => {
+    try {
+      await api.diary.addWater(ml)
+      refreshDay()
+    } catch (e) {
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
+    }
+  }
+
+  const handleWaterUndo = async () => {
+    const last = day?.water.entries[day.water.entries.length - 1]
+    if (!last) return
+    try {
+      await api.diary.removeWater(last.id)
+      refreshDay()
+    } catch (e) {
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
     }
   }
 
@@ -189,9 +172,9 @@ export function TrackerPage() {
     try {
       await api.presets.create(
         name,
-        rows.map((r, i) => ({
-          rawText: lines[i]?.raw ?? '',
-          productId: r.productId,
+        loggableRows.map((r) => ({
+          rawText: r.line?.raw ?? '',
+          productId: r.foodId,
           amountG: r.grams,
           serving: null,
           servingQuantity: null,
@@ -199,39 +182,74 @@ export function TrackerPage() {
       )
       setPresetSaved(true)
     } catch (e) {
-      if (e instanceof ApiError) {
-        setError(e.message)
-      } else {
-        throw e
-      }
+      if (e instanceof ApiError) setError(e.message)
+      else throw e
     }
   }
 
-  // Running totals across all matched rows.
-  const totals = rows.reduce(
-    (acc, r, i) => {
-      const cand = lines[i]?.candidates.find(c => c.productId === r.productId)
+  // Review totals across matched rows (per-100g values × grams).
+  const reviewTotals = loggableRows.reduce(
+    (acc, r) => {
+      const cand = r.line?.candidates.find((c) => c.id === r.foodId)
       if (!cand) return acc
-      const nn = scaleNutrition(cand.nutrientsPerReference, cand.referenceAmount, r.grams)
+      const f = r.grams / 100
       return {
-        kcal: acc.kcal + nn.kcal,
-        carb: acc.carb + nn.carb,
-        protein: acc.protein + nn.protein,
-        fat: acc.fat + nn.fat,
+        kcal: acc.kcal + cand.kcal * f,
+        carb: acc.carb + (cand.carbs ?? 0) * f,
+        protein: acc.protein + (cand.protein ?? 0) * f,
+        fat: acc.fat + (cand.fat ?? 0) * f,
       }
     },
     { kcal: 0, carb: 0, protein: 0, fat: 0 },
   )
 
+  const grouped = DAYTIME_ORDER.map((dt) => ({
+    daytime: dt,
+    entries: (day?.entries ?? []).filter((e) => e.daytime === dt),
+  })).filter((g) => g.entries.length > 0)
+
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Tracker</h1>
-        <span className="sub">Zutaten eintippen, matchen, in Yazio loggen.</span>
+        <h1>Tagebuch</h1>
+        <span className="sub">
+          {day && day.streak.currentStreak > 1
+            ? `🔥 ${day.streak.currentStreak} Tage in Folge`
+            : 'Mahlzeiten eintippen und loggen.'}
+        </span>
       </header>
 
       {error && (
         <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>
+      )}
+
+      {day && (
+        <div className="totals">
+          <div className="kcal-big">
+            <span className="n">{Math.max(0, day.remainingKcal)}</span>
+            <span className="l">kcal übrig von {day.goals.kcalTarget}</span>
+          </div>
+          <div className="macro-mini">
+            <div><span className="mn">{round(day.totals.carbs)}</span><span className="ml">KH</span></div>
+            <div><span className="mn">{round(day.totals.protein)}</span><span className="ml">Protein</span></div>
+            <div><span className="mn">{round(day.totals.fat)}</span><span className="ml">Fett</span></div>
+          </div>
+        </div>
+      )}
+
+      {day && (
+        <div className="card water-card">
+          <span className="water-label">💧 {day.water.totalMl} / {day.goals.waterMl} ml</span>
+          <div className="btn-row">
+            <button type="button" className="btn btn-soft btn-sm" onClick={() => { void handleWater(250) }}>+250</button>
+            <button type="button" className="btn btn-soft btn-sm" onClick={() => { void handleWater(500) }}>+500</button>
+            {day.water.entries.length > 0 && (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => { void handleWaterUndo() }} aria-label="Letztes Wasser entfernen">
+                −
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="card pad-lg stack">
@@ -240,26 +258,11 @@ export function TrackerPage() {
           <textarea
             id="tracker-text"
             value={text}
-            onChange={e => setText(e.target.value)}
+            onChange={(e) => setText(e.target.value)}
             rows={5}
             placeholder={'z. B.\n80g Haferflocken\n200ml Milch\n1 Banane'}
           />
         </div>
-
-        {accounts.length > 1 && (
-          <div className="field">
-            <label htmlFor="account-select">Konto</label>
-            <select
-              id="account-select"
-              value={selectedAccountId}
-              onChange={e => setSelectedAccountId(e.target.value)}
-            >
-              {accounts.map(a => (
-                <option key={a.id} value={a.id}>{a.label} ({a.yazioUsername})</option>
-              ))}
-            </select>
-          </div>
-        )}
 
         <button
           type="button"
@@ -276,26 +279,26 @@ export function TrackerPage() {
         <>
           <div className="totals">
             <div className="kcal-big">
-              <span className="n">{Math.round(totals.kcal)}</span>
+              <span className="n">{Math.round(reviewTotals.kcal)}</span>
               <span className="l">kcal gesamt</span>
             </div>
             <div className="macro-mini">
-              <div><span className="mn">{round(totals.carb)}</span><span className="ml">KH</span></div>
-              <div><span className="mn">{round(totals.protein)}</span><span className="ml">Protein</span></div>
-              <div><span className="mn">{round(totals.fat)}</span><span className="ml">Fett</span></div>
+              <div><span className="mn">{round(reviewTotals.carb)}</span><span className="ml">KH</span></div>
+              <div><span className="mn">{round(reviewTotals.protein)}</span><span className="ml">Protein</span></div>
+              <div><span className="mn">{round(reviewTotals.fat)}</span><span className="ml">Fett</span></div>
             </div>
           </div>
 
           <h2 className="section-title">Zutaten</h2>
           <div className="stack">
             {lines.map((line, i) => (
-              <IngredientRow
+              <FoodRow
                 key={keys[i] ?? i}
                 line={line}
-                value={rows[i] ?? { productId: '', grams: 0 }}
-                onChange={v => handleRowChange(i, v)}
+                value={rows[i] ?? { foodId: '', grams: 0 }}
+                onChange={(v) => handleRowChange(i, v)}
                 onRemove={() => handleRowRemove(i)}
-                onResearch={q => handleResearch(i, q)}
+                onResearch={(q) => handleResearch(i, q)}
               />
             ))}
           </div>
@@ -323,7 +326,7 @@ export function TrackerPage() {
                 className="btn btn-primary"
                 style={{ flex: 1 }}
                 onClick={() => { void handleLog() }}
-                disabled={rows.length === 0 || logging || matching}
+                disabled={loggableRows.length === 0 || logging || matching}
               >
                 <IconCheck />
                 {logging ? 'Loggen…' : `Als ${DAYTIME_LABELS[daytime]} loggen`}
@@ -332,7 +335,7 @@ export function TrackerPage() {
                 type="button"
                 className="btn btn-ghost"
                 onClick={() => { void handleSavePreset() }}
-                disabled={rows.length === 0}
+                disabled={loggableRows.length === 0}
               >
                 <IconBookmark />
                 Preset
@@ -346,7 +349,9 @@ export function TrackerPage() {
         <div className="banner success">
           <IconCheckCircle />
           <span className="banner-text">
-            {logResult.count} {logResult.count === 1 ? 'Eintrag' : 'Einträge'} als {DAYTIME_LABELS[logResult.daytime]} geloggt
+            {logResult.entries.length} {logResult.entries.length === 1 ? 'Eintrag' : 'Einträge'} als{' '}
+            {DAYTIME_LABELS[logResult.daytime]} geloggt
+            {logResult.mirrorQueued ? ' · wird zu Yazio gespiegelt' : ''}
           </span>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => { void handleUndo() }}>
             Rückgängig
@@ -358,6 +363,42 @@ export function TrackerPage() {
 
       {presetSaved && (
         <p className="banner success"><IconCheck /><span className="banner-text">Preset gespeichert.</span></p>
+      )}
+
+      {grouped.length > 0 && (
+        <>
+          <h2 className="section-title">Heute</h2>
+          <div className="stack">
+            {grouped.map((g) => (
+              <div key={g.daytime} className="card diary-group">
+                <div className="diary-group-head">
+                  <h3>{DAYTIME_LABELS[g.daytime]}</h3>
+                  <span className="muted">{Math.round(g.entries.reduce((s, e) => s + e.kcal, 0))} kcal</span>
+                </div>
+                <ul className="diary-list">
+                  {g.entries.map((entry: DiaryEntry) => (
+                    <li key={entry.id} className="diary-item">
+                      <span className="diary-name">{entry.nameSnapshot}</span>
+                      <span className="diary-meta">
+                        {round(entry.amountG)} g · {Math.round(entry.kcal)} kcal
+                        {entry.mirrorStatus === 'failed' ? ' · ⚠︎ Yazio' : ''}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-icon btn-ghost btn-sm"
+                        onClick={() => { void handleDeleteEntry(entry.id) }}
+                        aria-label="Eintrag löschen"
+                        title="Löschen"
+                      >
+                        <IconClose />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

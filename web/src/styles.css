@@ -701,6 +701,35 @@ select {
   border-radius: 18px;
   box-shadow: var(--sh-2);
 }
+
+/* ---- diary (tracker home) ------------------------------------------------ */
+.water-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+}
+.water-label { font-weight: 600; }
+.diary-group { padding: 0.8rem 1rem; }
+.diary-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+}
+.diary-group-head h3 { font-size: 1.05rem; }
+.diary-list { list-style: none; margin: 0; padding: 0; }
+.diary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--line, rgba(0, 0, 0, 0.07));
+}
+.diary-item:first-child { border-top: none; }
+.diary-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diary-meta { color: var(--ink-2); font-size: 0.85rem; white-space: nowrap; }
 .auth-brand h1 {
   font-variation-settings: 'opsz' 144;
   font-size: 2.2rem;

@@ -83,7 +83,7 @@ export function ImportPage() {
 
   useEffect(() => {
     api.settings.get().then(setSettings).catch(() =>
-      setSettings({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain', onboardingDone: true }),
+      setSettings({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain', onboardingDone: true, mirrorToYazio: true }),
     )
   }, [])
 
