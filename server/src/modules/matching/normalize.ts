@@ -40,3 +40,32 @@ export function buildSearchQuery(name: string): string {
   const query = kept.join(' ').trim()
   return query.length > 0 ? query : name.trim()
 }
+
+// Pure seasonings / spices to exclude from tracking (matched whole-word in
+// normalizeName() form). Ambiguous foods (Paprika, Ingwer, Knoblauch, Zwiebel,
+// Chili) are deliberately NOT here — only their unambiguous "…pulver" spice forms.
+const SEASONINGS = new Set([
+  // salt & pepper (incl. common compounds)
+  'salz', 'meersalz', 'steinsalz', 'jodsalz', 'gewurzsalz', 'krautersalz',
+  'pfeffer', 'pfefferkorn', 'pfefferkorner', 'cayennepfeffer',
+  // generic
+  'gewurz', 'gewurze', 'gewurzmischung', 'krauter',
+  // unambiguous ground-spice forms of otherwise-ambiguous foods
+  'paprikapulver', 'chilipulver', 'currypulver', 'knoblauchpulver', 'zwiebelpulver', 'ingwerpulver',
+  // spices
+  'muskat', 'muskatnuss', 'zimt', 'kurkuma', 'curry', 'kreuzkummel', 'kummel', 'koriander',
+  'kardamom', 'piment', 'nelken', 'safran', 'anis', 'sternanis', 'wacholder', 'vanille',
+  'lorbeer', 'lorbeerblatt', 'lorbeerblatter',
+  // herbs
+  'oregano', 'basilikum', 'thymian', 'rosmarin', 'majoran', 'salbei', 'petersilie',
+  'schnittlauch', 'dill', 'estragon', 'kerbel', 'minze', 'pfefferminze', 'bohnenkraut', 'kresse',
+])
+
+/** True if the ingredient name is a pure seasoning/spice (any whole word matches
+ *  the curated list). Ambiguous foods like "Paprika" or "Knoblauch" return false. */
+export function isSeasoning(name: string): boolean {
+  return normalizeName(name)
+    .split(/\s+/)
+    .map((tok) => tok.replace(/[^\p{L}\p{N}]/gu, ''))
+    .some((tok) => SEASONINGS.has(tok))
+}

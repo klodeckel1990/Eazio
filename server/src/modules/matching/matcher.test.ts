@@ -68,4 +68,20 @@ describe('matchText', () => {
     expect(lines[0]!.selectedProductId).toBe('p1')
     expect(lines[0]!.candidates[0]!.productId).toBe('p1')
   })
+
+  it('drops pure seasonings by name', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'jens', 'pw-123456')
+    const client = clientReturning([product('p1', 'Speisesalz')])
+    const lines = await matchText(client, db, user.id, 'Salz\nPfeffer\n100g Haferflocken')
+    expect(lines.map((l) => l.name)).toEqual(['Haferflocken'])
+  })
+
+  it('drops zero-calorie products', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'jens', 'pw-123456')
+    const client = clientReturning([product('p1', 'Wasser', { energy: 0 })])
+    const lines = await matchText(client, db, user.id, 'Wasser')
+    expect(lines).toHaveLength(0)
+  })
 })

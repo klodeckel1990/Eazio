@@ -2,7 +2,7 @@ import type { DB } from '../../db/client.js'
 import { env } from '../../config/env.js'
 import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
-import { normalizeName, buildSearchQuery } from './normalize.js'
+import { normalizeName, buildSearchQuery, isSeasoning } from './normalize.js'
 import { getAlias } from '../learning/aliases.repo.js'
 
 export interface SearchResult {
@@ -93,6 +93,10 @@ export async function matchText(
   for (const line of parseIngredients(text)) {
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
     let candidates = await searchCandidates(client, buildSearchQuery(line.name))
+
+    // Drop pure seasonings (curated list) and zero-calorie products — they clutter
+    // the list and add ~no calories. Ambiguous foods (Paprika, Ingwer, …) are kept.
+    if (isSeasoning(line.name) || candidates[0]?.nutrientsPerReference.kcal === 0) continue
 
     let selectedProductId = candidates[0]?.productId ?? null
     const alias = getAlias(db, userId, normalizeName(line.name))
