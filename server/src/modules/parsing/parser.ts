@@ -9,6 +9,10 @@ const KNOWN_UNITS = new Set([
   'g', 'gr', 'gramm', 'kg', 'ml', 'l',
   'stück', 'stk', 'stueck', 'portion', 'portionen', 'el', 'tl',
   'scheibe', 'scheiben', 'prise', 'prisen', 'becher', 'glas', 'dose', 'tasse',
+  // bundle/count words common in recipes ("1 Bund Radieschen", "2 Zehen Knoblauch")
+  'bund', 'zehe', 'zehen', 'stange', 'stangen', 'kopf', 'zweig', 'zweige',
+  'packung', 'päckchen', 'paeckchen', 'beutel', 'würfel', 'wuerfel',
+  'handvoll', 'blatt', 'blätter', 'blaetter', 'kugel', 'kugeln',
 ])
 
 // NOTE: simple fractions ("1/2 Apfel") are not parsed — the "/2" stays in the

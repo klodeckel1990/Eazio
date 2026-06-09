@@ -16,8 +16,32 @@ const COMPOUND_HEADS = [
   'suppe', 'wurst', 'zucker',
 ]
 
+// Colloquial names → what the BLS actually calls the product. Matched against
+// the folded food name at index time; the extra terms land in search_terms.
+const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
+  { match: /koerniger frischkaese|huettenkaese/, terms: 'huettenkaese hüttenkäse cottage cheese koerniger frischkaese' },
+  { match: /fruehlingszwiebel/, terms: 'lauchzwiebel jungzwiebel' },
+  { match: /\bhaferdrink/, terms: 'hafermilch' },
+  { match: /\bsojadrink/, terms: 'sojamilch' },
+  { match: /\bmandeldrink/, terms: 'mandelmilch' },
+  { match: /speisequark/, terms: 'quark magerquark' },
+  { match: /moehre|karotte/, terms: 'moehre möhre karotte wurzel' },
+  { match: /zuckermais/, terms: 'mais' },
+  { match: /paprikaschote/, terms: 'paprika' },
+]
+
 export function foldGerman(text: string): string {
   return text.toLowerCase().replace(/[äöüß]/g, (c) => UMLAUT_MAP[c] ?? c)
+}
+
+/** German plural → singular guesses for a folded token ("zwiebeln" → "zwiebel").
+ *  Prefix search only matches index tokens that START with the query token, so
+ *  a plural query never finds the singular name without these variants. */
+function depluralize(token: string): string[] {
+  const out: string[] = []
+  if (token.length >= 6 && token.endsWith('en')) out.push(token.slice(0, -2))
+  if (token.length >= 5 && /[ens]$/.test(token)) out.push(token.slice(0, -1))
+  return out
 }
 
 function tokenize(text: string): string[] {
@@ -54,6 +78,10 @@ export function buildSearchTerms(name: string, brand?: string | null): string {
   if (headTokens.length >= 2 && headTokens.length <= 3) {
     terms.add(headTokens.map(foldGerman).join(''))
   }
+  const folded = foldGerman(name)
+  for (const syn of NAME_SYNONYMS) {
+    if (syn.match.test(folded)) for (const t of syn.terms.split(' ')) terms.add(t)
+  }
   return [...terms].join(' ')
 }
 
@@ -71,7 +99,11 @@ export function buildFtsQuery(input: string): string | null {
     const exact = (s: string) => `"${s.replace(/"/g, '')}"`
     const prefix = (s: string) => `${exact(s)}*`
     const folded = foldGerman(t)
-    const alts = folded !== t ? [exact(t), prefix(t), exact(folded), prefix(folded)] : [exact(t), prefix(t)]
+    const variants = new Set<string>([t, folded, ...depluralize(t), ...depluralize(folded)])
+    const alts: string[] = []
+    for (const v of variants) {
+      alts.push(exact(v), prefix(v))
+    }
     return `(${alts.join(' OR ')})`
   })
   return parts.join(' AND ')

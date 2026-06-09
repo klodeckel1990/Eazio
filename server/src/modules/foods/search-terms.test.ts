@@ -49,4 +49,22 @@ describe('buildFtsQuery', () => {
   it('strips embedded quotes', () => {
     expect(buildFtsQuery('ap"fel')).not.toContain('""')
   })
+
+  it('adds singular variants for German plurals', () => {
+    expect(buildFtsQuery('zwiebeln')).toContain('"zwiebel"*')
+    expect(buildFtsQuery('frühlingszwiebeln')).toContain('"frühlingszwiebel"*')
+    expect(buildFtsQuery('tomaten')).toContain('"tomat"*')
+  })
+})
+
+describe('synonyms', () => {
+  it('indexes Hüttenkäse for Körniger Frischkäse', () => {
+    const terms = buildSearchTerms('Körniger Frischkäse < 10 % Fett i. Tr.')
+    expect(terms).toContain('huettenkaese')
+    expect(terms).toContain('cottage')
+  })
+
+  it('indexes Hafermilch for Haferdrink', () => {
+    expect(buildSearchTerms('Haferdrink')).toContain('hafermilch')
+  })
 })

@@ -23,6 +23,9 @@ const QUALIFIERS = new Set([
   'optional', 'ca', 'etwa', 'etwas', 'evtl', 'ggf', 'ungefahr',
   'nach', 'geschmack', 'wahl', 'belieben', 'saison', 'pro', 'portion', 'stuck',
   'der', 'die', 'das',
+  // bundle/packaging words that survive parsing in older saved texts
+  'bund', 'zehe', 'zehen', 'stange', 'stangen', 'kopf', 'zweig', 'zweige',
+  'packung', 'packchen', 'beutel', 'wurfel', 'handvoll', 'blatt', 'blatter',
 ])
 
 /**
