@@ -891,6 +891,71 @@ input[type='search']:focus {
 .opt-desc { color: var(--ink-2); font-size: 0.84rem; }
 .opt > svg { width: 20px; height: 20px; color: var(--primary); flex: none; }
 
+/* ---- Onboarding wizard --------------------------------------------------- */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.wiz-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease;
+}
+.wiz-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-3);
+  padding: 1.7rem 1.4rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.7rem;
+  animation: popIn 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+.wiz-skip {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.wiz-skip svg { width: 18px; height: 18px; }
+.wiz-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-pill);
+  display: grid;
+  place-items: center;
+  color: var(--primary-700);
+  background: linear-gradient(150deg, var(--primary-100), var(--surface-2));
+  margin-top: 0.2rem;
+}
+.wiz-icon svg { width: 30px; height: 30px; }
+.wiz-title { font-family: var(--font-display); font-size: 1.5rem; font-variation-settings: 'opsz' 60; }
+.wiz-body { color: var(--ink-2); font-size: 0.96rem; line-height: 1.5; margin-bottom: 0.1rem; }
+.wiz-dots { display: flex; gap: 0.4rem; margin: 0.3rem 0; }
+.wiz-dots span { width: 7px; height: 7px; border-radius: var(--r-pill); background: var(--line-2); transition: background 0.2s, width 0.2s; }
+.wiz-dots span.on { width: 20px; background: var(--primary); }
+.wiz-nav { display: flex; gap: 0.6rem; width: 100%; }
+.wiz-nav .btn { flex: 1; justify-content: center; }
+
 /* ---- Desktop ≥720px: nav moves to top bar, tab bar hidden ---------------- */
 @media (min-width: 720px) {
   :root { --maxw: 660px; }

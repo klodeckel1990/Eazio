@@ -10,9 +10,15 @@ export interface UserSettings {
   iosShortcutHintDismissed: boolean
   /** Preferred format when copying a recipe's ingredients as a shopping list. */
   shoppingListFormat: ShoppingListFormat
+  /** The first-login onboarding wizard has been completed or skipped. */
+  onboardingDone: boolean
 }
 
-const DEFAULTS: UserSettings = { iosShortcutHintDismissed: false, shoppingListFormat: 'plain' }
+const DEFAULTS: UserSettings = {
+  iosShortcutHintDismissed: false,
+  shoppingListFormat: 'plain',
+  onboardingDone: false,
+}
 
 export function getSettings(db: DB, userId: string): UserSettings {
   const row = db.select({ settings: users.settings }).from(users).where(eq(users.id, userId)).get()
@@ -35,6 +41,7 @@ function parseSettings(raw: string | null): UserSettings {
       shoppingListFormat: SHOPPING_FORMATS.includes(fmt as ShoppingListFormat)
         ? (fmt as ShoppingListFormat)
         : 'plain',
+      onboardingDone: o.onboardingDone === true,
     }
   } catch {
     return { ...DEFAULTS }

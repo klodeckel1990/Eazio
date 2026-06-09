@@ -7,6 +7,7 @@ import { getSettings, updateSettings } from '../../modules/settings/settings.rep
 const PatchSchema = z.object({
   iosShortcutHintDismissed: z.boolean().optional(),
   shoppingListFormat: z.enum(['plain', 'checklist', 'bring']).optional(),
+  onboardingDone: z.boolean().optional(),
 })
 
 export function registerSettingsRoutes(app: FastifyInstance, db: DB): void {

@@ -1,0 +1,107 @@
+import { useEffect, useState, type ComponentType, type ReactNode, type SVGProps } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { api } from '../api/client'
+import { IconLeaf, IconBowl, IconWand, IconCart, IconSettings, IconClose } from './icons'
+
+interface Step {
+  Icon: ComponentType<SVGProps<SVGSVGElement>>
+  title: string
+  body: ReactNode
+}
+
+const STEPS: Step[] = [
+  {
+    Icon: IconLeaf,
+    title: 'Willkommen bei eazio',
+    body: 'Dein entspannter Begleiter für Yazio: Mahlzeiten in Sekunden tracken, Rezepte importieren und Einkaufslisten erstellen. Eine kurze Tour gefällig?',
+  },
+  {
+    Icon: IconBowl,
+    title: 'Schnell tracken',
+    body: 'Tippe oder füge deine Zutaten als Text ein – z. B. „100 g Haferflocken, 1 Banane". eazio erkennt Mengen und Einheiten (auch EL/TL), ignoriert Gewürze ohne kcal und matcht alles automatisch auf Yazio-Produkte. Dann mit einem Tipp loggen.',
+  },
+  {
+    Icon: IconWand,
+    title: 'Rezepte importieren',
+    body: 'Importiere Rezepte aus Instagram, Blogs oder per eingefügtem Text – die KI zieht Zutaten und Kochschritte heraus. Gespeicherte Rezepte findest du als Karten im Tab „Rezepte", mit Favoriten und Suche.',
+  },
+  {
+    Icon: IconCart,
+    title: 'Kochen & Einkaufen',
+    body: 'Öffne ein Rezept, wähle wie viel du tracken willst (Ganzes, ½, ¼ …) und übernimm es in den Tracker. Oder kopiere die Zutaten als Einkaufsliste – als Klartext, für Apple Notes oder direkt in die Bring!-App.',
+  },
+  {
+    Icon: IconSettings,
+    title: 'Noch ein Schritt',
+    body: 'Damit getrackt werden kann, verknüpfe in den Einstellungen dein Yazio-Konto. Dort stellst du auch das Einkaufslisten-Format ein und richtest das Teilen vom iPhone ein.',
+  },
+]
+
+export function OnboardingWizard() {
+  const navigate = useNavigate()
+  const [show, setShow] = useState(false)
+  const [step, setStep] = useState(0)
+
+  useEffect(() => {
+    let alive = true
+    api.settings
+      .get()
+      .then((s) => { if (alive && !s.onboardingDone) setShow(true) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [])
+
+  const finish = () => {
+    setShow(false)
+    api.settings.update({ onboardingDone: true }).catch(() => {})
+  }
+  const goAccounts = () => {
+    finish()
+    navigate('/accounts')
+  }
+
+  if (!show) return null
+  const isLast = step === STEPS.length - 1
+  const current = STEPS[step]!
+  const { Icon } = current
+
+  return (
+    <div className="wiz-overlay" role="dialog" aria-modal="true" aria-label="Einführung">
+      <div className="wiz-card">
+        <button className="wiz-skip" type="button" onClick={finish} aria-label="Tour überspringen">
+          <IconClose />
+        </button>
+        <div className="wiz-icon"><Icon /></div>
+        <h2 className="wiz-title">{current.title}</h2>
+        <p className="wiz-body">{current.body}</p>
+
+        {isLast && (
+          <button type="button" className="btn btn-soft btn-block" onClick={goAccounts}>
+            <IconSettings /> Yazio-Konto verknüpfen
+          </button>
+        )}
+
+        <div className="wiz-dots" aria-hidden="true">
+          {STEPS.map((_, i) => (
+            <span key={i} className={i === step ? 'on' : ''} />
+          ))}
+        </div>
+
+        <div className="wiz-nav">
+          {step > 0 ? (
+            <button type="button" className="btn btn-ghost" onClick={() => setStep(step - 1)}>Zurück</button>
+          ) : (
+            <button type="button" className="btn btn-ghost" onClick={finish}>Überspringen</button>
+          )}
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => (isLast ? finish() : setStep(step + 1))}
+          >
+            {isLast ? "Los geht's" : 'Weiter'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
