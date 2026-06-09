@@ -167,6 +167,7 @@ Synct den Quellcode (ohne `node_modules`, `dist`, `data`, `.env`, `.git`), baut 
 - **Rezept-Import** – `link`/`text` → bei Instagram via Apify die Caption holen → JSON-LD parsen oder Seitentext strippen → Claude liefert ein validiertes Schema (`{title, servings, difficulty, totalMinutes, ingredients[], steps[]}`) mit Retry. Bilder werden serverseitig ins `/data`-Volume gecacht.
 - **Bring!-Export** – Bring lädt die Rezept-URL serverseitig, daher gibt es eine **öffentliche, token-gesicherte** Seite `GET /r/:id?t=…` mit schema.org/Recipe-JSON-LD. Der Token ist ein HMAC aus `SESSION_SECRET` über die Rezept-ID – nicht erratbar, ohne zusätzliche DB-Spalte.
 - **Auth** – argon2-Hashes, konstante Login-Zeit (Dummy-Hash gegen User-Enumeration), signiertes httpOnly-Session-Cookie. Offene Registrierung (`/api/auth/register`, rate-limited) + token-Bootstrap.
+- **Daten-Isolation** – jeder Datenzugriff ist strikt an die eingeloggte `userId` gebunden (Yazio-Konten, Logs, Presets, Rezepte, Lern-Daten). Es gibt **keinen** Endpoint, der eine fremde `userId`/`accountId` akzeptiert, und **keine** Admin-/Alle-Nutzer-Route – ein Nutzer kann also nie auf die Yazio-Konten oder -Daten eines anderen zugreifen. Abgesichert durch `server/src/http/routes/isolation.test.ts`. **Grenze:** Wer Server-root + `MASTER_KEY` besitzt (Betreiber), kann gespeicherte Yazio-Zugangsdaten technisch offline entschlüsseln; echte Null-Wissen-Trennung gegen den Betreiber erfordert clientseitige Verschlüsselung pro Nutzer-Passwort.
 
 ---
 
