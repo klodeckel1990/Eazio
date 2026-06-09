@@ -8,6 +8,8 @@ export interface LlmRecipe {
   servings: number | null
   ingredients: ExtractedIngredient[]
   steps: string[]
+  difficulty: string | null
+  totalMinutes: number | null
 }
 
 const SYSTEM = `Du extrahierst die Zutatenliste aus Rezept-Text (deutsch oder englisch, beliebiges Format: Blog-Artikel, Social-Media-Caption, eingefügter Text).
@@ -17,6 +19,8 @@ Gib zurück:
 - servings: Anzahl der Portionen als ganze Zahl, oder 0 wenn nicht angegeben.
 - ingredients: ein Eintrag pro Zutat.
 - steps: die Zubereitungsschritte als kurze Strings in Reihenfolge; leeres Array, wenn keine erkennbar sind.
+- difficulty: Schwierigkeit als „einfach", „mittel" oder „schwer" (schätze anhand Zutaten/Schritten); "" wenn unklar.
+- totalMinutes: geschätzte Gesamtzeit in Minuten als ganze Zahl (Vorbereitung + Garen/Backen); 0 wenn unklar.
 
 Pro Zutat:
 - raw: die ursprüngliche Zeile, so wie sie im Text steht.
@@ -56,8 +60,10 @@ const SCHEMA = {
       type: 'array',
       items: { type: 'string' },
     },
+    difficulty: { type: 'string', enum: ['einfach', 'mittel', 'schwer', ''] },
+    totalMinutes: { type: 'integer' },
   },
-  required: ['title', 'servings', 'ingredients', 'steps'],
+  required: ['title', 'servings', 'ingredients', 'steps', 'difficulty', 'totalMinutes'],
 }
 
 /** Extracts a normalized ingredient list from arbitrary recipe text via Claude. */
@@ -135,5 +141,11 @@ function parseRecipe(res: Anthropic.Message): LlmRecipe | null {
 
   const title = typeof o.title === 'string' && o.title.trim() ? o.title.trim() : null
   const servings = typeof o.servings === 'number' && o.servings > 0 ? Math.round(o.servings) : null
-  return { title, servings, ingredients, steps }
+  const difficulty =
+    typeof o.difficulty === 'string' && ['einfach', 'mittel', 'schwer'].includes(o.difficulty)
+      ? o.difficulty
+      : null
+  const totalMinutes =
+    typeof o.totalMinutes === 'number' && o.totalMinutes > 0 ? Math.round(o.totalMinutes) : null
+  return { title, servings, ingredients, steps, difficulty, totalMinutes }
 }

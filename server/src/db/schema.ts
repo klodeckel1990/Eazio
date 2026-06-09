@@ -99,6 +99,10 @@ export const recipes = sqliteTable('recipes', {
   sourceType: text('source_type').notNull(), // link|text
   servings: integer('servings'),
   steps: text('steps'), // JSON-encoded string[] of preparation steps
+  difficulty: text('difficulty'), // einfach|mittel|schwer
+  totalMinutes: integer('total_minutes'),
+  imageMime: text('image_mime'), // set when a cached image exists on the volume
+  isFavorite: integer('is_favorite', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at').notNull(),
 })
 

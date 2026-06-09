@@ -20,6 +20,8 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
   let jsonLdTitle: string | null = null
   let jsonLdServings: number | null = null
   let jsonLdInstructions: string[] = []
+  let jsonLdMinutes: number | null = null
+  let imageUrl: string | null = null
   let sourceUrl: string | null = null
   let source: 'link' | 'text'
 
@@ -27,15 +29,19 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
     source = 'link'
     sourceUrl = input.url
     if (isInstagramUrl(input.url)) {
-      // Instagram has no usable public API → resolve the caption via the scraper.
-      llmInput = await fetchInstagramCaption(input.url)
+      // Instagram has no usable public API → resolve caption + image via the scraper.
+      const ig = await fetchInstagramCaption(input.url)
+      llmInput = ig.text
+      imageUrl = ig.imageUrl
     } else {
       const html = await fetchHtml(input.url)
       const extracted = extractFromHtml(html)
+      imageUrl = extracted.imageUrl
       if (extracted.ingredients.length > 0) {
         jsonLdTitle = extracted.title
         jsonLdServings = extracted.servings
         jsonLdInstructions = extracted.instructions
+        jsonLdMinutes = extracted.totalMinutes
         llmInput = extracted.ingredients.join('\n')
       } else {
         llmInput = extracted.text ?? ''
@@ -62,6 +68,9 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
     servings: jsonLdServings ?? llm.servings,
     sourceUrl,
     source,
+    imageUrl,
+    difficulty: llm.difficulty,
+    totalMinutes: jsonLdMinutes ?? llm.totalMinutes,
     ingredients: llm.ingredients,
     steps: jsonLdInstructions.length > 0 ? jsonLdInstructions : llm.steps,
   }

@@ -16,6 +16,10 @@ export interface ImportedRecipe {
   /** Source URL when imported from a link. */
   sourceUrl: string | null
   source: 'link' | 'text'
+  /** Source image URL (downloaded + cached on save). */
+  imageUrl: string | null
+  difficulty: string | null
+  totalMinutes: number | null
   ingredients: ExtractedIngredient[]
   /** Ordered preparation steps. */
   steps: string[]

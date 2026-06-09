@@ -9,6 +9,8 @@ export interface CreateRecipeInput {
   servings: number | null
   sourceUrl: string | null
   sourceType: string
+  difficulty: string | null
+  totalMinutes: number | null
   ingredients: ExtractedIngredient[]
   steps: string[]
 }
@@ -17,6 +19,10 @@ export interface RecipeSummary {
   id: string
   title: string
   servings: number | null
+  difficulty: string | null
+  totalMinutes: number | null
+  isFavorite: boolean
+  hasImage: boolean
 }
 
 export interface RecipeDetail extends RecipeSummary {
@@ -37,6 +43,8 @@ export function createRecipe(db: DB, userId: string, input: CreateRecipeInput): 
         sourceUrl: input.sourceUrl,
         sourceType: input.sourceType,
         servings: input.servings,
+        difficulty: input.difficulty,
+        totalMinutes: input.totalMinutes,
         steps: JSON.stringify(input.steps),
         createdAt: Date.now(),
       })
@@ -55,16 +63,41 @@ export function createRecipe(db: DB, userId: string, input: CreateRecipeInput): 
         .run()
     })
   })
-  return { id, title: input.title, servings: input.servings }
+  return {
+    id,
+    title: input.title,
+    servings: input.servings,
+    difficulty: input.difficulty,
+    totalMinutes: input.totalMinutes,
+    isFavorite: false,
+    hasImage: false,
+  }
 }
 
 export function listRecipes(db: DB, userId: string): RecipeSummary[] {
-  return db
-    .select({ id: recipes.id, title: recipes.title, servings: recipes.servings })
+  const rows = db
+    .select({
+      id: recipes.id,
+      title: recipes.title,
+      servings: recipes.servings,
+      difficulty: recipes.difficulty,
+      totalMinutes: recipes.totalMinutes,
+      isFavorite: recipes.isFavorite,
+      imageMime: recipes.imageMime,
+    })
     .from(recipes)
     .where(eq(recipes.userId, userId))
-    .orderBy(desc(recipes.createdAt))
+    .orderBy(desc(recipes.isFavorite), desc(recipes.createdAt))
     .all()
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    servings: r.servings,
+    difficulty: r.difficulty,
+    totalMinutes: r.totalMinutes,
+    isFavorite: r.isFavorite,
+    hasImage: r.imageMime != null,
+  }))
 }
 
 export function getRecipe(db: DB, userId: string, id: string): RecipeDetail | null {
@@ -84,6 +117,10 @@ export function getRecipe(db: DB, userId: string, id: string): RecipeDetail | nu
     id: row.id,
     title: row.title,
     servings: row.servings,
+    difficulty: row.difficulty,
+    totalMinutes: row.totalMinutes,
+    isFavorite: row.isFavorite,
+    hasImage: row.imageMime != null,
     sourceUrl: row.sourceUrl,
     sourceType: row.sourceType,
     steps: parseSteps(row.steps),
@@ -116,4 +153,28 @@ export function removeRecipe(db: DB, userId: string, id: string): boolean {
   // recipe_ingredients cascade via FK (foreign_keys pragma is ON in createDb).
   db.delete(recipes).where(eq(recipes.id, id)).run()
   return true
+}
+
+export function updateRecipeImageMime(db: DB, recipeId: string, mime: string): void {
+  db.update(recipes).set({ imageMime: mime }).where(eq(recipes.id, recipeId)).run()
+}
+
+export function setFavorite(db: DB, userId: string, id: string, isFavorite: boolean): boolean {
+  const row = db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.id, id), eq(recipes.userId, userId)))
+    .get()
+  if (!row) return false
+  db.update(recipes).set({ isFavorite }).where(eq(recipes.id, id)).run()
+  return true
+}
+
+export function getRecipeImageMime(db: DB, userId: string, id: string): string | null {
+  const row = db
+    .select({ imageMime: recipes.imageMime })
+    .from(recipes)
+    .where(and(eq(recipes.id, id), eq(recipes.userId, userId)))
+    .get()
+  return row?.imageMime ?? null
 }

@@ -10,7 +10,11 @@ import {
   listRecipes,
   getRecipe,
   removeRecipe,
+  updateRecipeImageMime,
+  setFavorite,
+  getRecipeImageMime,
 } from '../../modules/recipes/recipes.repo.js'
+import { cacheRecipeImage, readRecipeImage, deleteRecipeImage } from '../../modules/recipes/recipe-images.js'
 
 const ImportSchema = z
   .object({
@@ -31,9 +35,14 @@ const SaveSchema = z.object({
   servings: z.number().int().positive().max(999).nullable().optional(),
   sourceUrl: z.string().max(2000).nullable().optional(),
   sourceType: z.enum(['link', 'text']).default('text'),
+  imageUrl: z.string().max(2000).nullable().optional(),
+  difficulty: z.enum(['einfach', 'mittel', 'schwer']).nullable().optional(),
+  totalMinutes: z.number().int().positive().max(100000).nullable().optional(),
   ingredients: z.array(IngredientSchema).min(1).max(100),
   steps: z.array(z.string().max(2000)).max(100).default([]),
 })
+
+const PatchRecipeSchema = z.object({ isFavorite: z.boolean().optional() })
 
 const IdParams = z.object({ id: z.string().min(1) })
 
@@ -62,9 +71,18 @@ export function registerRecipeRoutes(app: FastifyInstance, db: DB): void {
       servings: body.servings ?? null,
       sourceUrl: body.sourceUrl ?? null,
       sourceType: body.sourceType,
+      difficulty: body.difficulty ?? null,
+      totalMinutes: body.totalMinutes ?? null,
       ingredients: body.ingredients,
       steps: body.steps,
     })
+    if (body.imageUrl) {
+      const mime = await cacheRecipeImage(summary.id, body.imageUrl)
+      if (mime) {
+        updateRecipeImageMime(db, summary.id, mime)
+        summary.hasImage = true
+      }
+    }
     return reply.status(201).send(summary)
   })
 
@@ -77,9 +95,28 @@ export function registerRecipeRoutes(app: FastifyInstance, db: DB): void {
     return recipe
   })
 
+  app.get('/api/recipes/:id/image', { preHandler: requireAuth }, async (req, reply) => {
+    const { id } = IdParams.parse(req.params)
+    const mime = getRecipeImageMime(db, req.user!.id, id)
+    if (!mime) return reply.status(404).send({ error: 'not_found' })
+    const buf = readRecipeImage(id)
+    if (!buf) return reply.status(404).send({ error: 'not_found' })
+    return reply.header('content-type', mime).header('cache-control', 'private, max-age=86400').send(buf)
+  })
+
+  app.patch('/api/recipes/:id', { preHandler: requireAuth }, async (req, reply) => {
+    const { id } = IdParams.parse(req.params)
+    const body = PatchRecipeSchema.parse(req.body)
+    if (body.isFavorite !== undefined && !setFavorite(db, req.user!.id, id, body.isFavorite)) {
+      return reply.status(404).send({ error: 'not_found' })
+    }
+    return reply.status(204).send()
+  })
+
   app.delete('/api/recipes/:id', { preHandler: requireAuth }, async (req, reply) => {
     const { id } = IdParams.parse(req.params)
     if (!removeRecipe(db, req.user!.id, id)) return reply.status(404).send({ error: 'not_found' })
+    deleteRecipeImage(id)
     return reply.status(204).send()
   })
 }

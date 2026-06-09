@@ -5,6 +5,10 @@ export interface ExtractResult {
   ingredients: string[]
   /** Preparation steps from schema.org recipeInstructions; empty when none. */
   instructions: string[]
+  /** Recipe image URL (schema.org image or og:image), if any. */
+  imageUrl: string | null
+  /** Total time in minutes from schema.org totalTime/cookTime, if any. */
+  totalMinutes: number | null
   /** Fallback page text for the LLM when no structured ingredients exist. */
   text: string | null
 }
@@ -24,12 +28,46 @@ export function extractFromHtml(html: string): ExtractResult {
         servings: parseYield(recipe.recipeYield),
         ingredients,
         instructions: toInstructionSteps(recipe.recipeInstructions),
+        imageUrl: toImageUrl(recipe.image) ?? ogImage(html),
+        totalMinutes: parseDuration(recipe.totalTime) ?? parseDuration(recipe.cookTime),
         text: null,
       }
     }
   }
   const text = htmlToText(html) || ogDescription(html)
-  return { title: null, servings: null, ingredients: [], instructions: [], text }
+  return { title: null, servings: null, ingredients: [], instructions: [], imageUrl: ogImage(html), totalMinutes: null, text }
+}
+
+function toImageUrl(v: unknown): string | null {
+  if (typeof v === 'string') return v.trim() || null
+  if (Array.isArray(v)) {
+    for (const x of v) {
+      const u = toImageUrl(x)
+      if (u) return u
+    }
+    return null
+  }
+  if (v && typeof v === 'object') {
+    const u = (v as Record<string, unknown>).url
+    return typeof u === 'string' ? u.trim() || null : null
+  }
+  return null
+}
+
+function ogImage(html: string): string | null {
+  const m =
+    html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']*)["']/i) ??
+    html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:image["']/i)
+  return m ? (m[1] ?? '').trim() || null : null
+}
+
+/** Parse an ISO 8601 duration like "PT1H30M" / "PT45M" into total minutes. */
+function parseDuration(v: unknown): number | null {
+  if (typeof v !== 'string') return null
+  const m = v.match(/^PT(?:(\d+)H)?(?:(\d+)M)?/i)
+  if (!m) return null
+  const total = (m[1] ? parseInt(m[1], 10) : 0) * 60 + (m[2] ? parseInt(m[2], 10) : 0)
+  return total > 0 ? total : null
 }
 
 /** recipeInstructions is polymorphic: string, string[], HowToStep[], or HowToSection[]. */

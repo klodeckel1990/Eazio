@@ -14,7 +14,7 @@ export function isInstagramUrl(url: string): boolean {
  * Instagram has no usable public API for arbitrary posts, so this is the only
  * link path; without APIFY_TOKEN the caller should paste the caption instead.
  */
-export async function fetchInstagramCaption(url: string): Promise<string> {
+export async function fetchInstagramCaption(url: string): Promise<{ text: string; imageUrl: string | null }> {
   const token = env.APIFY_TOKEN
   if (!token) {
     throw new RecipeImportError('fetch_failed', 400, 'instagram link needs the scraper or a pasted caption')
@@ -54,7 +54,21 @@ export async function fetchInstagramCaption(url: string): Promise<string> {
 
   const caption = extractCaption(items)
   if (!caption) throw new RecipeImportError('no_content', 422, 'no caption found for that post')
-  return caption
+  return { text: caption, imageUrl: extractImage(items) }
+}
+
+function extractImage(items: unknown): string | null {
+  if (!Array.isArray(items)) return null
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue
+    const o = item as Record<string, unknown>
+    for (const key of ['displayUrl', 'imageUrl', 'thumbnailUrl', 'image']) {
+      const v = o[key]
+      if (typeof v === 'string' && /^https?:/i.test(v)) return v
+    }
+    if (Array.isArray(o.images) && typeof o.images[0] === 'string') return o.images[0]
+  }
+  return null
 }
 
 function extractCaption(items: unknown): string | null {
