@@ -16,7 +16,7 @@ vorbereiten) · Umbenennung vor Store-Launch (Bundle-IDs!).
 | 1 | Bearer-Auth | Opake Tokens (sha256-Hash in `sessions`, 90 d gleitend) neben Cookie, CORS für Capacitor-Origins, CSP/Helmet, Geräteliste + Remote-Revoke | ✅ 09.06.2026 |
 | 2 | Eigene Food-DB | `foods`-Tabelle (bls/off/custom), BLS-4.0-Import (CC BY 4.0, Excel), FTS5-Suche (Umlaute/Komposita), OFF-Barcode-Cache, Custom Foods | ✅ 09.06.2026 |
 | 3 | Tagebuch | `diary_entries` (denormalisierte Nährwert-Snapshots) als Quelle der Wahrheit, Ziele/Wasser/Streak, asynchroner Yazio-Mirror (`pending→mirrored/skipped/failed`), `GET /api/widget/summary`, TrackerPage-Umbau | ✅ 09.06.2026 |
-| 4 | PWA | vite-plugin-pwa, Offline-Lesen (NetworkFirst für Diary, SWR für Foods) | offen |
+| 4 | PWA | vite-plugin-pwa, Offline-Lesen (NetworkFirst für Diary, SWR für Foods), Cache-Clear bei Logout | ✅ 09.06.2026 |
 | 5 | Capacitor-Shell | `app/`-Workspace, TestFlight/Internal Testing, ML-Kit-Barcode-Scanner, `SharedAuth`-Plugin (Shared Keychain/App Group) — **braucht neuen Namen** | offen |
 | 6 | Widgets + Live Activities | WidgetKit/Glance: Kalorienring + interaktives Wasser-Widget; Live Activity (Fasten/Tagesbilanz) + APNs-Pipeline | offen |
 | 7 | Launch-Paket | Hosting-Migration (EU-Cloud, Postgres), DSGVO, Premium/IAP | offen |
