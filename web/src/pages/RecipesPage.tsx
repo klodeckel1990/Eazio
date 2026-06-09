@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { ImportedRecipe, RecipeDetail, RecipeIngredient, RecipeSummary } from '../api/types'
 import { buildTrackerText } from '../lib/recipe'
@@ -34,6 +34,7 @@ const ingredientLine = (ing: RecipeIngredient): string =>
 
 export function RecipesPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [recipes, setRecipes] = useState<RecipeSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,12 +63,11 @@ export function RecipesPage() {
   }
   useEffect(() => { loadRecipes() }, [])
 
-  const handleImport = async () => {
-    if (!input.trim() || importing) return
+  const runImport = async (payload: { url?: string; text?: string }) => {
     setImportError(null)
     setImporting(true)
     try {
-      const r = await api.recipes.import(mode === 'link' ? { url: input.trim() } : { text: input })
+      const r = await api.recipes.import(payload)
       setPreview(r)
       setTitle(r.title ?? '')
       setServings(r.servings ? String(r.servings) : '')
@@ -80,6 +80,31 @@ export function RecipesPage() {
       setImporting(false)
     }
   }
+
+  const handleImport = () => {
+    if (!input.trim() || importing) return
+    void runImport(mode === 'link' ? { url: input.trim() } : { text: input })
+  }
+
+  // Deep link: /recipes?import=<url> (or ?import_text=<text>) auto-runs an import.
+  // Lets an iOS Shortcut on the share sheet feed in shared links — iOS has no
+  // Web Share Target API, so this is the iPhone path.
+  useEffect(() => {
+    const url = searchParams.get('import')
+    const text = searchParams.get('import_text')
+    if (!url && !text) return
+    if (url) {
+      setMode('link')
+      setInput(url)
+      void runImport({ url })
+    } else if (text) {
+      setMode('text')
+      setInput(text)
+      void runImport({ text })
+    }
+    setSearchParams({}, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSave = async () => {
     if (ingredients.length === 0 || saving) return
