@@ -5,7 +5,7 @@ import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconChec
 
 const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }[] = [
   { value: 'plain', title: 'Klartext', desc: 'Einfache Liste – ideal für WhatsApp & Notizen.' },
-  { value: 'checklist', title: 'Abhakbare Liste', desc: 'Mit ☐ zum Abhaken (iOS-Notizen, WhatsApp).' },
+  { value: 'checklist', title: 'Abhakbare Liste', desc: 'Saubere Zeilen für Apple Notes – einfügen, markieren, Checklisten-Button tippen.' },
   { value: 'bring', title: 'Bring!', desc: 'Direkt in die Bring!-Einkaufsliste übernehmen.' },
 ]
 

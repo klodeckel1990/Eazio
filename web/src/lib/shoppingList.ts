@@ -9,16 +9,16 @@ export const SHOPPING_FORMAT_LABEL: Record<ShoppingListFormat, string> = {
 const line = (ing: RecipeIngredient): string =>
   [ing.quantity, ing.unit, ing.name].map((p) => p.trim()).filter(Boolean).join(' ')
 
-/** Builds the clipboard text for the `plain` / `checklist` formats. */
-export function buildShoppingText(
-  title: string,
-  ingredients: RecipeIngredient[],
-  format: 'plain' | 'checklist',
-): string {
-  const lines = ingredients.map(line).filter(Boolean)
-  const body = format === 'checklist' ? lines.map((l) => `☐ ${l}`).join('\n') : lines.join('\n')
+/**
+ * Clipboard text for the `plain` / `checklist` formats: a "🛒 Titel" header
+ * plus one clean ingredient line each. No checkbox prefix — Apple Notes can't
+ * turn pasted text into a native checklist anyway; clean lines let the user
+ * select-all and tap the Notes checklist button to convert them in one step.
+ */
+export function buildShoppingText(title: string, ingredients: RecipeIngredient[]): string {
+  const lines = ingredients.map(line).filter(Boolean).join('\n')
   const header = title.trim() ? `🛒 ${title.trim()}\n\n` : ''
-  return header + body
+  return header + lines
 }
 
 /**

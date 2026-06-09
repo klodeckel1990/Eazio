@@ -44,7 +44,7 @@ export function RecipeDetailPage() {
       window.location.href = bringDeeplink(publicUrl, recipe.servings)
       return
     }
-    const ok = await copyText(buildShoppingText(recipe.title, recipe.ingredients, format))
+    const ok = await copyText(buildShoppingText(recipe.title, recipe.ingredients))
     if (ok) {
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1800)
@@ -147,6 +147,11 @@ export function RecipeDetailPage() {
                 <><IconCopy /> Zutaten kopieren</>
               )}
             </button>
+            {format === 'checklist' && (
+              <span className="muted small">
+                Apple Notes: einfügen → alles markieren → Checklisten-Button (⊙) tippen ergibt eine echte Checkliste.
+              </span>
+            )}
             <span className="muted small">
               Format: {SHOPPING_FORMAT_LABEL[format]} · <Link to="/accounts">in Einstellungen ändern</Link>
             </span>
