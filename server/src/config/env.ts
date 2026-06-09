@@ -33,6 +33,10 @@ const schema = z.object({
   // error when it's missing.
   ANTHROPIC_API_KEY: z.string().optional(),
   RECIPE_LLM_MODEL: z.string().default('claude-haiku-4-5'),
+  // Optional Apify token to resolve Instagram links (caption scraping) on import.
+  // Without it, Instagram links fall back to "paste the caption".
+  APIFY_TOKEN: z.string().optional(),
+  APIFY_INSTAGRAM_ACTOR: z.string().default('apify/instagram-scraper'),
 })
 
 const parsed = schema.safeParse(process.env)

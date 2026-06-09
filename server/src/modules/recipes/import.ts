@@ -1,6 +1,7 @@
 import { fetchHtml } from './fetch.js'
 import { extractFromHtml } from './extract.js'
 import { extractWithLlm } from './llm.js'
+import { isInstagramUrl, fetchInstagramCaption } from './instagram.js'
 import { RecipeImportError } from './errors.js'
 import type { ImportedRecipe } from './types.js'
 
@@ -24,14 +25,19 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
   if (input.url) {
     source = 'link'
     sourceUrl = input.url
-    const html = await fetchHtml(input.url)
-    const extracted = extractFromHtml(html)
-    if (extracted.ingredients.length > 0) {
-      jsonLdTitle = extracted.title
-      jsonLdServings = extracted.servings
-      llmInput = extracted.ingredients.join('\n')
+    if (isInstagramUrl(input.url)) {
+      // Instagram has no usable public API → resolve the caption via the scraper.
+      llmInput = await fetchInstagramCaption(input.url)
     } else {
-      llmInput = extracted.text ?? ''
+      const html = await fetchHtml(input.url)
+      const extracted = extractFromHtml(html)
+      if (extracted.ingredients.length > 0) {
+        jsonLdTitle = extracted.title
+        jsonLdServings = extracted.servings
+        llmInput = extracted.ingredients.join('\n')
+      } else {
+        llmInput = extracted.text ?? ''
+      }
     }
   } else if (input.text && input.text.trim()) {
     source = 'text'
