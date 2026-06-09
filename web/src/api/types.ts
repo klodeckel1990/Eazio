@@ -46,3 +46,5 @@ export interface RecipeDetail extends RecipeSummary {
   ingredients: RecipeIngredient[]
   steps: string[]
 }
+
+export interface UserSettings { iosShortcutHintDismissed: boolean }

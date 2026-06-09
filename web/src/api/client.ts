@@ -1,6 +1,6 @@
 import type {
   Account, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
-  ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient,
+  ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
 } from './types'
 
 export class ApiError extends Error {
@@ -66,5 +66,9 @@ export const api = {
     list: () => req<RecipeSummary[]>('GET', '/recipes'),
     get: (id: string) => req<RecipeDetail>('GET', `/recipes/${id}`),
     remove: (id: string) => req<void>('DELETE', `/recipes/${id}`),
+  },
+  settings: {
+    get: () => req<UserSettings>('GET', '/settings'),
+    update: (patch: Partial<UserSettings>) => req<UserSettings>('PATCH', '/settings', patch),
   },
 }

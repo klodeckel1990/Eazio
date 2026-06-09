@@ -4,6 +4,7 @@ export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  settings: text('settings'), // JSON-encoded per-user UI settings
   createdAt: integer('created_at').notNull(),
 })
 

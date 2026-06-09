@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
-import type { ImportedRecipe, RecipeDetail, RecipeIngredient, RecipeSummary } from '../api/types'
+import type { ImportedRecipe, RecipeDetail, RecipeIngredient, RecipeSummary, UserSettings } from '../api/types'
 import { buildTrackerText } from '../lib/recipe'
 import { IconBook, IconWand, IconBowl, IconTrash, IconCheck, IconClose, IconAlert, IconShare } from '../components/icons'
 
 const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/e9161889953d4685b6e2a9fd181cf41d'
-const HINT_KEY = 'eazio:ios-shortcut-hint'
 const IS_IOS =
   typeof navigator !== 'undefined' &&
   (/ip(hone|ad|od)/i.test(navigator.userAgent) ||
@@ -51,21 +50,11 @@ export function RecipesPage() {
   const [importing, setImporting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
   const [importOpen, setImportOpen] = useState(false)
-  const [hintDismissed, setHintDismissed] = useState(() => {
-    try {
-      return localStorage.getItem(HINT_KEY) === 'done'
-    } catch {
-      return false
-    }
-  })
-  const showHint = IS_IOS && !hintDismissed
+  const [settings, setSettings] = useState<UserSettings | null>(null)
+  const showHint = IS_IOS && settings != null && !settings.iosShortcutHintDismissed
   const dismissHint = () => {
-    try {
-      localStorage.setItem(HINT_KEY, 'done')
-    } catch {
-      /* ignore (private mode) */
-    }
-    setHintDismissed(true)
+    setSettings((s) => (s ? { ...s, iosShortcutHintDismissed: true } : { iosShortcutHintDismissed: true }))
+    api.settings.update({ iosShortcutHintDismissed: true }).catch(() => {})
   }
 
   // editable preview
@@ -85,7 +74,10 @@ export function RecipesPage() {
   const loadRecipes = () => {
     api.recipes.list().then(setRecipes).catch(() => setRecipes([]))
   }
-  useEffect(() => { loadRecipes() }, [])
+  useEffect(() => {
+    loadRecipes()
+    api.settings.get().then(setSettings).catch(() => setSettings({ iosShortcutHintDismissed: false }))
+  }, [])
 
   const runImport = async (payload: { url?: string; text?: string }) => {
     setImportError(null)

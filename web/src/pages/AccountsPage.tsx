@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError } from '../api/client'
 import type { Account } from '../api/types'
-import { IconUser, IconStar, IconTrash, IconPlus, IconAlert } from '../components/icons'
+import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck } from '../components/icons'
 
 export function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[] | null>(null)
@@ -10,6 +10,7 @@ export function AccountsPage() {
   const [password, setPassword] = useState('')
   const [linkError, setLinkError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [hintReenabled, setHintReenabled] = useState(false)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -52,12 +53,23 @@ export function AccountsPage() {
     loadAccounts()
   }
 
+  const reenableHint = async () => {
+    try {
+      await api.settings.update({ iosShortcutHintDismissed: false })
+      setHintReenabled(true)
+    } catch (e) {
+      if (!(e instanceof ApiError)) throw e
+    }
+  }
+
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Konten</h1>
-        <span className="sub">Deine verknüpften Yazio-Konten.</span>
+        <h1>Einstellungen</h1>
+        <span className="sub">Yazio-Konten, App-Optionen und mehr.</span>
       </header>
+
+      <h2 className="section-title">Yazio-Konten</h2>
 
       {accounts === null ? (
         <p className="loading-inline"><span className="spinner" /> Lade Konten…</p>
@@ -153,6 +165,28 @@ export function AccountsPage() {
             {submitting ? 'Verknüpfen…' : 'Verknüpfen'}
           </button>
         </form>
+      </div>
+
+      <div className="card stack">
+        <h2 className="section-title">Teilen &amp; Import</h2>
+        <p className="muted">
+          Blende die Anleitung zum Teilen aus Instagram (iPhone-Kurzbefehl) auf der Rezepte-Seite wieder ein.
+        </p>
+        {hintReenabled ? (
+          <p className="banner success">
+            <IconCheck />
+            <span className="banner-text">Wird auf der Rezepte-Seite (am iPhone) wieder angezeigt.</span>
+          </p>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ alignSelf: 'flex-start' }}
+            onClick={() => { void reenableHint() }}
+          >
+            <IconShare /> Teilen-Anleitung erneut anzeigen
+          </button>
+        )}
       </div>
     </div>
   )

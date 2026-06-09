@@ -69,7 +69,7 @@ export function TrackerPage() {
           <h3>Kein Konto verknüpft</h3>
           <p>Verbinde zuerst dein Yazio-Konto, dann kannst du hier tracken.</p>
           <Link to="/accounts" className="btn btn-primary" style={{ marginTop: '0.4rem' }}>
-            Zu den Konten
+            Zu den Einstellungen
           </Link>
         </div>
       </div>
@@ -99,7 +99,7 @@ export function TrackerPage() {
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 409) {
-          setError('Kein Yazio-Konto verknüpft. Bitte zuerst ein Konto unter Konten hinzufügen.')
+          setError('Kein Yazio-Konto verknüpft. Bitte zuerst ein Konto unter Einstellungen hinzufügen.')
         } else {
           setError(e.message)
         }

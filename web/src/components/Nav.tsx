@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import type { ComponentType, SVGProps } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { IconBowl, IconBook, IconUser, IconBookmark, IconLeaf, IconLogout } from './icons'
+import { IconBowl, IconBook, IconBookmark, IconSettings, IconLeaf, IconLogout } from './icons'
 
 interface NavItem {
   to: string
@@ -13,7 +13,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Tracker', Icon: IconBowl },
   { to: '/recipes', label: 'Rezepte', Icon: IconBook },
   { to: '/presets', label: 'Presets', Icon: IconBookmark },
-  { to: '/accounts', label: 'Konten', Icon: IconUser },
+  { to: '/accounts', label: 'Einstellungen', Icon: IconSettings },
 ]
 
 /** Top app bar: brand, inline nav (desktop), user chip + logout. */
