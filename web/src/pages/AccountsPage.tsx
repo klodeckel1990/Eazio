@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError } from '../api/client'
 import type { Account } from '../api/types'
+import { IconUser, IconStar, IconTrash, IconPlus, IconAlert } from '../components/icons'
 
 export function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[] | null>(null)
@@ -52,78 +53,107 @@ export function AccountsPage() {
   }
 
   return (
-    <div className="container">
-      <h2>Konten</h2>
+    <div className="page">
+      <header className="page-head">
+        <h1>Konten</h1>
+        <span className="sub">Deine verknüpften Yazio-Konten.</span>
+      </header>
 
       {accounts === null ? (
-        <p>Lade Konten…</p>
+        <p className="loading-inline"><span className="spinner" /> Lade Konten…</p>
+      ) : accounts.length === 0 ? (
+        <div className="empty">
+          <span className="emoji"><IconUser /></span>
+          <h3>Noch kein Konto</h3>
+          <p>Verknüpfe unten dein Yazio-Konto, um Mahlzeiten zu tracken.</p>
+        </div>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="list">
           {accounts.map(acc => (
-            <li key={acc.id} style={{ marginBottom: '0.75rem' }}>
-              <strong>{acc.label}</strong>
-              {' '}
-              <span className="muted">({acc.yazioUsername})</span>
-              {' '}
-              {acc.isDefault && <span className="badge">Standard</span>}
-              {!acc.isDefault && (
-                <button
-                  type="button"
-                  onClick={() => { void handleSetDefault(acc.id) }}
-                  style={{ marginLeft: '0.5rem' }}
-                >
-                  Als Standard
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => { void handleRemove(acc.id) }}
-                style={{ marginLeft: '0.5rem' }}
-              >
-                Entfernen
-              </button>
+            <li key={acc.id}>
+              <div className="row-card">
+                <span className="row-icon"><IconUser /></span>
+                <div className="row-main">
+                  <div className="row-title">
+                    <span className="text">{acc.label}</span>
+                    {acc.isDefault && (
+                      <span className="badge"><IconStar /> Standard</span>
+                    )}
+                  </div>
+                  <div className="row-sub">{acc.yazioUsername}</div>
+                </div>
+                <div className="row-actions">
+                  {!acc.isDefault && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => { void handleSetDefault(acc.id) }}
+                    >
+                      Als Standard
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-danger"
+                    onClick={() => { void handleRemove(acc.id) }}
+                    aria-label={`${acc.label} entfernen`}
+                    title="Entfernen"
+                  >
+                    <IconTrash />
+                  </button>
+                </div>
+              </div>
             </li>
           ))}
         </ul>
       )}
 
-      <h3>Konto verknüpfen</h3>
-      <form onSubmit={(e) => { void handleLink(e) }}>
-        <div>
-          <label htmlFor="link-label">Bezeichnung</label>
-          <input
-            id="link-label"
-            type="text"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="link-username">Benutzername (Yazio)</label>
-          <input
-            id="link-username"
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="link-password">Passwort</label>
-          <input
-            id="link-password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        {linkError && <p className="error">{linkError}</p>}
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Verknüpfen…' : 'Verknüpfen'}
-        </button>
-      </form>
+      <div className="card pad-lg">
+        <h2 className="section-title">Konto verknüpfen</h2>
+        <form className="stack" style={{ marginTop: '0.6rem' }} onSubmit={(e) => { void handleLink(e) }}>
+          <div className="field">
+            <label htmlFor="link-label">Bezeichnung</label>
+            <input
+              id="link-label"
+              type="text"
+              placeholder="z. B. Mein Konto"
+              value={label}
+              onChange={e => setLabel(e.target.value)}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="link-username">Benutzername (Yazio)</label>
+            <input
+              id="link-username"
+              type="text"
+              placeholder="E-Mail bei Yazio"
+              autoCapitalize="none"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="link-password">Passwort</label>
+            <input
+              id="link-password"
+              type="password"
+              placeholder="Yazio-Passwort"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {linkError && (
+            <p className="banner error"><IconAlert /><span className="banner-text">{linkError}</span></p>
+          )}
+          <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
+            <IconPlus />
+            {submitting ? 'Verknüpfen…' : 'Verknüpfen'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { Preset } from '../api/types'
+import { IconBookmark, IconTrash, IconAlert } from '../components/icons'
 
 export function PresetsPage() {
   const [presets, setPresets] = useState<Preset[] | null>(null)
@@ -52,34 +53,52 @@ export function PresetsPage() {
   }
 
   return (
-    <div className="container">
-      <h2>Presets</h2>
+    <div className="page">
+      <header className="page-head">
+        <h1>Presets</h1>
+        <span className="sub">Gespeicherte Zutatenlisten – mit einem Tipp in den Tracker.</span>
+      </header>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>
+      )}
 
       {presets === null ? (
-        <p>Lade Presets…</p>
+        <p className="loading-inline"><span className="spinner" /> Lade Presets…</p>
       ) : presets.length === 0 ? (
-        <p className="muted">Noch keine Presets.</p>
+        <div className="empty">
+          <span className="emoji"><IconBookmark /></span>
+          <h3>Noch keine Presets</h3>
+          <p>Speichere im Tracker eine Zutatenliste als Preset – sie erscheint dann hier.</p>
+        </div>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="list">
           {presets.map(preset => (
-            <li key={preset.id} style={{ marginBottom: '0.75rem' }}>
-              <strong>{preset.name}</strong>
-              <button
-                type="button"
-                onClick={() => { void handleLoad(preset.id) }}
-                style={{ marginLeft: '0.75rem' }}
-              >
-                Im Tracker laden
-              </button>
-              <button
-                type="button"
-                onClick={() => { void handleRemove(preset.id) }}
-                style={{ marginLeft: '0.5rem' }}
-              >
-                Löschen
-              </button>
+            <li key={preset.id}>
+              <div className="row-card">
+                <span className="row-icon alt"><IconBookmark /></span>
+                <div className="row-main">
+                  <div className="row-title"><span className="text">{preset.name}</span></div>
+                </div>
+                <div className="row-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={() => { void handleLoad(preset.id) }}
+                  >
+                    Im Tracker laden
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-danger"
+                    onClick={() => { void handleRemove(preset.id) }}
+                    aria-label={`${preset.name} löschen`}
+                    title="Löschen"
+                  >
+                    <IconTrash />
+                  </button>
+                </div>
+              </div>
             </li>
           ))}
         </ul>

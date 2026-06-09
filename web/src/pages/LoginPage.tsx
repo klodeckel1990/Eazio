@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { IconLeaf, IconAlert } from '../components/icons'
 
 export function LoginPage() {
   const { user, login, loading } = useAuth()
@@ -9,6 +10,7 @@ export function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   if (loading) return null
   if (user) return <Navigate to="/" replace />
@@ -16,6 +18,7 @@ export function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
+    setSubmitting(true)
     try {
       await login(username, password)
       navigate('/', { replace: true })
@@ -25,30 +28,51 @@ export function LoginPage() {
       } else {
         throw err
       }
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div className="container">
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="username">Benutzername</label>
-        <input
-          id="username"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          autoComplete="username"
-        />
-        <label htmlFor="password">Passwort</label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
-        <button type="submit">Anmelden</button>
-        {error && <p className="error">{error}</p>}
+    <div className="auth">
+      <form className="auth-card" onSubmit={(e) => { void handleSubmit(e) }}>
+        <div className="auth-brand">
+          <span className="leaf"><IconLeaf /></span>
+          <h1>eazio</h1>
+          <p>Dein entspannter Yazio-Begleiter.</p>
+        </div>
+
+        <div className="field">
+          <label htmlFor="username">Benutzername</label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            autoCapitalize="none"
+            autoFocus
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="password">Passwort</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+        </div>
+
+        {error && (
+          <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>
+        )}
+
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={submitting}>
+          {submitting ? 'Anmelden…' : 'Anmelden'}
+        </button>
       </form>
     </div>
   )

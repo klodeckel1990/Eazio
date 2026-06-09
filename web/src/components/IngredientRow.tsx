@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import type { MatchLine } from '../api/types'
 import { scaleNutrition, round } from '../lib/nutrition'
+import { IconClose } from './icons'
 
 export interface IngredientRowProps {
   line: MatchLine
@@ -11,48 +12,76 @@ export interface IngredientRowProps {
 
 export function IngredientRow({ line, value, onChange, onRemove }: IngredientRowProps) {
   const sel = line.candidates.find(c => c.productId === value.productId)
-
-  let nutrientSummary: string
-  if (sel) {
-    const n = scaleNutrition(sel.nutrientsPerReference, sel.referenceAmount, value.grams)
-    nutrientSummary = `${n.kcal} kcal · ${n.carb} g KH · ${round(n.protein)} g P · ${round(n.fat)} g F`
-  } else {
-    nutrientSummary = '–'
-  }
+  const n = sel ? scaleNutrition(sel.nutrientsPerReference, sel.referenceAmount, value.grams) : null
 
   const fieldId = useId()
   const gramsInputId = `${fieldId}-grams`
 
+  const setGrams = (grams: number) => onChange({ productId: value.productId, grams: Math.max(0, grams) })
+
   return (
-    <div className="ingredient-row">
-      <small className="muted">{line.raw}</small>
+    <div className="ingredient">
+      <div className="ing-head">
+        <span className="ing-raw">{line.raw}</span>
+        <button
+          type="button"
+          className="btn btn-icon btn-ghost btn-sm"
+          onClick={onRemove}
+          aria-label="Zutat entfernen"
+          title="Entfernen"
+        >
+          <IconClose />
+        </button>
+      </div>
 
-      <select
-        aria-label="Produkt"
-        value={value.productId}
-        onChange={e => onChange({ productId: e.target.value, grams: value.grams })}
-      >
-        {line.candidates.map(c => (
-          <option key={c.productId} value={c.productId}>
-            {c.name} – {c.producer}{c.isVerified ? ' ✓' : ''}
-          </option>
-        ))}
-      </select>
+      <div className="ing-controls">
+        <div className="field grow">
+          <label htmlFor={`${fieldId}-prod`}>Produkt</label>
+          <select
+            id={`${fieldId}-prod`}
+            aria-label="Produkt"
+            value={value.productId}
+            onChange={e => onChange({ productId: e.target.value, grams: value.grams })}
+          >
+            {line.candidates.map(c => (
+              <option key={c.productId} value={c.productId}>
+                {c.name} – {c.producer}{c.isVerified ? ' ✓' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <label htmlFor={gramsInputId}>Gramm</label>
-      <input
-        id={gramsInputId}
-        type="number"
-        value={value.grams}
-        onChange={e => {
-          const parsed = Number(e.target.value)
-          onChange({ productId: value.productId, grams: isNaN(parsed) ? 0 : parsed })
-        }}
-      />
+        <div className="field">
+          <label htmlFor={gramsInputId}>Menge</label>
+          <div className="stepper">
+            <button type="button" aria-label="Weniger" onClick={() => setGrams(value.grams - 10)}>−</button>
+            <input
+              id={gramsInputId}
+              type="number"
+              inputMode="decimal"
+              aria-label="Gramm"
+              value={value.grams}
+              onChange={e => {
+                const parsed = Number(e.target.value)
+                onChange({ productId: value.productId, grams: isNaN(parsed) ? 0 : parsed })
+              }}
+            />
+            <span className="unit">g</span>
+            <button type="button" aria-label="Mehr" onClick={() => setGrams(value.grams + 10)}>+</button>
+          </div>
+        </div>
+      </div>
 
-      <span className="muted">{nutrientSummary}</span>
-
-      <button type="button" onClick={onRemove}>✕</button>
+      {n ? (
+        <div className="macros">
+          <span className="macro kcal"><span className="v">{n.kcal}</span><span className="u">kcal</span></span>
+          <span className="macro carb"><span className="v">{round(n.carb)}</span><span className="u">g KH</span></span>
+          <span className="macro prot"><span className="v">{round(n.protein)}</span><span className="u">g Protein</span></span>
+          <span className="macro fat"><span className="v">{round(n.fat)}</span><span className="u">g Fett</span></span>
+        </div>
+      ) : (
+        <span className="muted">–</span>
+      )}
     </div>
   )
 }

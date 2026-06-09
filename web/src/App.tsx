@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import { ProtectedRoute } from './auth/ProtectedRoute'
-import { Nav } from './components/Nav'
+import { AppBar, TabBar } from './components/Nav'
 import { LoginPage } from './pages/LoginPage'
 import { TrackerPage } from './pages/TrackerPage'
 import { AccountsPage } from './pages/AccountsPage'
@@ -9,12 +9,13 @@ import { PresetsPage } from './pages/PresetsPage'
 
 function Shell() {
   return (
-    <>
-      <Nav />
-      <main className="container">
+    <div className="app">
+      <AppBar />
+      <main className="main">
         <Outlet />
       </main>
-    </>
+      <TabBar />
+    </div>
   )
 }
 
