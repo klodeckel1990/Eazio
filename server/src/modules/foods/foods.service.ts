@@ -7,7 +7,7 @@ import {
   type FoodRow,
   type ServingDef,
 } from './foods.repo.js'
-import { fetchOffProduct, type FetchOffProduct } from './off.client.js'
+import { fetchOffProduct, searchOffProducts, type FetchOffProduct, type SearchOffProducts } from './off.client.js'
 import { mapOffProduct } from './off.mapper.js'
 import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
@@ -87,6 +87,46 @@ export function search(db: DB, userId: string, query: string, limit: number): Fo
   return searchRepo(db, userId, query, limit).map((row) => toSummary(row, userId))
 }
 
+// Below this many local hits, branded products from OFF are searched live.
+const MIN_LOCAL_RESULTS = 3
+
+/**
+ * Text search across BLS/custom (local FTS) plus an Open Food Facts fallback
+ * for branded products: only when the local index is sparse, results are
+ * cached into the foods table (next search is local), OFF being down just
+ * means no extra results.
+ */
+export async function searchSmart(
+  db: DB,
+  userId: string,
+  query: string,
+  limit: number,
+  fetchSearch: SearchOffProducts = searchOffProducts,
+): Promise<FoodSummary[]> {
+  const local = search(db, userId, query, limit)
+  if (local.length >= MIN_LOCAL_RESULTS) return local
+
+  const products = await fetchSearch(query)
+  const seen = new Set(local.map((f) => f.id))
+  const merged = [...local]
+  for (const p of products) {
+    const id = `off:${p.code}`
+    if (seen.has(id) || merged.length >= limit) continue
+    seen.add(id)
+    const existing = getFoodById(db, id, userId)
+    if (existing && Date.now() - existing.updatedAt < OFF_REFRESH_MS) {
+      merged.push(toSummary(existing, userId))
+      continue
+    }
+    const food = mapOffProduct(p.code, p)
+    if (!food) continue
+    upsertSourcedFood(db, food)
+    const row = getFoodById(db, id, userId)
+    if (row) merged.push(toSummary(row, userId))
+  }
+  return merged
+}
+
 export function getFood(db: DB, userId: string, id: string): FoodDetail | null {
   const row = getFoodById(db, id, userId)
   return row ? toDetail(row, userId) : null
@@ -137,14 +177,20 @@ export interface FoodMatchLine {
 /**
  * Bulk text matching for the tracker: parse pasted ingredients, drop pure
  * seasonings, look up each line in the user's learned aliases and the foods
- * FTS index. Mirrors the legacy Yazio matchText flow, but against our data.
+ * FTS index, with the OFF text fallback for branded products. Mirrors the
+ * legacy Yazio matchText flow, but against our data.
  */
-export function matchFoodText(db: DB, userId: string, text: string): FoodMatchLine[] {
+export async function matchFoodText(
+  db: DB,
+  userId: string,
+  text: string,
+  fetchSearch: SearchOffProducts = searchOffProducts,
+): Promise<FoodMatchLine[]> {
   const out: FoodMatchLine[] = []
   for (const line of parseIngredients(text)) {
     if (isSeasoning(line.name)) continue
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
-    const candidates = search(db, userId, buildSearchQuery(line.name), 10)
+    const candidates = await searchSmart(db, userId, buildSearchQuery(line.name), 10, fetchSearch)
 
     let selectedFoodId = candidates[0]?.id ?? null
     let aliasDefaultG: number | null = null

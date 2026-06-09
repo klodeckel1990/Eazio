@@ -13,7 +13,8 @@ export interface OffProduct {
   code: string
   product_name?: string
   product_name_de?: string
-  brands?: string
+  /** Comma string from the product API, string[] from search-a-licious. */
+  brands?: string | string[]
   categories_tags?: string[]
   quantity?: string
   serving_quantity?: number | string
@@ -57,4 +58,25 @@ export async function fetchOffProduct(ean: string): Promise<OffProduct | null> {
   if (!body) throw new OffUnavailableError('off returned invalid json')
   if (body.status !== 1 || !body.product) return null
   return body.product
+}
+
+export type SearchOffProducts = (query: string, limit?: number) => Promise<OffProduct[]>
+
+/**
+ * Full-text product search via search.openfoodfacts.org (search-a-licious).
+ * Used as a best-effort fallback when the local index is sparse — failures
+ * and outages just mean "no extra results", so this never throws.
+ */
+export async function searchOffProducts(query: string, limit = 8): Promise<OffProduct[]> {
+  try {
+    const res = await fetch(
+      `https://search.openfoodfacts.org/search?q=${encodeURIComponent(query)}&langs=de&page_size=${limit}&fields=${FIELDS}`,
+      { headers: { 'user-agent': USER_AGENT }, signal: AbortSignal.timeout(6000) },
+    )
+    if (!res.ok) return []
+    const body = (await res.json().catch(() => null)) as { hits?: OffProduct[] } | null
+    return (body?.hits ?? []).filter((p) => typeof p.code === 'string' && p.code.length > 0)
+  } catch {
+    return []
+  }
 }

@@ -14,7 +14,7 @@ export interface FoodRowProps {
 
 const SOURCE_BADGE: Record<FoodSummary['source'], string> = {
   bls: 'BLS',
-  off: 'Barcode',
+  off: 'Produkt',
   custom: 'Eigenes',
 }
 

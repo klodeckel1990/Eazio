@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createTestDb } from '../../db/test-db.js'
 import { buildApp } from '../../app.js'
 import { upsertSourcedFood } from '../../modules/foods/foods.repo.js'
 import { buildSearchTerms } from '../../modules/foods/search-terms.js'
+
+// Keep the OFF text-search fallback off the network in tests.
+vi.mock('../../modules/foods/off.client.js', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('../../modules/foods/off.client.js')>()
+  return { ...mod, searchOffProducts: vi.fn(async () => []) }
+})
 
 const BOOTSTRAP = 'test-bootstrap-token'
 

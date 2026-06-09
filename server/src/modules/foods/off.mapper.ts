@@ -20,7 +20,8 @@ export function mapOffProduct(ean: string, p: OffProduct): NewFood | null {
 
   const name = (p.product_name_de || p.product_name || '').trim()
   if (!name) return null
-  const brand = p.brands?.split(',')[0]?.trim() || null
+  const rawBrand = Array.isArray(p.brands) ? p.brands[0] : p.brands?.split(',')[0]
+  const brand = rawBrand?.trim() || null
 
   // OFF sodium is g/100g; our column stores mg to match BLS.
   const sodiumG = num(n['sodium_100g'])

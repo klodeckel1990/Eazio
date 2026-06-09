@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import type { DB } from '../../db/client.js'
 import { requireAuth } from '../auth-guard.js'
-import { getFood, lookupBarcode, matchFoodText, search } from '../../modules/foods/foods.service.js'
+import { getFood, lookupBarcode, matchFoodText, searchSmart } from '../../modules/foods/foods.service.js'
 import {
   createCustomFood,
   softDeleteCustomFood,
@@ -42,13 +42,13 @@ const CustomFoodSchema = z.object({
 export function registerFoodRoutes(app: FastifyInstance, db: DB): void {
   app.get('/api/foods/search', { preHandler: requireAuth }, async (req, reply) => {
     const { q, limit } = SearchSchema.parse(req.query)
-    return reply.send({ results: search(db, req.user!.id, q, limit) })
+    return reply.send({ results: await searchSmart(db, req.user!.id, q, limit) })
   })
 
   // Bulk text matching for the tracker (multi-line paste → candidates per line).
   app.post('/api/foods/match', { preHandler: requireAuth }, async (req, reply) => {
     const { text } = z.object({ text: z.string().trim().min(1).max(4000) }).parse(req.body)
-    return reply.send({ lines: matchFoodText(db, req.user!.id, text) })
+    return reply.send({ lines: await matchFoodText(db, req.user!.id, text) })
   })
 
   app.get(

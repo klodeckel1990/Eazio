@@ -3,11 +3,11 @@ import { createTestDb } from '../../db/test-db.js'
 import { buildApp } from '../../app.js'
 import { upsertSourcedFood } from '../../modules/foods/foods.repo.js'
 import { buildSearchTerms } from '../../modules/foods/search-terms.js'
-import { fetchOffProduct, OffUnavailableError } from '../../modules/foods/off.client.js'
+import { fetchOffProduct, searchOffProducts, OffUnavailableError } from '../../modules/foods/off.client.js'
 
 vi.mock('../../modules/foods/off.client.js', async (importOriginal) => {
   const mod = await importOriginal<typeof import('../../modules/foods/off.client.js')>()
-  return { ...mod, fetchOffProduct: vi.fn() }
+  return { ...mod, fetchOffProduct: vi.fn(), searchOffProducts: vi.fn() }
 })
 
 const BOOTSTRAP = 'test-bootstrap-token'
@@ -44,6 +44,8 @@ function seedBls(db: ReturnType<typeof createTestDb>) {
 
 beforeEach(() => {
   vi.mocked(fetchOffProduct).mockReset()
+  vi.mocked(searchOffProducts).mockReset()
+  vi.mocked(searchOffProducts).mockResolvedValue([])
 })
 
 describe('foods routes', () => {
@@ -140,6 +142,55 @@ describe('foods routes', () => {
     const second = await app.inject({ method: 'GET', url: '/api/foods/barcode/4000417025005', headers: auth })
     expect(second.statusCode).toBe(200)
     expect(fetchOffProduct).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to OFF text search when the local index is sparse and caches results', async () => {
+    const app = buildApp(createTestDb())
+    const auth = await login(app, 'sparse')
+    vi.mocked(searchOffProducts).mockResolvedValue([
+      {
+        code: '4250350590126',
+        product_name_de: 'Designer Whey Proteinpulver',
+        brands: 'ESN',
+        nutriments: { 'energy-kcal_100g': 370, proteins_100g: 80 },
+      },
+    ])
+
+    const res = await app.inject({ method: 'GET', url: '/api/foods/search?q=proteinpulver', headers: auth })
+    expect(res.statusCode).toBe(200)
+    const { results } = res.json() as { results: { name: string; source: string }[] }
+    expect(results).toContainEqual(
+      expect.objectContaining({ name: 'Designer Whey Proteinpulver', source: 'off', kcal: 370 }),
+    )
+
+    // second search is served from the cache without another OFF call
+    vi.mocked(searchOffProducts).mockClear()
+    vi.mocked(searchOffProducts).mockResolvedValue([])
+    const second = await app.inject({ method: 'GET', url: '/api/foods/search?q=proteinpulver', headers: auth })
+    const cached = (second.json() as { results: { name: string }[] }).results
+    expect(cached.some((r) => r.name === 'Designer Whey Proteinpulver')).toBe(true)
+  })
+
+  it('skips the OFF fallback when local results are plentiful', async () => {
+    const db = createTestDb()
+    const now = Date.now()
+    for (let i = 0; i < 4; i++) {
+      upsertSourcedFood(db, {
+        id: `bls:A${i}`,
+        source: 'bls',
+        sourceId: `A${i}`,
+        name: `Apfelsorte ${i}`,
+        searchTerms: buildSearchTerms(`Apfelsorte ${i}`),
+        kcal: 52,
+        createdAt: now,
+        updatedAt: now,
+      })
+    }
+    const app = buildApp(db)
+    const auth = await login(app, 'plenty')
+    const res = await app.inject({ method: 'GET', url: '/api/foods/search?q=apfelsorte', headers: auth })
+    expect((res.json() as { results: unknown[] }).results).toHaveLength(4)
+    expect(searchOffProducts).not.toHaveBeenCalled()
   })
 
   it('maps OFF misses to 404 and outages to 503', async () => {
