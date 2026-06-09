@@ -30,6 +30,8 @@ export const api = {
   auth: {
     me: () => req<User>('GET', '/auth/me'),
     login: (username: string, password: string) => req<User>('POST', '/auth/login', { username, password }),
+    register: (username: string, email: string, password: string) =>
+      req<User>('POST', '/auth/register', { username, email, password }),
     logout: () => req<void>('POST', '/auth/logout'),
   },
   accounts: {

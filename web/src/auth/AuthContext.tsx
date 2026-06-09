@@ -6,6 +6,7 @@ interface AuthState {
   user: User | null
   loading: boolean
   login: (username: string, password: string) => Promise<void>
+  register: (username: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
 const Ctx = createContext<AuthState | null>(null)
@@ -29,11 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string) => {
     setUser(await api.auth.login(username, password))
   }
+  const register = async (username: string, email: string, password: string) => {
+    setUser(await api.auth.register(username, email, password))
+  }
   const logout = async () => {
     await api.auth.logout().catch((e) => { if (!(e instanceof ApiError)) throw e })
     setUser(null)
   }
-  return <Ctx.Provider value={{ user, loading, login, logout }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ user, loading, login, register, logout }}>{children}</Ctx.Provider>
 }
 
 export function useAuth(): AuthState {

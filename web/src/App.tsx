@@ -3,6 +3,7 @@ import { AuthProvider } from './auth/AuthContext'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { AppBar, TabBar } from './components/Nav'
 import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
 import { TrackerPage } from './pages/TrackerPage'
 import { AccountsPage } from './pages/AccountsPage'
 import { PresetsPage } from './pages/PresetsPage'
@@ -28,6 +29,7 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<Shell />}>
               <Route path="/" element={<TrackerPage />} />

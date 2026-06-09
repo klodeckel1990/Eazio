@@ -3,6 +3,8 @@ import { sqliteTable, text, integer, real, unique } from 'drizzle-orm/sqlite-cor
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   username: text('username').notNull().unique(),
+  // Nullable: pre-existing bootstrap users have no email. Stored lowercased.
+  email: text('email').unique(),
   passwordHash: text('password_hash').notNull(),
   settings: text('settings'), // JSON-encoded per-user UI settings
   createdAt: integer('created_at').notNull(),

@@ -80,6 +80,68 @@ describe('auth routes', () => {
     expect(res.statusCode).toBe(400)
   })
 
+  it('registers a new user, sets a session, and reads me', async () => {
+    const app = buildApp(createTestDb())
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'newbie', email: 'New@Example.COM', password: 'pw-123456' },
+    })
+    expect(res.statusCode).toBe(201)
+    expect(res.json()).toMatchObject({ username: 'newbie' })
+    const cookie = res.cookies.find((c) => c.name === SESSION_COOKIE)
+    expect(cookie).toBeTruthy()
+    const me = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { cookie: `${SESSION_COOKIE}=${cookie!.value}` },
+    })
+    expect(me.statusCode).toBe(200)
+    expect(me.json()).toMatchObject({ username: 'newbie' })
+  })
+
+  it('rejects registration for a duplicate username', async () => {
+    const app = buildApp(createTestDb())
+    const payload = { username: 'dup', email: 'a@example.com', password: 'pw-123456' }
+    expect((await app.inject({ method: 'POST', url: '/api/auth/register', payload })).statusCode).toBe(201)
+    const dup = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { ...payload, email: 'b@example.com' },
+    })
+    expect(dup.statusCode).toBe(409)
+    expect(dup.json()).toMatchObject({ error: 'username_taken' })
+  })
+
+  it('rejects registration for a duplicate email (case-insensitive)', async () => {
+    const app = buildApp(createTestDb())
+    const payload = { username: 'one', email: 'same@example.com', password: 'pw-123456' }
+    expect((await app.inject({ method: 'POST', url: '/api/auth/register', payload })).statusCode).toBe(201)
+    const dup = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'two', email: 'SAME@example.com', password: 'pw-123456' },
+    })
+    expect(dup.statusCode).toBe(409)
+    expect(dup.json()).toMatchObject({ error: 'email_taken' })
+  })
+
+  it('rejects registration with an invalid email or short password (400)', async () => {
+    const app = buildApp(createTestDb())
+    const badEmail = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'bademail', email: 'not-an-email', password: 'pw-123456' },
+    })
+    expect(badEmail.statusCode).toBe(400)
+    const shortPw = await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'shortpw', email: 'ok@example.com', password: '1234567' },
+    })
+    expect(shortPw.statusCode).toBe(400)
+  })
+
   it('logout without a cookie is a no-op 204', async () => {
     const app = buildApp(createTestDb())
     const res = await app.inject({ method: 'POST', url: '/api/auth/logout' })

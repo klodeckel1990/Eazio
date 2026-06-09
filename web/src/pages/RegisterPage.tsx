@@ -1,32 +1,46 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { IconLeaf, IconAlert } from '../components/icons'
 
-export function LoginPage() {
-  const { user, login, loading } = useAuth()
+function errorMessage(err: ApiError): string {
+  if (err.status === 429) return 'Zu viele Versuche. Bitte später erneut probieren.'
+  if (err.status === 400) {
+    return 'Bitte gültige Daten eingeben (E-Mail korrekt, Passwort ≥ 8 Zeichen, Benutzername ≥ 3 Zeichen).'
+  }
+  switch (err.message) {
+    case 'username_taken':
+      return 'Dieser Benutzername ist bereits vergeben.'
+    case 'email_taken':
+      return 'Für diese E-Mail existiert bereits ein Konto.'
+    default:
+      return 'Registrierung fehlgeschlagen.'
+  }
+}
+
+export function RegisterPage() {
+  const { user, register, loading } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
   const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   if (loading) return null
-  if (user) return <Navigate to={from} replace />
+  if (user) return <Navigate to="/" replace />
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
     try {
-      await login(username, password)
-      navigate(from, { replace: true })
+      await register(username, email, password)
+      navigate('/', { replace: true })
     } catch (err) {
       if (err instanceof ApiError) {
-        setError('Anmeldung fehlgeschlagen')
+        setError(errorMessage(err))
       } else {
         throw err
       }
@@ -41,7 +55,7 @@ export function LoginPage() {
         <div className="auth-brand">
           <span className="leaf"><IconLeaf /></span>
           <h1>eazio</h1>
-          <p>Dein entspannter Yazio-Begleiter.</p>
+          <p>Erstelle dein Konto.</p>
         </div>
 
         <div className="field">
@@ -58,14 +72,28 @@ export function LoginPage() {
         </div>
 
         <div className="field">
+          <label htmlFor="email">E-Mail</label>
+          <input
+            id="email"
+            type="email"
+            inputMode="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoCapitalize="none"
+          />
+        </div>
+
+        <div className="field">
           <label htmlFor="password">Passwort</label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
+            autoComplete="new-password"
           />
+          <span className="muted small">Mindestens 8 Zeichen.</span>
         </div>
 
         {error && (
@@ -73,11 +101,11 @@ export function LoginPage() {
         )}
 
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={submitting}>
-          {submitting ? 'Anmelden…' : 'Anmelden'}
+          {submitting ? 'Konto wird erstellt…' : 'Konto erstellen'}
         </button>
 
         <p className="auth-alt">
-          Noch kein Konto? <Link to="/register">Registrieren</Link>
+          Schon ein Konto? <Link to="/login">Anmelden</Link>
         </p>
       </form>
     </div>

@@ -695,6 +695,8 @@ select {
   letter-spacing: -0.02em;
 }
 .auth-brand p { color: var(--ink-2); font-size: 0.95rem; }
+.auth-alt { text-align: center; color: var(--ink-2); font-size: 0.9rem; margin: 0.1rem 0 0; }
+.auth-alt a { color: var(--primary-700); font-weight: 600; }
 
 /* ---- Spinner ------------------------------------------------------------- */
 .spinner {

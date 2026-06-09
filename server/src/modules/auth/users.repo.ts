@@ -9,15 +9,24 @@ export interface PublicUser {
   username: string
 }
 
-export async function createUser(db: DB, username: string, password: string): Promise<PublicUser> {
+export async function createUser(
+  db: DB,
+  username: string,
+  password: string,
+  email: string | null = null,
+): Promise<PublicUser> {
   const id = randomUUID()
   const passwordHash = await hashPassword(password)
-  db.insert(users).values({ id, username, passwordHash, createdAt: Date.now() }).run()
+  db.insert(users).values({ id, username, email, passwordHash, createdAt: Date.now() }).run()
   return { id, username }
 }
 
 export function findUserByUsername(db: DB, username: string) {
   return db.select().from(users).where(eq(users.username, username)).get()
+}
+
+export function findUserByEmail(db: DB, email: string) {
+  return db.select().from(users).where(eq(users.email, email)).get()
 }
 
 // Projects only public columns so callers (e.g. the /me route) can never

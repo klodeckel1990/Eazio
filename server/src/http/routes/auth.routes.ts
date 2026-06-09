@@ -3,7 +3,7 @@ import { timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../../config/env.js'
 import type { DB } from '../../db/client.js'
-import { createUser, findUserByUsername, findUserById } from '../../modules/auth/users.repo.js'
+import { createUser, findUserByUsername, findUserByEmail, findUserById } from '../../modules/auth/users.repo.js'
 import { verifyPassword, dummyVerifyHash } from '../../modules/auth/password.js'
 import { createSession, deleteSession, SESSION_COOKIE } from '../../modules/auth/sessions.js'
 
@@ -12,6 +12,20 @@ const BootstrapSchema = z.object({
   username: z.string().min(1).max(64),
   password: z.string().min(8).max(256),
 })
+
+const RegisterSchema = z.object({
+  username: z.string().trim().min(3).max(64),
+  email: z.string().trim().toLowerCase().email().max(254),
+  password: z.string().min(8).max(256),
+})
+
+const SESSION_COOKIE_OPTS = {
+  signed: true as const,
+  httpOnly: true as const,
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: 60 * 60 * 24 * 30,
+}
 
 const LoginSchema = z.object({
   username: z.string().min(1),
@@ -39,6 +53,25 @@ export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
       }
       const user = await createUser(db, body.username, body.password)
       return reply.status(201).send(user)
+    },
+  )
+
+  // Open self-service registration. Creates the account and logs in directly.
+  app.post(
+    '/api/auth/register',
+    { config: { rateLimit: { max: 10, timeWindow: '1 hour' } } },
+    async (req, reply) => {
+      const body = RegisterSchema.parse(req.body)
+      if (findUserByUsername(db, body.username)) {
+        return reply.status(409).send({ error: 'username_taken' })
+      }
+      if (findUserByEmail(db, body.email)) {
+        return reply.status(409).send({ error: 'email_taken' })
+      }
+      const user = await createUser(db, body.username, body.password, body.email)
+      const session = createSession(db, user.id)
+      reply.setCookie(SESSION_COOKIE, session.id, { ...SESSION_COOKIE_OPTS, secure: env.COOKIE_SECURE })
+      return reply.status(201).send({ id: user.id, username: user.username })
     },
   )
 
