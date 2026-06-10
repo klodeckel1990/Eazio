@@ -5,6 +5,7 @@ import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine } fro
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
 import { round } from '../lib/nutrition'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
+import { initHealthSync } from '../lib/health'
 import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan } from '../components/icons'
@@ -41,7 +42,10 @@ export function TrackerPage() {
     refreshWidgets() // keep the home-screen widget in sync with diary writes
   }
 
-  useEffect(refreshDay, [])
+  useEffect(() => {
+    refreshDay()
+    initHealthSync(refreshDay) // Apple Health → Server → Tagesansicht aktualisieren
+  }, [])
 
   const handleMatch = async () => {
     if (!text.trim()) return
@@ -296,6 +300,17 @@ export function TrackerPage() {
               style={{ width: `${Math.min(100, (day.totals.kcal / day.goals.kcalTarget) * 100)}%` }}
             />
           </div>
+        </div>
+      )}
+
+      {day?.activity && (day.activity.steps !== null || day.activity.activeKcal !== null) && (
+        <div className="card water-card">
+          <span className="water-label">
+            {day.activity.steps !== null ? `👟 ${day.activity.steps.toLocaleString('de-DE')} Schritte` : ''}
+            {day.activity.steps !== null && day.activity.activeKcal !== null ? ' · ' : ''}
+            {day.activity.activeKcal !== null ? `🔥 ${Math.round(day.activity.activeKcal)} kcal aktiv` : ''}
+            {day.activity.countedKcal > 0 ? ' · im Budget' : ''}
+          </span>
         </div>
       )}
 

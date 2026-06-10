@@ -13,6 +13,7 @@ describe('db client + migrations', () => {
     const names = rows.map((r) => r.name).sort()
     expect(names).toEqual(
       [
+        'activity_days',
         'aliases',
         'diary_entries',
         'food_aliases',

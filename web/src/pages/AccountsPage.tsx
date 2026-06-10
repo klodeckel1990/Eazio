@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { healthAvailable, healthOptedIn, setHealthOptIn } from '../lib/health'
 import { api, ApiError } from '../api/client'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
 import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck, IconCart } from '../components/icons'
@@ -23,6 +24,8 @@ export function AccountsPage() {
   const [mirror, setMirror] = useState<boolean | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<string | null>(null)
+  const [healthOn, setHealthOn] = useState(healthOptedIn())
+  const [activityBudget, setActivityBudget] = useState<boolean | null>(null)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -32,7 +35,7 @@ export function AccountsPage() {
 
   useEffect(() => {
     loadAccounts()
-    api.settings.get().then((s) => { setFormat(s.shoppingListFormat); setMirror(s.mirrorToYazio) }).catch(() => {})
+    api.settings.get().then((s) => { setFormat(s.shoppingListFormat); setMirror(s.mirrorToYazio); setActivityBudget(s.activityBudget) }).catch(() => {})
     api.goals.get().then(setGoals).catch(() => {})
   }, [])
 
@@ -46,6 +49,19 @@ export function AccountsPage() {
     const next = !mirror
     setMirror(next)
     api.settings.update({ mirrorToYazio: next }).catch(() => {})
+  }
+
+  const toggleHealth = () => {
+    const next = !healthOn
+    setHealthOn(next)
+    setHealthOptIn(next) // on: triggert sofort Permission-Sheet + ersten Sync
+  }
+
+  const toggleActivityBudget = () => {
+    if (activityBudget === null) return
+    const next = !activityBudget
+    setActivityBudget(next)
+    api.settings.update({ activityBudget: next }).catch(() => {})
   }
 
   const importHistory = async () => {
@@ -243,6 +259,45 @@ export function AccountsPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {healthAvailable() && (
+        <>
+          <div className="card water-card">
+            <div>
+              <strong>Apple Health</strong>
+              <p className="muted" style={{ margin: 0 }}>
+                Schritte, Aktivitätskalorien und Gewicht (Smart Scale) automatisch übernehmen.
+              </p>
+            </div>
+            <button
+              type="button"
+              className={healthOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+              aria-pressed={healthOn}
+              onClick={toggleHealth}
+            >
+              {healthOn ? 'An' : 'Aus'}
+            </button>
+          </div>
+          {healthOn && activityBudget !== null && (
+            <div className="card water-card">
+              <div>
+                <strong>Aktivität aufs Budget anrechnen</strong>
+                <p className="muted" style={{ margin: 0 }}>
+                  Verbrannte Aktivitätskalorien erhöhen dein Tagesbudget.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={activityBudget ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+                aria-pressed={activityBudget}
+                onClick={toggleActivityBudget}
+              >
+                {activityBudget ? 'An' : 'Aus'}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {accounts !== null && accounts.length > 0 && mirror !== null && (

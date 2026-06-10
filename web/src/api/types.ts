@@ -69,6 +69,7 @@ export interface UserSettings {
   shoppingListFormat: ShoppingListFormat
   onboardingDone: boolean
   mirrorToYazio: boolean
+  activityBudget: boolean
 }
 
 // --- own food database & diary (Phase 3) -----------------------------------
@@ -173,6 +174,13 @@ export interface OnboardingPlan {
   etaWeeks: number | null
 }
 
+export interface DayActivity {
+  steps: number | null
+  activeKcal: number | null
+  weightKg: number | null
+  countedKcal: number
+}
+
 export interface DiaryDay {
   date: string
   defaultDaytime: Daytime
@@ -182,6 +190,7 @@ export interface DiaryDay {
   remainingKcal: number
   water: { totalMl: number; entries: { id: string; ml: number }[] }
   streak: Streak
+  activity: DayActivity | null
 }
 
 export interface DiaryLogLine {

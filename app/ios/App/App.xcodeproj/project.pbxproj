@@ -23,6 +23,7 @@
 		5AF310C5D88795955908ECAE /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F2F887302D530AF560E38BB /* MainViewController.swift */; };
 		965783351661F9AB35538964 /* TellerwertWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B54302F5119E15FC1FE939E2 /* TellerwertWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
+		E739F2ACAD015E11C572415E /* HealthSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5BBDEE724A30EE0AA909469 /* HealthSync.swift */; };
 		E963EEC45AE4640FEF14E601 /* PendingShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379DA276FC95C50FB6F94D8B /* PendingShare.swift */; };
 		F714209F7DA25FC427ABF667 /* SharedAuthPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C4AFD2F932346BB00B7BD4 /* SharedAuthPlugin.swift */; };
 /* End PBXBuildFile section */
@@ -78,6 +79,7 @@
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		B54302F5119E15FC1FE939E2 /* TellerwertWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TellerwertWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5BBDEE724A30EE0AA909469 /* HealthSync.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HealthSync.swift; sourceTree = "<group>"; };
 		EEA3472A856DE2918E7254C6 /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -155,6 +157,7 @@
 				41C4AFD2F932346BB00B7BD4 /* SharedAuthPlugin.swift */,
 				7F2F887302D530AF560E38BB /* MainViewController.swift */,
 				379DA276FC95C50FB6F94D8B /* PendingShare.swift */,
+				D5BBDEE724A30EE0AA909469 /* HealthSync.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -364,6 +367,7 @@
 				F714209F7DA25FC427ABF667 /* SharedAuthPlugin.swift in Sources */,
 				5AF310C5D88795955908ECAE /* MainViewController.swift in Sources */,
 				42C72F5D2BB79C909F90AF17 /* PendingShare.swift in Sources */,
+				E739F2ACAD015E11C572415E /* HealthSync.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

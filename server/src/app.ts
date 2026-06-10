@@ -23,6 +23,7 @@ import { registerFoodRoutes } from './http/routes/foods.routes.js'
 import { registerDiaryRoutes } from './http/routes/diary.routes.js'
 import { registerGoalRoutes } from './http/routes/goals.routes.js'
 import { registerWidgetRoutes } from './http/routes/widget.routes.js'
+import { registerActivityRoutes } from './http/routes/activity.routes.js'
 import { registerStatsRoutes } from './http/routes/stats.routes.js'
 
 declare module 'fastify' {
@@ -105,6 +106,7 @@ export function buildApp(db: DB, opts: { webDir?: string } = {}): FastifyInstanc
   registerDiaryRoutes(app, db)
   registerGoalRoutes(app, db)
   registerWidgetRoutes(app, db)
+  registerActivityRoutes(app, db)
   registerStatsRoutes(app, db)
 
   const webDir =

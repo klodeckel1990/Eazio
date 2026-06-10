@@ -154,4 +154,8 @@ export const api = {
   stats: {
     get: (days: number) => req<StatsResult>('GET', `/stats?days=${days}`),
   },
+  activity: {
+    update: (patch: { date?: string; steps?: number; activeKcal?: number; weightKg?: number }) =>
+      req<{ activity: { steps: number | null; activeKcal: number | null; weightKg: number | null } }>('PUT', '/activity/day', patch),
+  },
 }

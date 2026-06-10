@@ -8,8 +8,13 @@ import WidgetKit
 ///  - pending share: keychain mailbox (from the share extension or the
 ///    tellerwert:// URL scheme) → WebView navigation to the import page
 class MainViewController: CAPBridgeViewController {
+    private let healthSync = HealthSync()
+
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(SharedAuthPlugin())
+        if let webView = bridge?.webView {
+            healthSync.attach(to: webView) // JS: webkit.messageHandlers.eazioHealth
+        }
     }
 
     override func viewDidLoad() {

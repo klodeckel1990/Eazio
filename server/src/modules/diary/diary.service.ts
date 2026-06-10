@@ -8,6 +8,7 @@ import { normalizeName } from '../matching/normalize.js'
 import { getSettings } from '../settings/settings.repo.js'
 import { getDefaultAccount } from '../accounts/accounts.repo.js'
 import { getGoals, type Goals } from '../goals/goals.repo.js'
+import { getActivityDay } from '../activity/activity.repo.js'
 import { getStreak, updateStreakOnLog, type Streak } from './streak.js'
 import { mirrorEntries, unmirrorEntry, type ClientFactory } from './mirror.service.js'
 import {
@@ -222,6 +223,14 @@ export function deleteEntry(
   return true
 }
 
+export interface DayActivity {
+  steps: number | null
+  activeKcal: number | null
+  weightKg: number | null
+  /** active kcal added to today's budget (0 unless the setting is on) */
+  countedKcal: number
+}
+
 export interface DiaryDay {
   date: string
   defaultDaytime: Daytime
@@ -231,6 +240,7 @@ export interface DiaryDay {
   remainingKcal: number
   water: { totalMl: number; entries: { id: string; ml: number }[] }
   streak: Streak
+  activity: DayActivity | null
 }
 
 export function getDay(db: DB, userId: string, date?: string): DiaryDay {
@@ -238,18 +248,31 @@ export function getDay(db: DB, userId: string, date?: string): DiaryDay {
   const d = date ?? dateInTz(now, env.TZ)
   const totals = dayTotals(db, userId, d)
   const goals = getGoals(db, userId)
+  const activityRow = getActivityDay(db, userId, d)
+  const countedKcal =
+    activityRow?.activeKcal && getSettings(db, userId).activityBudget
+      ? Math.round(activityRow.activeKcal)
+      : 0
   return {
     date: d,
     defaultDaytime: resolveDaytime(now, env.TZ),
     entries: listDayEntries(db, userId, d),
     totals,
     goals,
-    remainingKcal: Math.round(goals.kcalTarget - totals.kcal),
+    remainingKcal: Math.round(goals.kcalTarget + countedKcal - totals.kcal),
     water: {
       totalMl: dayWaterTotal(db, userId, d),
       entries: listDayWater(db, userId, d).map((w) => ({ id: w.id, ml: w.ml })),
     },
     streak: getStreak(db, userId),
+    activity: activityRow
+      ? {
+          steps: activityRow.steps,
+          activeKcal: activityRow.activeKcal,
+          weightKg: activityRow.weightKg,
+          countedKcal,
+        }
+      : null,
   }
 }
 
@@ -272,11 +295,17 @@ export function getWidgetSummary(db: DB, userId: string, date?: string): WidgetS
   const totals = dayTotals(db, userId, d)
   const goals = getGoals(db, userId)
   const streak = getStreak(db, userId)
+  // same budget math as the diary: opted-in active calories extend the target
+  const activityRow = getActivityDay(db, userId, d)
+  const countedKcal =
+    activityRow?.activeKcal && getSettings(db, userId).activityBudget
+      ? Math.round(activityRow.activeKcal)
+      : 0
   return {
     date: d,
-    kcalTarget: goals.kcalTarget,
+    kcalTarget: goals.kcalTarget + countedKcal,
     kcalConsumed: Math.round(totals.kcal),
-    kcalRemaining: Math.round(goals.kcalTarget - totals.kcal),
+    kcalRemaining: Math.round(goals.kcalTarget + countedKcal - totals.kcal),
     protein: totals.protein,
     fat: totals.fat,
     carbs: totals.carbs,

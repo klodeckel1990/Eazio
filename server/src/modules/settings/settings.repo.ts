@@ -15,6 +15,8 @@ export interface UserSettings {
   /** Mirror diary entries to the linked default Yazio account (transition aid).
    *  Defaults to true so existing Yazio users keep their data flowing. */
   mirrorToYazio: boolean
+  /** Add Apple-Health active calories on top of the daily kcal budget. */
+  activityBudget: boolean
 }
 
 const DEFAULTS: UserSettings = {
@@ -22,6 +24,7 @@ const DEFAULTS: UserSettings = {
   shoppingListFormat: 'plain',
   onboardingDone: false,
   mirrorToYazio: true,
+  activityBudget: false,
 }
 
 export function getSettings(db: DB, userId: string): UserSettings {
@@ -47,6 +50,7 @@ function parseSettings(raw: string | null): UserSettings {
         : 'plain',
       onboardingDone: o.onboardingDone === true,
       mirrorToYazio: o.mirrorToYazio !== false,
+      activityBudget: o.activityBudget === true,
     }
   } catch {
     return { ...DEFAULTS }

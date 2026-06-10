@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, unique, index } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, unique, index, primaryKey } from 'drizzle-orm/sqlite-core'
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
@@ -252,6 +252,23 @@ export const matchCache = sqliteTable('match_cache', {
   hits: integer('hits').notNull().default(1),
   updatedAt: integer('updated_at').notNull(),
 })
+
+// Per-day activity from Apple Health / Health Connect: steps, active energy
+// and the day's (smart-scale) weight. Synced by the native app on foreground.
+export const activityDays = sqliteTable(
+  'activity_days',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    date: text('date').notNull(), // YYYY-MM-DD (Europe/Berlin)
+    steps: integer('steps'),
+    activeKcal: real('active_kcal'),
+    weightKg: real('weight_kg'),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.date] })],
+)
 
 export const recipes = sqliteTable('recipes', {
   id: text('id').primaryKey(),
