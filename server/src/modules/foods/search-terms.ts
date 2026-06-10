@@ -126,6 +126,14 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^feta mind/, terms: 'feta schafskaese' },
   { match: /^obstbrand/, terms: 'kirschwasser obstler williams' },
   { match: /^reis poliert/, terms: 'rice weisser reis white langkornreis' },
+  // Audit v5 (englisch)
+  { match: /^bleichsellerie/, terms: 'stangensellerie staudensellerie celery' },
+  { match: /^knollensellerie/, terms: 'sellerie celeriac' },
+  { match: /^erbse gruen, tiefgefroren/, terms: 'green frozen' },
+  { match: /gemuesepaprika/, terms: 'bell pepper red green yellow' },
+  { match: /^backhefe/, terms: 'yeast instant' },
+  { match: /^haehnchen brustfilet, roh/, terms: 'chicken breast haehnchenbrust huehnerbrust' },
+  { match: /^kartoffel (geschaelt|ungeschaelt), roh/, terms: 'potato potatoes russet' },
 ]
 
 export function foldGerman(text: string): string {

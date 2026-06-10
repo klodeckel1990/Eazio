@@ -28,6 +28,8 @@ describe('ingredient parser', () => {
     ['1 1/2 cups all-purpose flour', { qty: 1.5, unit: 'cup', name: 'all-purpose flour' }],
     ['1 1/4 cups milk', { qty: 1.25, unit: 'cup', name: 'milk' }],
     ['2 ½ EL Zucker', { qty: 2.5, unit: 'el', name: 'Zucker' }],
+    ['2/3 cup milk', { qty: 0.667, unit: 'cup', name: 'milk' }],
+    ['500 grams bread flour', { qty: 500, unit: 'g', name: 'bread flour' }],
   ])('parses %s', (input, expected) => {
     const p = parseLine(input)
     expect({ qty: p.qty, unit: p.unit, name: p.name }).toEqual(expected)

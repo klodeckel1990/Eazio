@@ -112,8 +112,8 @@ const SEASONINGS = new Set([
   'orangenabrieb', 'rauchsalz', 'gurkenwasser', 'spargelschalen', 'shisokresse',
   'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
   'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
-  // englisch
-  'salt', 'pepper', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
+  // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
+  'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
   'saffron', 'turmeric', 'cardamom', 'allspice', 'anise',
 ])
@@ -137,8 +137,11 @@ export function isPrepNote(name: string): boolean {
 /** True if the ingredient name is a pure seasoning/spice (any whole word matches
  *  the curated list). Ambiguous foods like "Paprika" or "Knoblauch" return false. */
 export function isSeasoning(name: string): boolean {
+  const normalized = normalizeName(name)
+  // mehrwortige englische Pfeffer-Formen (bare 'pepper' wäre bell pepper)
+  if (/\b(black|white|ground|cracked) pepper\b/.test(normalized)) return true
   // Nicht-Buchstaben-Grenzen statt Whitespace: "Togarashi-Gewürz" → gewurz
-  return normalizeName(name)
+  return normalized
     .split(/[^\p{L}\p{N}]+/u)
     .some((tok) => SEASONINGS.has(tok))
 }

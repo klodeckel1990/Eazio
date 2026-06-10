@@ -6,7 +6,7 @@ export interface ParsedLine {
 }
 
 const KNOWN_UNITS = new Set([
-  'g', 'gr', 'gramm', 'kg', 'ml', 'l', 'liter',
+  'g', 'gr', 'gramm', 'gram', 'grams', 'kg', 'ml', 'l', 'liter',
   'stück', 'stk', 'stueck', 'portion', 'portionen', 'el', 'tl',
   'scheibe', 'scheiben', 'prise', 'prisen', 'becher', 'glas', 'dose', 'tasse',
   // bundle/count words common in recipes ("1 Bund Radieschen", "2 Zehen Knoblauch")
@@ -24,7 +24,7 @@ const KNOWN_UNITS = new Set([
 // Recipe-site abbreviations → the canonical unit word the rest of the pipeline
 // knows ("1 Pck. Vanillezucker", "1 Bd Lauchzwiebeln").
 const UNIT_ALIASES: Record<string, string> = {
-  pck: 'packung', pkt: 'packung', bd: 'bund', liter: 'l',
+  pck: 'packung', pkt: 'packung', bd: 'bund', liter: 'l', gram: 'g', grams: 'g',
   cups: 'cup', tsp: 'tl', teaspoon: 'tl', teaspoons: 'tl',
   tbsp: 'el', tablespoon: 'el', tablespoons: 'el',
   lbs: 'lb', pound: 'lb', pounds: 'lb', ounce: 'oz', ounces: 'oz',
@@ -42,6 +42,8 @@ const NUM = String.raw`(\d+(?:[.,]\d+)?)`
 const RANGE = new RegExp(`^${NUM}\\s*[-–—]\\s*${NUM}\\s+(.*)$`)
 // mixed numbers ("1 1/2 cups flour", "2 ½ EL") → decimal quantity
 const MIXED = /^(\d+)\s+(?:(\d+)\/(\d+)|(½)|(¼)|(¾))\s+(.*)$/
+// bare fractions beyond the German word list ("2/3 cup milk")
+const FRAC = /^(\d+)\/(\d+)\s+(.*)$/
 const LEADING = new RegExp(`^${NUM}\\s*([a-zà-ÿ]+)?\\s*(.*)$`, 'i')
 const TRAILING = new RegExp(`^(.*?)\\s+${NUM}\\s*([a-zà-ÿ]+)?\\s*$`, 'i')
 
@@ -134,6 +136,12 @@ export function parseLine(raw: string): ParsedLine {
       : mixed[4] ? 0.5 : mixed[5] ? 0.25 : 0.75
     const qty = Number(mixed[1]) + frac
     chunk = `${String(qty).replace('.', ',')} ${mixed[7]!}`
+  } else {
+    const frac = FRAC.exec(chunk)
+    if (frac && Number(frac[2]) > 0) {
+      const qty = Math.round((Number(frac[1]) / Number(frac[2])) * 1000) / 1000
+      chunk = `${String(qty).replace('.', ',')} ${frac[3]!}`
+    }
   }
 
   for (const [pattern, qty] of FRACTIONS) {
