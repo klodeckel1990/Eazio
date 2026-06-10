@@ -164,6 +164,8 @@ struct StepsBadge: View {
                 Text(steps.formatted(.number.grouping(.automatic)))
                     .font(.caption.weight(.bold))
                     .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
             .foregroundStyle(TW.green)
         }
@@ -526,6 +528,7 @@ struct TellerwertLiveActivity: Widget {
                         StreakBadge(streak: context.state.streak)
                         StepsBadge(steps: context.state.steps)
                     }
+                    .padding(.trailing, 6)
                 }
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 1) {
@@ -538,7 +541,7 @@ struct TellerwertLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         Image(systemName: "drop.fill").font(.caption2).foregroundStyle(TW.teal)
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
@@ -553,7 +556,12 @@ struct TellerwertLiveActivity: Widget {
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(.gray)
                             .monospacedDigit()
+                            .lineLimit(1)
+                            .fixedSize()
+                            .layoutPriority(1)
                     }
+                    .padding(.horizontal, 6)
+                    .padding(.top, 4)
                 }
             } compactLeading: {
                 MiniKcalRing(state: context.state, lineWidth: 3)
