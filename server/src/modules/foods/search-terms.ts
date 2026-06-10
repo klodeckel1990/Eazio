@@ -67,6 +67,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /kuvertuere/, terms: 'kuvertuere zartbitterkuvertuere vollmilchkuvertuere schokoglasur' },
   { match: /^backhefe/, terms: 'hefe trockenhefe frischhefe' },
   { match: /^champignon roh/, terms: 'pilz pilze champignons' },
+  { match: /^kuerbis hokkaido/, terms: 'hokkaidokuerbis hokkaido' },
+  { match: /^kuerbis butternut/, terms: 'butternutkuerbis butternusskuerbis butternut' },
 ]
 
 export function foldGerman(text: string): string {

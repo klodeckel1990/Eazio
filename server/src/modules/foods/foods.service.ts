@@ -217,11 +217,18 @@ export async function matchFoodText(
     // products only ever supplement; they must never displace base foods
     // ("rote Zwiebel" → Speisezwiebel, not a tuna-salad snack product).
     let candidates = search(db, userId, query, 12)
-    if (candidates.length === 0) {
-      // unknown compound ("Romatomaten") — search its head ("tomate") and let
-      // the AI rerank pick the fitting base product
+    if (candidates.length < 3) {
+      // unknown compound ("Romatomaten") — also search its head ("tomate") and
+      // let the AI rerank pick the fitting base product. Runs on sparse (not
+      // just zero) results: a single stray hit must not suppress base foods.
       const head = compoundHeadFallback(line.name)
-      if (head) candidates = search(db, userId, head, 12)
+      if (head) {
+        const seen = new Set(candidates.map((c) => c.id))
+        for (const c of search(db, userId, head, 12)) {
+          if (candidates.length >= 12) break
+          if (!seen.has(c.id)) candidates.push(c)
+        }
+      }
     }
     if (candidates.length === 0) {
       // multi-word zero hit ("Cherry-Tomaten"): try the tokens individually
