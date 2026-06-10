@@ -231,6 +231,18 @@ export const foodAliases = sqliteTable(
   (t) => [unique().on(t.userId, t.normalizedName)],
 )
 
+// Global (cross-user) LLM match memory: each unique ingredient name pays the
+// AI-rerank latency at most once ever. Only shared foods (bls/off) are cached;
+// custom foods stay per-user in food_aliases.
+export const matchCache = sqliteTable('match_cache', {
+  normalizedName: text('normalized_name').primaryKey(),
+  foodId: text('food_id')
+    .notNull()
+    .references(() => foods.id),
+  hits: integer('hits').notNull().default(1),
+  updatedAt: integer('updated_at').notNull(),
+})
+
 export const recipes = sqliteTable('recipes', {
   id: text('id').primaryKey(),
   userId: text('user_id')

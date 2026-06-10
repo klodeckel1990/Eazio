@@ -1,12 +1,15 @@
 import type { DB } from '../../db/client.js'
 import {
   findFoodByBarcode,
+  getCachedMatch,
   getFoodById,
   searchFoods as searchRepo,
+  upsertCachedMatch,
   upsertSourcedFood,
   type FoodRow,
   type ServingDef,
 } from './foods.repo.js'
+import { aiRerank, type AiRerank } from './ai-match.js'
 import { fetchOffProduct, searchOffProducts, type FetchOffProduct, type SearchOffProducts } from './off.client.js'
 import { mapOffProduct } from './off.mapper.js'
 import { parseIngredients } from '../parsing/parser.js'
@@ -177,25 +180,43 @@ export interface FoodMatchLine {
 
 /**
  * Bulk text matching for the tracker: parse pasted ingredients, drop pure
- * seasonings, look up each line in the user's learned aliases and the foods
- * FTS index, with the OFF text fallback for branded products. Mirrors the
- * legacy Yazio matchText flow, but against our data.
+ * seasonings, look up each line in the user's learned aliases, the global LLM
+ * match cache and the foods FTS index (with OFF text fallback). Lines that
+ * none of the caches resolve go through one batched AI rerank — Claude picks
+ * the nutritionally fitting candidate; on any LLM problem the FTS order
+ * stands. Confirmed AI picks are cached globally (shared foods only).
  */
 export async function matchFoodText(
   db: DB,
   userId: string,
   text: string,
   fetchSearch: SearchOffProducts = searchOffProducts,
+  rerank: AiRerank = aiRerank,
 ): Promise<FoodMatchLine[]> {
-  const out: FoodMatchLine[] = []
+  interface Pending {
+    line: ReturnType<typeof parseIngredients>[number]
+    normalizedUnit: NormalizedUnit
+    amountGrams: number | null
+    candidates: FoodSummary[]
+    selectedFoodId: string | null
+    aliasDefaultG: number | null
+    normalizedName: string
+    needsAi: boolean
+  }
+
+  const pending: Pending[] = []
   for (const line of parseIngredients(text)) {
     if (isSeasoning(line.name)) continue
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
     const candidates = await searchSmart(db, userId, buildSearchQuery(line.name), 10, fetchSearch)
+    const normalizedName = normalizeName(line.name)
 
     let selectedFoodId = candidates[0]?.id ?? null
     let aliasDefaultG: number | null = null
-    const alias = getFoodAlias(db, userId, normalizeName(line.name))
+    let resolved = false
+
+    // 1) the user's own learned mapping always wins
+    const alias = getFoodAlias(db, userId, normalizedName)
     if (alias) {
       const idx = candidates.findIndex((c) => c.id === alias.foodId)
       if (idx >= 0) {
@@ -203,9 +224,66 @@ export async function matchFoodText(
         candidates.unshift(pick!)
         selectedFoodId = pick!.id
         aliasDefaultG = alias.defaultAmountG
+        resolved = true
       }
     }
 
+    // 2) global LLM match memory (one AI call per unique name, ever)
+    if (!resolved) {
+      const cached = getCachedMatch(db, normalizedName)
+      if (cached) {
+        const idx = candidates.findIndex((c) => c.id === cached)
+        if (idx >= 0) {
+          const [pick] = candidates.splice(idx, 1)
+          candidates.unshift(pick!)
+          selectedFoodId = pick!.id
+          resolved = true
+        }
+      }
+    }
+
+    pending.push({
+      line,
+      normalizedUnit,
+      amountGrams,
+      candidates,
+      selectedFoodId,
+      aliasDefaultG,
+      normalizedName,
+      // a single candidate needs no ranking; zero candidates have no ranking
+      needsAi: !resolved && candidates.length >= 2,
+    })
+  }
+
+  // 3) one batched AI pass for everything the caches did not resolve
+  const aiLines = pending.filter((p) => p.needsAi)
+  if (aiLines.length > 0) {
+    const picks = await rerank(
+      aiLines.map((p) => ({
+        name: p.line.name,
+        candidates: p.candidates.map((c) => ({
+          id: c.id,
+          label: c.brand ? `${c.name} – ${c.brand}` : c.name,
+        })),
+      })),
+    )
+    aiLines.forEach((p, i) => {
+      const pickId = picks[i]
+      if (!pickId) return
+      const idx = p.candidates.findIndex((c) => c.id === pickId)
+      if (idx <= 0) return // not found, or FTS already had it first
+      const [pick] = p.candidates.splice(idx, 1)
+      p.candidates.unshift(pick!)
+      p.selectedFoodId = pick!.id
+      if (pick!.source !== 'custom') {
+        upsertCachedMatch(db, p.normalizedName, pick!.id)
+      }
+    })
+  }
+
+  const out: FoodMatchLine[] = []
+  for (const p of pending) {
+    const { line, normalizedUnit, amountGrams, candidates, selectedFoodId, aliasDefaultG } = p
     // count units ("2 Stück", "3 Scheiben") scale the per-piece default; the
     // unit word picks the matching serving ("Scheibe" 50 g over "Stück").
     const qtyFactor = normalizedUnit === 'serving' && line.qty ? line.qty : 1

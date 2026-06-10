@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
-import { foods } from '../../db/schema.js'
+import { foods, matchCache } from '../../db/schema.js'
 import { buildFtsQuery, buildSearchTerms } from './search-terms.js'
 
 export type FoodRow = typeof foods.$inferSelect
@@ -40,6 +40,33 @@ export function upsertSourcedFood(db: DB, food: NewFood): void {
         version: sql`${foods.version} + 1`,
         updatedAt: food.updatedAt,
       },
+    })
+    .run()
+}
+
+/** Global LLM-match memory: normalized ingredient name → shared food. */
+export function getCachedMatch(db: DB, normalizedName: string): string | null {
+  const row = db
+    .select({ foodId: matchCache.foodId })
+    .from(matchCache)
+    .innerJoin(foods, eq(foods.id, matchCache.foodId))
+    .where(and(eq(matchCache.normalizedName, normalizedName), isNull(foods.deletedAt)))
+    .get()
+  if (row) {
+    db.update(matchCache)
+      .set({ hits: sql`${matchCache.hits} + 1` })
+      .where(eq(matchCache.normalizedName, normalizedName))
+      .run()
+  }
+  return row?.foodId ?? null
+}
+
+export function upsertCachedMatch(db: DB, normalizedName: string, foodId: string): void {
+  db.insert(matchCache)
+    .values({ normalizedName, foodId, updatedAt: Date.now() })
+    .onConflictDoUpdate({
+      target: matchCache.normalizedName,
+      set: { foodId, updatedAt: Date.now() },
     })
     .run()
 }

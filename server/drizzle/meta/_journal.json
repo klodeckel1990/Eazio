@@ -64,6 +64,13 @@
       "when": 1781038500000,
       "tag": "0008_diary",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1781120000000,
+      "tag": "0009_match_cache",
+      "breakpoints": true
     }
   ]
 }

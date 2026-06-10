@@ -18,6 +18,7 @@ describe('db client + migrations', () => {
         'food_aliases',
         'foods',
         'log_events',
+        'match_cache',
         'preset_items',
         'presets',
         'recipe_ingredients',
