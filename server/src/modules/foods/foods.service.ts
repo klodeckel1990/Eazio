@@ -200,6 +200,8 @@ export async function matchFoodText(
     candidates: FoodSummary[]
     selectedFoodId: string | null
     aliasDefaultG: number | null
+    /** AI/cache-estimated grams per piece (Cocktailtomate ≈ 15 ≠ Tomate 100) */
+    pieceGrams: number | null
     normalizedName: string
     needsAi: boolean
   }
@@ -254,9 +256,11 @@ export async function matchFoodText(
     }
 
     // 2) global LLM match memory (one AI call per unique name, ever)
+    let pieceGrams: number | null = null
     if (!resolved) {
       const cached = getCachedMatch(db, normalizedName)
-      if (cached && promote(cached)) {
+      if (cached && promote(cached.foodId)) {
+        pieceGrams = cached.pieceGrams
         resolved = true
       }
     }
@@ -268,20 +272,26 @@ export async function matchFoodText(
       candidates,
       selectedFoodId,
       aliasDefaultG,
+      pieceGrams,
       normalizedName,
-      // a single candidate needs no ranking; zero candidates have no ranking
-      needsAi: !resolved && candidates.length >= 2,
+      // a single candidate needs no ranking — except for count entries, where
+      // the AI still estimates the piece weight ("18 Cocktailtomaten")
+      needsAi:
+        !resolved &&
+        (candidates.length >= 2 ||
+          (candidates.length >= 1 && normalizedUnit === 'serving' && line.qty !== null)),
     })
   }
 
   const toRerankLine = (p: Pending) => ({
     name: p.line.name,
+    perPiece: p.normalizedUnit === 'serving' && p.line.qty !== null,
     candidates: p.candidates.map((c) => ({
       id: c.id,
       label: c.brand ? `${c.name} – ${c.brand}` : c.name,
     })),
   })
-  const applyPick = (p: Pending, pickId: string) => {
+  const applyPick = (p: Pending, pickId: string, pieceGrams: number | null) => {
     const idx = p.candidates.findIndex((c) => c.id === pickId)
     if (idx < 0) return
     if (idx > 0) {
@@ -289,9 +299,10 @@ export async function matchFoodText(
       p.candidates.unshift(pick!)
     }
     p.selectedFoodId = pickId
+    if (pieceGrams !== null) p.pieceGrams = pieceGrams
     // cache confirmations too — otherwise every repeat pays the AI call
     if (p.candidates[0]!.source !== 'custom') {
-      upsertCachedMatch(db, p.normalizedName, pickId)
+      upsertCachedMatch(db, p.normalizedName, pickId, pieceGrams)
     }
   }
 
@@ -305,7 +316,7 @@ export async function matchFoodText(
     aiLines.forEach((p, i) => {
       const pick = picks[i]
       if (!pick) return
-      if (pick.id) applyPick(p, pick.id)
+      if (pick.id) applyPick(p, pick.id, pick.pieceGrams)
       else if (pick.retryQuery) retries.push({ p, query: pick.retryQuery })
     })
 
@@ -323,7 +334,7 @@ export async function matchFoodText(
       retries.forEach(({ p }, i) => {
         const pick = secondPicks[i]
         if (pick?.id) {
-          applyPick(p, pick.id)
+          applyPick(p, pick.id, pick.pieceGrams)
         } else {
           // the requery did not convince the model either — keep the original
           // FTS list instead of leaving requeried noise on top
@@ -342,9 +353,11 @@ export async function matchFoodText(
     const { line, normalizedUnit, amountGrams, candidates, selectedFoodId, aliasDefaultG } = p
     // count units ("2 Stück", "3 Scheiben") scale the per-piece default; the
     // unit word picks the matching serving ("Scheibe" 50 g over "Stück").
+    // Precedence: user's learned default > AI/cache piece estimate (knows
+    // size modifiers like Cocktail-/Mini-) > the food's generic serving.
     const qtyFactor = normalizedUnit === 'serving' && line.qty ? line.qty : 1
     const perPiece =
-      aliasDefaultG ?? pickServingGrams(candidates[0]?.servings ?? [], line.unit)
+      aliasDefaultG ?? p.pieceGrams ?? pickServingGrams(candidates[0]?.servings ?? [], line.unit)
     const suggestedAmountG =
       amountGrams ?? (perPiece !== null ? Math.round(perPiece * qtyFactor) : 100)
 

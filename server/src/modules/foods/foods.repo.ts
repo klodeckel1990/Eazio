@@ -44,10 +44,15 @@ export function upsertSourcedFood(db: DB, food: NewFood): void {
     .run()
 }
 
+export interface CachedMatch {
+  foodId: string
+  pieceGrams: number | null
+}
+
 /** Global LLM-match memory: normalized ingredient name → shared food. */
-export function getCachedMatch(db: DB, normalizedName: string): string | null {
+export function getCachedMatch(db: DB, normalizedName: string): CachedMatch | null {
   const row = db
-    .select({ foodId: matchCache.foodId })
+    .select({ foodId: matchCache.foodId, pieceGrams: matchCache.pieceGrams })
     .from(matchCache)
     .innerJoin(foods, eq(foods.id, matchCache.foodId))
     .where(and(eq(matchCache.normalizedName, normalizedName), isNull(foods.deletedAt)))
@@ -58,15 +63,23 @@ export function getCachedMatch(db: DB, normalizedName: string): string | null {
       .where(eq(matchCache.normalizedName, normalizedName))
       .run()
   }
-  return row?.foodId ?? null
+  return row ?? null
 }
 
-export function upsertCachedMatch(db: DB, normalizedName: string, foodId: string): void {
+export function upsertCachedMatch(
+  db: DB,
+  normalizedName: string,
+  foodId: string,
+  pieceGrams?: number | null,
+): void {
+  const set: Record<string, unknown> = { foodId, updatedAt: Date.now() }
+  // undefined keeps an existing estimate (human overrides carry no grams info)
+  if (pieceGrams !== undefined) set.pieceGrams = pieceGrams
   db.insert(matchCache)
-    .values({ normalizedName, foodId, updatedAt: Date.now() })
+    .values({ normalizedName, foodId, pieceGrams: pieceGrams ?? null, updatedAt: Date.now() })
     .onConflictDoUpdate({
       target: matchCache.normalizedName,
-      set: { foodId, updatedAt: Date.now() },
+      set,
     })
     .run()
 }

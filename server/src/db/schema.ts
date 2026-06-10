@@ -239,6 +239,8 @@ export const matchCache = sqliteTable('match_cache', {
   foodId: text('food_id')
     .notNull()
     .references(() => foods.id),
+  /** AI-estimated grams per piece for count entries ("Cocktailtomate" ≈ 15) */
+  pieceGrams: real('piece_grams'),
   hits: integer('hits').notNull().default(1),
   updatedAt: integer('updated_at').notNull(),
 })

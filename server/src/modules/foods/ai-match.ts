@@ -12,6 +12,8 @@ import { env } from '../../config/env.js'
 
 export interface RerankLine {
   name: string
+  /** true when the user typed a count ("18 Stück …") — ask for piece weight */
+  perPiece?: boolean
   candidates: { id: string; label: string }[]
 }
 
@@ -20,6 +22,8 @@ export interface AiPick {
   id: string | null
   /** alternative search term to retry with (only set when id is null) */
   retryQuery: string | null
+  /** estimated grams per piece for count entries (null = no estimate) */
+  pieceGrams: number | null
 }
 
 export type AiRerank = (lines: RerankLine[]) => Promise<AiPick[]>
@@ -32,6 +36,7 @@ Du bekommst nummerierte Zutaten, jede mit nummerierten Kandidaten. Wähle pro Zu
 - Für pur genannte Zutaten das Grundprodukt (roh/natur) bevorzugen — niemals Gerichte, Wurst, Gebäck, Suppen oder Saucen daraus. Eine Zwiebel ist keine Zwiebelwurst, ein Ei kein Ei-Einlauf.
 - Fettstufen/Prozentangaben und Zusätze wie "mager"/"light" ernst nehmen und die passende Variante wählen.
 - Passt KEIN Kandidat: candidate = -1 und gib in query einen besseren deutschen Suchbegriff im Stil der Datenbank-Namen an (z. B. "Ei" → "Hühnerei", "Milch" → "Milch 3,5", "Mehl" → "Weizen Mehl"). Sonst query = "".
+- Ist eine Zutat mit "(Stückzahl)" markiert, schätze in grams das typische Gewicht EINES Stücks der GETIPPTEN Zutat in Gramm — Größenangaben zählen: Cocktailtomate ≈ 15, Tomate ≈ 100, Mini-Mozzarellakugel ≈ 5, Mozzarellakugel ≈ 125, Ei ≈ 60. Sonst grams = 0.
 
 Antworte ausschließlich mit dem JSON.`
 
@@ -48,8 +53,9 @@ const SCHEMA = {
           line: { type: 'integer' },
           candidate: { type: 'integer' },
           query: { type: 'string' },
+          grams: { type: 'integer' },
         },
-        required: ['line', 'candidate', 'query'],
+        required: ['line', 'candidate', 'query', 'grams'],
       },
     },
   },
@@ -57,13 +63,13 @@ const SCHEMA = {
 }
 
 export const aiRerank: AiRerank = async (lines) => {
-  const fallback: AiPick[] = lines.map(() => ({ id: null, retryQuery: null }))
+  const fallback: AiPick[] = lines.map(() => ({ id: null, retryQuery: null, pieceGrams: null }))
   if (!env.ANTHROPIC_API_KEY || lines.length === 0) return fallback
 
   const prompt = lines
     .map(
       (line, i) =>
-        `Zutat ${i}: "${line.name}"\n` +
+        `Zutat ${i}: "${line.name}"${line.perPiece ? ' (Stückzahl)' : ''}\n` +
         (line.candidates.length === 0
           ? '  (keine Kandidaten gefunden)'
           : line.candidates.map((c, j) => `  Kandidat ${j}: ${c.label}`).join('\n')),
@@ -82,18 +88,26 @@ export const aiRerank: AiRerank = async (lines) => {
     const textBlock = res.content.find((b): b is Anthropic.TextBlock => b.type === 'text')
     if (!textBlock) return fallback
     const parsed = JSON.parse(textBlock.text) as {
-      choices?: { line: number; candidate: number; query?: string }[]
+      choices?: { line: number; candidate: number; query?: string; grams?: number }[]
     }
     const picks = fallback.map((p) => ({ ...p }))
     for (const choice of parsed.choices ?? []) {
       const line = lines[choice.line]
       if (!line) continue
+      const grams =
+        typeof choice.grams === 'number' && choice.grams > 0 && choice.grams <= 5000
+          ? choice.grams
+          : null
       const candidate = line.candidates[choice.candidate]
       if (candidate) {
-        picks[choice.line] = { id: candidate.id, retryQuery: null }
+        picks[choice.line] = { id: candidate.id, retryQuery: null, pieceGrams: grams }
       } else {
         const query = choice.query?.trim()
-        picks[choice.line] = { id: null, retryQuery: query ? query.slice(0, 80) : null }
+        picks[choice.line] = {
+          id: null,
+          retryQuery: query ? query.slice(0, 80) : null,
+          pieceGrams: grams,
+        }
       }
     }
     return picks
