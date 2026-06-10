@@ -97,15 +97,24 @@ struct SummaryProvider: TimelineProvider {
 
 // MARK: - Design-Tokens (Fresh Market)
 
+/// Adaptive Palette: Hellmodus = "Fresh Market"-Papier, Dunkelmodus (und die
+/// immer dunkle Dynamic Island) = Waldgrün-Anthrazit mit aufgehellten Akzenten.
 enum TW {
-    static let paper = Color(red: 0.984, green: 0.965, blue: 0.933) // #fbf6ee
-    static let ink = Color(red: 0.137, green: 0.188, blue: 0.165) // #23302a
-    static let ink2 = Color(red: 0.329, green: 0.396, blue: 0.361)
-    static let green = Color(red: 0.180, green: 0.490, blue: 0.322) // #2e7d52
-    static let coral = Color(red: 0.886, green: 0.416, blue: 0.247) // #e26a3f
-    static let amber = Color(red: 0.843, green: 0.604, blue: 0.196)
-    static let teal = Color(red: 0.184, green: 0.561, blue: 0.525)
-    static let track = Color(red: 0.925, green: 0.878, blue: 0.800)
+    private static func dyn(_ l: (Double, Double, Double), _ d: (Double, Double, Double)) -> Color {
+        Color(UIColor { trait in
+            let c = trait.userInterfaceStyle == .dark ? d : l
+            return UIColor(red: c.0, green: c.1, blue: c.2, alpha: 1)
+        })
+    }
+
+    static let paper = dyn((0.984, 0.965, 0.933), (0.094, 0.114, 0.104)) // #fbf6ee / dunkles Waldgrün
+    static let ink = dyn((0.137, 0.188, 0.165), (0.925, 0.945, 0.929))
+    static let ink2 = dyn((0.329, 0.396, 0.361), (0.640, 0.700, 0.662))
+    static let green = dyn((0.180, 0.490, 0.322), (0.455, 0.780, 0.580))
+    static let coral = dyn((0.886, 0.416, 0.247), (0.949, 0.569, 0.412))
+    static let amber = dyn((0.843, 0.604, 0.196), (0.918, 0.737, 0.392))
+    static let teal = dyn((0.184, 0.561, 0.525), (0.420, 0.760, 0.718))
+    static let track = dyn((0.925, 0.878, 0.800), (0.235, 0.275, 0.255))
 }
 
 // MARK: - Bausteine
@@ -518,7 +527,7 @@ struct TellerwertLiveActivity: Widget {
                         MiniKcalRing(state: context.state)
                         Text("\(max(0, context.state.kcalRemaining))")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(TW.ink)
                             .minimumScaleFactor(0.6)
                     }
                     .frame(width: 44, height: 44)
@@ -534,10 +543,10 @@ struct TellerwertLiveActivity: Widget {
                     VStack(spacing: 1) {
                         Text("\(max(0, context.state.kcalRemaining)) kcal übrig")
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(TW.ink)
                         Text("von \(context.state.kcalTarget)")
                             .font(.caption2)
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(TW.ink2)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -545,7 +554,7 @@ struct TellerwertLiveActivity: Widget {
                         Image(systemName: "drop.fill").font(.caption2).foregroundStyle(TW.teal)
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                Capsule().fill(Color.gray.opacity(0.35))
+                                Capsule().fill(TW.track)
                                 Capsule().fill(TW.teal).frame(
                                     width: max(4, geo.size.width * min(1.0, context.state.waterTargetMl > 0
                                         ? Double(context.state.waterMl) / Double(context.state.waterTargetMl) : 0)))
@@ -554,7 +563,7 @@ struct TellerwertLiveActivity: Widget {
                         .frame(height: 5)
                         Text("\(context.state.waterMl) ml")
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(TW.ink2)
                             .monospacedDigit()
                             .lineLimit(1)
                             .fixedSize()
