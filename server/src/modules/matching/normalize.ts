@@ -47,7 +47,8 @@ const QUALIFIERS = new Set([
   'peeled', 'grated', 'toasted', 'mashed', 'packed', 'divided', 'drained',
   'rinsed', 'beaten', 'dried', 'fresh', 'freshly', 'large', 'medium', 'small',
   'whole', 'ripe', 'lean', 'boneless', 'skinless', 'unsalted', 'salted',
-  'granulated', 'kosher',
+  'granulated', 'kosher', 'dry', 'thick', 'thin', 'homemade', 'store', 'bought',
+  'low', 'sodium',
   'pitted', 'juiced', 'halved', 'quartered', 'seeded', 'deseeded', 'stemmed', 'separated',
   'cut', 'into', 'inch', 'inches', 'cubes', 'pieces', 'chunks', 'strips', 'wedges', 'halves', 'thirds',
   'trimmed', 'cored', 'shredded', 'cubed', 'crumbled', 'zested', 'roughly',
@@ -162,6 +163,7 @@ export function isSeasoning(name: string): boolean {
   if (/\b(black|white|ground|cracked) pepper\b/.test(normalized)) return true
   if (/\bbay (leaf|leaves)\b/.test(normalized)) return true
   if (/\b(kaffir|lime) leaves\b/.test(normalized)) return true
+  if (/\bvanilla (extract|essence)\b/.test(normalized)) return true
   // Nicht-Buchstaben-Grenzen statt Whitespace: "Togarashi-Gewürz" → gewurz
   return normalized
     .split(/[^\p{L}\p{N}]+/u)

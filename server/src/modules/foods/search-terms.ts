@@ -92,7 +92,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^banane roh/, terms: 'banana bananas' },
   { match: /^buttermilch/, terms: 'buttermilk' },
   { match: /^pfefferschote/, terms: 'chile chiles peppers green' },
-  { match: /^speisezwiebel/, terms: 'rot rote onion onions' },
+  { match: /^speisezwiebel/, terms: 'rot rote gelbe onion onions yellow' },
   { match: /^milch (fettarm|entrahmt)/, terms: 'milk' },
   { match: /^butter (mild|gesalzen)/, terms: 'unsalted salted' },
   // Audit v2 Batch 2
@@ -148,7 +148,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^hirsch fleisch, roh/, terms: 'hirschgulasch hirschfleisch venison' },
   { match: /^sahnejoghurt mind\. 10 % fett$/, terms: 'griechischer joghurt greek yogurt' },
   { match: /^pekannuss$/, terms: 'pecan pecans pekannuesse pekannusskerne' },
-  { match: /^weisswein trocken/, terms: 'riesling chardonnay weissburgunder' },
+  { match: /^weisswein trocken/, terms: 'riesling chardonnay weissburgunder white wine dry' },
   { match: /^tomatenmark/, terms: 'salca' },
   { match: /^weizenbaguette$/, terms: 'baguette baguettescheiben baguettebrot' },
   { match: /^rucola roh/, terms: 'rauke arugula rocket' },
