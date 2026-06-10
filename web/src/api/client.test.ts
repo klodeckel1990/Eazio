@@ -13,7 +13,7 @@ describe('api client', () => {
     fetchMock.mockResolvedValueOnce(ok({ id: 'u1', username: 'jens' }))
     const user = await api.auth.me()
     expect(user).toEqual({ id: 'u1', username: 'jens' })
-    expect(fetchMock).toHaveBeenCalledWith('/api/auth/me', expect.objectContaining({ credentials: 'include' }))
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/me', expect.objectContaining({ credentials: 'same-origin' }))
   })
 
   it('POST sends JSON body + content-type', async () => {
