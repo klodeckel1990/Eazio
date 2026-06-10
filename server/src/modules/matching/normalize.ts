@@ -137,7 +137,11 @@ const PREP_NOTE = new RegExp(
 /** True for negligible prep notes ("etwas Butter für die Form", "Mehl zum
  *  Bestäuben") — skipped like seasonings instead of defaulting to 100 g. */
 export function isPrepNote(name: string): boolean {
-  return PREP_NOTE.test(normalizeName(name))
+  const n = normalizeName(name)
+  // Alternativ-/Beispiel-Klauseln aus Komma-Splits ("such as serrano",
+  // "z. B. Gouda") sind keine eigene Zutat
+  if (/^(such as |like |z\.? ?b\.? |wie |etwa |idealerweise |am besten )/.test(n)) return true
+  return PREP_NOTE.test(n)
 }
 
 // Gewürz-Komposita: <Gewürz> + Form ("Zimtstange", "Pimentkörner",

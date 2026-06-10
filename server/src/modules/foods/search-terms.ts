@@ -147,6 +147,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^rindfleischbruehe/, terms: 'rinderbruehe beef broth stock' },
   { match: /^hirsch fleisch, roh/, terms: 'hirschgulasch hirschfleisch venison' },
   { match: /^sahnejoghurt mind\. 10 % fett$/, terms: 'griechischer joghurt greek yogurt' },
+  { match: /^pekannuss$/, terms: 'pecan pecans pekannuesse pekannusskerne' },
 ]
 
 export function foldGerman(text: string): string {

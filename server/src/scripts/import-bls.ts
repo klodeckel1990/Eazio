@@ -123,6 +123,10 @@ const STAPLE_MATCHES: Record<string, string> = {
   mandelkerne: 'Mandel süß',
   mandeln: 'Mandel süß',
   feta: 'Feta mind. 45 % Fett i. Tr.',
+  'feta cheese': 'Feta mind. 45 % Fett i. Tr.',
+  pecans: 'Pekannuss',
+  pekannusse: 'Pekannuss',
+  pekannusskerne: 'Pekannuss',
   kirschwasser: 'Obstbrand/Obstwasser',
   // Audit v5
   sellerie: 'Knollensellerie roh',
