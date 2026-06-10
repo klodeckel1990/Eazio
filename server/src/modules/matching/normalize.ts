@@ -112,6 +112,7 @@ const SEASONINGS = new Set([
   'orangenabrieb', 'rauchsalz', 'gurkenwasser', 'spargelschalen', 'shisokresse',
   'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
   'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
+  'anisstern', 'gewurznelke', 'gewurznelken', 'vanillemark',
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',

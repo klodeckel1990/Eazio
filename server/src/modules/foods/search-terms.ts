@@ -14,8 +14,8 @@ const COMPOUND_HEADS = [
   'gemuese', 'joghurt', 'kaese', 'kartoffel', 'keule', 'kohl', 'kuchen',
   'kuerbis', 'lende', 'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudel',
   'nudeln', 'nuss', 'oel', 'paprika', 'pilz', 'pulver', 'quark', 'reis',
-  'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse', 'speck',
-  'spinat', 'suppe', 'tomate', 'traube', 'wurst', 'zucker', 'zwiebel',
+  'kotelett', 'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse',
+  'speck', 'spinat', 'suppe', 'tomate', 'traube', 'wurst', 'zucker', 'zwiebel',
 ]
 
 /**
@@ -134,6 +134,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^backhefe/, terms: 'yeast instant' },
   { match: /^haehnchen brustfilet, roh/, terms: 'chicken breast haehnchenbrust huehnerbrust' },
   { match: /^kartoffel (geschaelt|ungeschaelt), roh/, terms: 'potato potatoes russet' },
+  { match: /^roemischer salat/, terms: 'roemersalat romana roemersalatherzen salatherzen romaine' },
+  { match: /^teigwaren eifrei, roh$/, terms: 'rigatoni farfalle' },
 ]
 
 export function foldGerman(text: string): string {
