@@ -116,7 +116,7 @@ const SEASONINGS = new Set([
   'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
   'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
   'anisstern', 'gewurznelke', 'gewurznelken', 'vanillemark',
-  'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung',
+  'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung', 'brotgewurz',
   'rosenbluten', 'rosenblutenblatter', 'koriandergrun',
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
@@ -149,7 +149,7 @@ export function isPrepNote(name: string): boolean {
 const SPICE_FORMS = [
   'korner', 'koerner', 'korn', 'stange', 'stangen', 'rinde', 'stangel',
   'staengel', 'zweig', 'zweige', 'grun', 'gruen', 'blatt', 'blatter',
-  'blaetter', 'pulver', 'mischung', 'samen', 'saat',
+  'blaetter', 'blute', 'bluten', 'pulver', 'mischung', 'samen', 'saat',
 ]
 
 /** True if the ingredient name is a pure seasoning/spice (any whole word matches

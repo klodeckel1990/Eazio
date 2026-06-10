@@ -161,6 +161,8 @@ const STAPLE_MATCHES: Record<string, string> = {
   tahin: 'Tahin (Sesammus)',
   rinderbruhe: 'Rindfleischbrühe Konserve',
   'beef broth': 'Rindfleischbrühe Konserve',
+  riesling: 'Weißwein trocken',
+  raucherbauch: 'Schwein Bauch (wie gewachsen) Rohpökelware',
   // englische Grundbegriffe (Allrecipes/Serious Eats/Cookpad)
   flour: 'Weizen Mehl, Type 405',
   sugar: 'Zucker weiß (Raffinadezucker/Weißzucker)',
