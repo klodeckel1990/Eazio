@@ -759,7 +759,8 @@ select {
   from { transform: scaleY(0); }
   to { transform: scaleY(1); }
 }
-.stats-seg { align-self: flex-start; }
+/* explicit columns: auto-fit would collapse to one column at shrink-to-fit width */
+.stats-seg { align-self: flex-start; grid-template-columns: repeat(3, minmax(82px, auto)); }
 .stats-page .card { animation: stats-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .stats-page .card:nth-of-type(2) { animation-delay: 0.06s; }
 .stats-page .card:nth-of-type(3) { animation-delay: 0.12s; }
@@ -849,7 +850,7 @@ select {
 .chart-bar.ok { fill: var(--primary); opacity: 0.78; }
 .chart-bar.over { fill: var(--coral); opacity: 0.85; }
 .chart-bar.empty { fill: var(--line-2); }
-.chart-bar.selected { opacity: 1; stroke: var(--ink); stroke-width: 1.2; }
+.chart-bar.selected { opacity: 1; stroke: var(--ink); stroke-opacity: 0.45; stroke-width: 1.4; }
 .chart-bar.water { fill: var(--teal); opacity: 0.75; }
 .chart-bar.water.empty { fill: var(--line-2); }
 .chart-goal { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 4 4; }
