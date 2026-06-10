@@ -18,8 +18,10 @@ export interface YazioRecipeDetails {
 
 export type RecipeFetcher = (id: string) => Promise<YazioRecipeDetails>
 
-export function buildRecipeFetcher(db: DB, account: AccountRecord): RecipeFetcher {
-  const getToken = (): string | null => {
+/** Reads the account's cached bearer token (refreshed by the yazio package's
+ *  own calls during an import run) for raw v15 API requests. */
+export function cachedTokenGetter(db: DB, account: AccountRecord): () => string | null {
+  return () => {
     const row = db
       .select({ encTokens: yazioAccounts.encTokens })
       .from(yazioAccounts)
@@ -28,6 +30,10 @@ export function buildRecipeFetcher(db: DB, account: AccountRecord): RecipeFetche
     if (!row?.encTokens) return null
     return (JSON.parse(decrypt(row.encTokens)) as { access_token: string }).access_token
   }
+}
+
+export function buildRecipeFetcher(db: DB, account: AccountRecord): RecipeFetcher {
+  const getToken = cachedTokenGetter(db, account)
 
   return async (id: string): Promise<YazioRecipeDetails> => {
     const token = getToken()

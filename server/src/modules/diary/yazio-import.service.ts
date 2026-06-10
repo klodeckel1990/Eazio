@@ -12,6 +12,7 @@ import { diaryEntries } from '../../db/schema.js'
 import { getAccount, getDefaultAccount, type AccountRecord } from '../accounts/accounts.repo.js'
 import { buildYazioClient } from '../yazio/client.js'
 import { buildRecipeFetcher, type RecipeFetcher, type YazioRecipeDetails } from '../yazio/recipes.js'
+import { buildSimpleProductsFetcher, type SimpleProductsFetcher } from '../yazio/simple-products.js'
 import { dateInTz, type Daytime } from '../meals/daytime.js'
 import { previousDay } from './streak.js'
 import { insertEntries, type NewDiaryEntry } from './diary.repo.js'
@@ -59,13 +60,23 @@ export interface HistoryClient {
   recipes: {
     get: RecipeFetcher
   }
+  /** quick/AI entries — the package's zod schema drops simple_products */
+  simpleProducts: {
+    get: SimpleProductsFetcher
+  }
 }
 
 export type HistoryClientFactory = (db: DB, account: AccountRecord) => HistoryClient
 
 const defaultFactory: HistoryClientFactory = (db, account) => {
-  const client = buildYazioClient(db, account) as unknown as Omit<HistoryClient, 'recipes'>
-  return { ...client, user: client.user, products: client.products, recipes: { get: buildRecipeFetcher(db, account) } }
+  const client = buildYazioClient(db, account) as unknown as Omit<HistoryClient, 'recipes' | 'simpleProducts'>
+  return {
+    ...client,
+    user: client.user,
+    products: client.products,
+    recipes: { get: buildRecipeFetcher(db, account) },
+    simpleProducts: { get: buildSimpleProductsFetcher(db, account) },
+  }
 }
 
 export interface ImportResult {
@@ -82,6 +93,25 @@ export class NoAccountError extends Error {
 }
 
 const r1 = (x: number): number => Math.round(x * 10) / 10
+
+/** True when the Yazio consumed-item is already in the diary — either from a
+ *  previous import (originRefId) or because OUR mirror created it in Yazio in
+ *  the first place (consumedId inside mirrorJson). Without this, re-importing
+ *  a day duplicates every dual-written manual entry. */
+function alreadyTracked(db: DB, userId: string, consumedId: string): boolean {
+  const row = db
+    .select({ one: sql<number>`1` })
+    .from(diaryEntries)
+    .where(
+      and(
+        eq(diaryEntries.userId, userId),
+        sql`(${diaryEntries.originRefId} = ${consumedId} OR ${diaryEntries.mirrorJson} LIKE '%' || ${consumedId} || '%')`,
+      ),
+    )
+    .limit(1)
+    .get()
+  return row !== undefined
+}
 
 function hasImportedEntries(db: DB, userId: string, date: string): boolean {
   const row = db
@@ -138,11 +168,13 @@ export async function importYazioHistory(
     const { products, recipe_portions: recipePortions = [] } = await client.user.getConsumedItems({
       date: new Date(`${date}T12:00:00`),
     })
-    if (products.length === 0 && recipePortions.length === 0) continue
+    const simpleProducts = await client.simpleProducts.get(date)
+    if (products.length === 0 && recipePortions.length === 0 && simpleProducts.length === 0) continue
 
     const rows: NewDiaryEntry[] = []
     for (const item of products) {
       if (item.amount === null || item.amount <= 0) continue // no gram amount — nutrients not computable
+      if (alreadyTracked(db, userId, item.id)) continue
       const product = await getProduct(item.product_id)
       if (!product) continue // deleted/unreachable product — skip the line, not the day
       const n = product.nutrients
@@ -173,6 +205,7 @@ export async function importYazioHistory(
     }
     for (const item of recipePortions) {
       if (!item.portion_count || item.portion_count <= 0) continue
+      if (alreadyTracked(db, userId, item.id)) continue
       const recipe = await getRecipe(item.recipe_id)
       if (!recipe) continue // deleted/unreachable recipe — skip the line, not the day
       // recipe.nutrients are the TOTAL of the ingredient list; portion_count
@@ -201,6 +234,36 @@ export async function importYazioHistory(
         originRefId: item.id,
         mirrorStatus: 'mirrored',
         mirrorJson: JSON.stringify({ accountId: account.id, consumedId: item.id, imported: true, recipe: true }),
+        createdAt: ts,
+        updatedAt: ts,
+      })
+    }
+    for (const item of simpleProducts) {
+      if (alreadyTracked(db, userId, item.id)) continue
+      // nutrients are absolute totals for the entry; the eaten weight is
+      // unknown (AI photo/text entries) — amountG 1 marks "no gram info"
+      const n = item.nutrients ?? {}
+      const ts = Date.now()
+      rows.push({
+        id: randomUUID(),
+        userId,
+        date,
+        daytime: item.daytime as Daytime,
+        foodId: null,
+        nameSnapshot: item.name,
+        amountG: 1,
+        servingLabel: 'Eintrag',
+        servingQuantity: 1,
+        kcal: r1(n['energy.energy'] ?? 0),
+        protein: r1(n['nutrient.protein'] ?? 0),
+        fat: r1(n['nutrient.fat'] ?? 0),
+        carbs: r1(n['nutrient.carb'] ?? 0),
+        sugar: r1(n['nutrient.sugar'] ?? 0),
+        fiber: r1(n['nutrient.dietaryfiber'] ?? 0),
+        origin: 'yazio_import',
+        originRefId: item.id,
+        mirrorStatus: 'mirrored',
+        mirrorJson: JSON.stringify({ accountId: account.id, consumedId: item.id, imported: true, simple: true }),
         createdAt: ts,
         updatedAt: ts,
       })

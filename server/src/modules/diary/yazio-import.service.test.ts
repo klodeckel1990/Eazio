@@ -36,6 +36,7 @@ function fakeClient(byDate: Record<string, { id: string; product_id: string; day
       }),
     },
     products: { get: productsGet },
+    simpleProducts: { get: vi.fn(async () => []) },
   } as unknown as HistoryClient
   return { client, productsGet }
 }
@@ -95,6 +96,7 @@ describe('yazio history import', () => {
       },
       products: { get: vi.fn() },
       recipes: { get: recipesGet },
+      simpleProducts: { get: vi.fn(async () => []) },
     } as unknown as HistoryClient
 
     const result = await importYazioHistory(db, user.id, { accountId: account.id, days: 2 }, () => client)
@@ -155,6 +157,87 @@ describe('yazio history import', () => {
     })
     const result = await importYazioHistory(db, user.id, { accountId: account.id, days: 1 }, () => client)
     expect(result.entriesImported).toBe(1)
+  })
+
+  it('imports AI/free-form quick entries (simple_products) with absolute nutrients', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'imp-simple', 'pw-123456')
+    const account = createAccount(db, user.id, 'Y', { username: 'a@b.de', password: 'x' })
+    const client = {
+      user: { getConsumedItems: vi.fn(async () => ({ products: [], recipe_portions: [] })) },
+      products: { get: vi.fn() },
+      recipes: { get: vi.fn() },
+      simpleProducts: {
+        get: vi.fn(async (date: string) =>
+          date === today
+            ? [
+                {
+                  id: 'sp1',
+                  daytime: 'lunch',
+                  name: 'Frikadellen mit Kartoffelsalat',
+                  nutrients: { 'energy.energy': 725, 'nutrient.protein': 55, 'nutrient.fat': 38, 'nutrient.carb': 70 },
+                },
+              ]
+            : [],
+        ),
+      },
+    } as unknown as HistoryClient
+
+    const result = await importYazioHistory(db, user.id, { accountId: account.id, days: 2 }, () => client)
+    expect(result.entriesImported).toBe(1)
+    const entries = listDayEntries(db, user.id, today)
+    expect(entries[0]).toMatchObject({
+      nameSnapshot: 'Frikadellen mit Kartoffelsalat',
+      kcal: 725, // absolute totals, no per-gram scaling
+      protein: 55,
+      amountG: 1,
+      servingLabel: 'Eintrag',
+      origin: 'yazio_import',
+    })
+  })
+
+  it('does not re-import items our own mirror wrote to Yazio', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'imp-dedupe', 'pw-123456')
+    const account = createAccount(db, user.id, 'Y', { username: 'a@b.de', password: 'x' })
+    // a manual entry that was dual-written: Yazio knows it under consumedId y-77
+    const { insertEntries } = await import('./diary.repo.js')
+    const ts = Date.now()
+    insertEntries(db, [
+      {
+        id: 'manual-1',
+        userId: user.id,
+        date: today,
+        daytime: 'lunch',
+        foodId: null,
+        nameSnapshot: 'Banane',
+        amountG: 120,
+        servingLabel: null,
+        servingQuantity: null,
+        kcal: 107,
+        protein: null,
+        fat: null,
+        carbs: null,
+        sugar: null,
+        fiber: null,
+        origin: 'manual',
+        originRefId: null,
+        mirrorStatus: 'mirrored',
+        mirrorJson: JSON.stringify({ accountId: account.id, consumedId: 'y-77' }),
+        createdAt: ts,
+        updatedAt: ts,
+      },
+    ])
+    const { client } = fakeClient({
+      [today]: [
+        { id: 'y-77', product_id: 'p1', daytime: 'lunch', amount: 120 }, // the mirrored one
+        { id: 'y-88', product_id: 'p1', daytime: 'dinner', amount: 50 }, // genuinely new
+      ],
+    })
+    const result = await importYazioHistory(db, user.id, { accountId: account.id, days: 1 }, () => client)
+    expect(result.entriesImported).toBe(1)
+    const entries = listDayEntries(db, user.id, today)
+    expect(entries).toHaveLength(2) // manual + the new import, no duplicate
   })
 
   it('throws NoAccountError without a linked account', async () => {
