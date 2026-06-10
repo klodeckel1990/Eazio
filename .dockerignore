@@ -12,3 +12,6 @@ coverage
 docs
 **/*.test.ts
 **/*.test.tsx
+app/ios
+app/android
+app/assets

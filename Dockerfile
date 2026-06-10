@@ -9,6 +9,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY server/package.json ./server/package.json
 COPY web/package.json ./web/package.json
+# app workspace: web imports @capacitor/* (dynamically), so its deps must exist
+COPY app/package.json ./app/package.json
 # npm install (not ci): the committed lockfile can't be regenerated in the dev
 # sandbox (TLS interception), so resolve fresh here in the clean build network.
 RUN npm install --no-audit --no-fund
