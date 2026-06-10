@@ -10,12 +10,12 @@ const UMLAUT_MAP: Record<string, string> = { ä: 'ae', ö: 'oe', ü: 'ue', ß: '
 // indexed as the bare head ("kalbslende" → "lende"). Curated, not linguistic.
 const COMPOUND_HEADS = [
   'aufstrich', 'auflauf', 'beere', 'bohne', 'braten', 'brot', 'broetchen',
-  'butter', 'creme', 'eis', 'erbse', 'filet', 'flocken', 'fleisch', 'gemuese',
-  'joghurt', 'kaese', 'keule', 'kohl', 'kuchen', 'kuerbis', 'lende',
-  'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudeln', 'nuss', 'oel',
-  'paprika', 'pilz', 'pulver', 'quark', 'reis', 'saft', 'salat', 'sauce',
-  'schinken', 'schnitzel', 'sosse', 'speck', 'suppe', 'tomate', 'traube',
-  'wurst', 'zucker', 'zwiebel',
+  'butter', 'creme', 'eis', 'erbse', 'essig', 'filet', 'flocken', 'fleisch',
+  'gemuese', 'joghurt', 'kaese', 'kartoffel', 'keule', 'kohl', 'kuchen',
+  'kuerbis', 'lende', 'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudel',
+  'nudeln', 'nuss', 'oel', 'paprika', 'pilz', 'pulver', 'quark', 'reis',
+  'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse', 'speck',
+  'spinat', 'suppe', 'tomate', 'traube', 'wurst', 'zucker', 'zwiebel',
 ]
 
 /**
@@ -69,6 +69,32 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^champignon roh/, terms: 'pilz pilze champignons' },
   { match: /^kuerbis hokkaido/, terms: 'hokkaidokuerbis hokkaido' },
   { match: /^kuerbis butternut/, terms: 'butternutkuerbis butternusskuerbis butternut' },
+  // Audit v2 (Top-10-Rezeptseiten): farbliche Varianten + fehlende Begriffe
+  { match: /^kopfsalat roh/, terms: 'salatblatt salatblaetter blattsalat lettuce' },
+  { match: /^joghurt mild/, terms: 'naturjoghurt yogurt yoghurt' },
+  { match: /^tomaten geschaelt/, terms: 'tomatenstuecke dosentomaten' },
+  { match: /^spinat roh/, terms: 'blattspinat babyspinat spinach' },
+  { match: /^linse rot reif/, terms: 'rote linsen red lentils' },
+  { match: /^weizentoastbrot/, terms: 'toastbrot toast' },
+  { match: /^zartbitter-\/halbbitterschokolade$/, terms: 'zartbitterschokolade schokoraspel raspelschokolade dunkle schokolade dark chocolate chips' },
+  { match: /^kidneybohne/, terms: 'kidney beans kidneybohnen' },
+  // englische Staples (Allrecipes/Serious Eats/Cookpad — KI-Retry trifft sonst nur OFF)
+  { match: /^huehnerei/, terms: 'ei eier egg eggs' },
+  { match: /^weizen mehl/, terms: 'flour allpurpose' },
+  { match: /^zucker weiss/, terms: 'sugar' },
+  { match: /^knoblauch roh/, terms: 'knoblauchzehe knoblauchzehen zehe garlic' },
+  { match: /^tomate roh$/, terms: 'kirschtomate cherrytomate cocktailtomate cherry romatomate tomato tomatoes' },
+  { match: /^rind hackfleisch/, terms: 'rinderhack rinderhackfleisch hackfleisch hack ground beef' },
+  { match: /^haehnchenbrustfilet|^haehnchen brust/, terms: 'chicken breast haehnchenbrust' },
+  { match: /^schlagsahne/, terms: 'sahne schlagobers cream whipping heavy' },
+  { match: /^trinkwasser/, terms: 'wasser leitungswasser water' },
+  { match: /^walnuss/, terms: 'walnut walnuts walnuesse' },
+  { match: /^banane roh/, terms: 'banana bananas' },
+  { match: /^buttermilch/, terms: 'buttermilk' },
+  { match: /^pfefferschote/, terms: 'chile chiles' },
+  { match: /^speisezwiebel/, terms: 'rot rote onion onions' },
+  { match: /^milch (fettarm|entrahmt)/, terms: 'milk' },
+  { match: /^butter (mild|gesalzen)/, terms: 'unsalted salted' },
 ]
 
 export function foldGerman(text: string): string {

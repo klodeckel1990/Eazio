@@ -14,11 +14,22 @@ const KNOWN_UNITS = new Set([
   'packung', 'päckchen', 'paeckchen', 'beutel', 'würfel', 'wuerfel',
   'handvoll', 'blatt', 'blätter', 'blaetter', 'kugel', 'kugeln',
   'pck', 'pkt', 'bd',
+  // englische Rezepte (Allrecipes, Serious Eats, …)
+  'cup', 'cups', 'tsp', 'teaspoon', 'teaspoons', 'tbsp', 'tablespoon', 'tablespoons',
+  'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces',
+  'clove', 'cloves', 'slice', 'slices', 'can', 'cans', 'stick', 'sticks', 'pinch',
 ])
 
 // Recipe-site abbreviations → the canonical unit word the rest of the pipeline
 // knows ("1 Pck. Vanillezucker", "1 Bd Lauchzwiebeln").
-const UNIT_ALIASES: Record<string, string> = { pck: 'packung', pkt: 'packung', bd: 'bund' }
+const UNIT_ALIASES: Record<string, string> = {
+  pck: 'packung', pkt: 'packung', bd: 'bund',
+  cups: 'cup', tsp: 'tl', teaspoon: 'tl', teaspoons: 'tl',
+  tbsp: 'el', tablespoon: 'el', tablespoons: 'el',
+  lbs: 'lb', pound: 'lb', pounds: 'lb', ounce: 'oz', ounces: 'oz',
+  clove: 'zehe', cloves: 'zehe', slice: 'scheibe', slices: 'scheibe',
+  can: 'dose', cans: 'dose', sticks: 'stick', pinch: 'prise',
+}
 const canonicalUnit = (u: string): string => UNIT_ALIASES[u] ?? u
 
 // NOTE: simple fractions ("1/2 Apfel") are not parsed — the "/2" stays in the

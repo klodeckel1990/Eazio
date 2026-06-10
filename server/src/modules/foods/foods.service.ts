@@ -14,7 +14,7 @@ import { fetchOffProduct, searchOffProducts, type FetchOffProduct, type SearchOf
 import { mapOffProduct } from './off.mapper.js'
 import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
-import { buildSearchQuery, isPrepNote, isSeasoning, normalizeName, stripPurpose } from '../matching/normalize.js'
+import { buildSearchQuery, isPrepNote, isQualifierOnly, isSeasoning, normalizeName, stripPurpose } from '../matching/normalize.js'
 import { getFoodAlias } from './food-aliases.repo.js'
 import { compoundHeadFallback, foldGerman } from './search-terms.js'
 
@@ -210,7 +210,7 @@ export async function matchFoodText(
 
   const pending: Pending[] = []
   for (const line of parseIngredients(text)) {
-    if (isSeasoning(line.name) || isPrepNote(line.name)) continue
+    if (isSeasoning(line.name) || isPrepNote(line.name) || isQualifierOnly(line.name)) continue
     // purpose clauses stay out of the cache key and the AI prompt too:
     // "Öl zum Braten" must hit the same cache entry / staple seed as "Öl"
     line.name = stripPurpose(line.name)

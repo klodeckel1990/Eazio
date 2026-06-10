@@ -34,7 +34,24 @@ const QUALIFIERS = new Set([
   // prefer the matching fat level among the candidates
   'mager', 'magere', 'mageres', 'magerer',
   'fettarm', 'fettarme', 'fettarmes', 'fettarmer',
+  // Herkunfts-/Größen-Präfixe ("Bio-Zitrone", "Baby-Blattspinat")
+  'bio', 'baby', 'jung', 'junge',
+  // englische Rezepte (Allrecipes, Serious Eats, …)
+  'softened', 'melted', 'diced', 'crushed', 'minced', 'chopped', 'sliced',
+  'peeled', 'grated', 'toasted', 'mashed', 'packed', 'divided', 'drained',
+  'rinsed', 'beaten', 'dried', 'fresh', 'freshly', 'large', 'medium', 'small',
+  'whole', 'ripe', 'lean', 'boneless', 'skinless', 'unsalted', 'salted',
+  'granulated', 'kosher',
 ])
+
+/** True wenn der Name NUR aus Qualifier-Wörtern besteht — Geister-Zeilen aus
+ *  Komma-Splits ("1 cup butter, softened" → "softened") werden übersprungen. */
+export function isQualifierOnly(name: string): boolean {
+  const tokens = name
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((t) => t.length > 0)
+  return tokens.length > 0 && tokens.every((t) => QUALIFIERS.has(normalizeName(t)))
+}
 
 /**
  * Builds a Yazio search query from a parsed ingredient name: keep the first of
@@ -52,7 +69,9 @@ export function stripPurpose(name: string): string {
 
 export function buildSearchQuery(name: string): string {
   const firstAlternative = name.split(/\s+(?:oder|bzw\.?|alternativ)\s+/i)[0] ?? name
-  const kept = stripPurpose(firstAlternative)
+  // Bindestrich-Präfixe überleben die Token-Filterung ("Bio-Zitrone")
+  const dePrefixed = firstAlternative.replace(/\b(bio|baby|demeter)-/gi, '')
+  const kept = stripPurpose(dePrefixed)
     .split(/\s+/)
     .map((tok) => tok.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
     .filter((tok) => tok.length > 0 && !QUALIFIERS.has(normalizeName(tok)))
@@ -78,6 +97,13 @@ const SEASONINGS = new Set([
   // herbs
   'oregano', 'basilikum', 'thymian', 'rosmarin', 'majoran', 'salbei', 'petersilie',
   'schnittlauch', 'dill', 'estragon', 'kerbel', 'minze', 'pfefferminze', 'bohnenkraut', 'kresse',
+  // Audit-Funde: Aroma-/Gewürzformen ohne relevante Kalorien
+  'vanilleschote', 'vanilleschoten', 'koriandersaat', 'kardamomkapsel', 'kardamomkapseln',
+  'kamillenblute', 'kamillenbluten', 'rosmarinnadeln', 'selleriesalz', 'knoblauchgranulat',
+  // englisch
+  'salt', 'pepper', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
+  'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
+  'saffron', 'turmeric', 'cardamom', 'allspice', 'anise',
 ])
 
 // Prep notes whose amount is negligible and unknowable: greasing the tin,
@@ -99,8 +125,8 @@ export function isPrepNote(name: string): boolean {
 /** True if the ingredient name is a pure seasoning/spice (any whole word matches
  *  the curated list). Ambiguous foods like "Paprika" or "Knoblauch" return false. */
 export function isSeasoning(name: string): boolean {
+  // Nicht-Buchstaben-Grenzen statt Whitespace: "Togarashi-Gewürz" → gewurz
   return normalizeName(name)
-    .split(/\s+/)
-    .map((tok) => tok.replace(/[^\p{L}\p{N}]/gu, ''))
+    .split(/[^\p{L}\p{N}]+/u)
     .some((tok) => SEASONINGS.has(tok))
 }

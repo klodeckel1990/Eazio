@@ -17,6 +17,13 @@ describe('ingredient parser', () => {
     // recipe-site unit abbreviations are canonicalized
     ['1 Pck. Vanillezucker', { qty: 1, unit: 'packung', name: 'Vanillezucker' }],
     ['1 Bd Radieschen', { qty: 1, unit: 'bund', name: 'Radieschen' }],
+    // englische Einheiten (Allrecipes/Serious Eats)
+    ['2 cups all-purpose flour', { qty: 2, unit: 'cup', name: 'all-purpose flour' }],
+    ['1 teaspoon baking soda', { qty: 1, unit: 'tl', name: 'baking soda' }],
+    ['2 tablespoons olive oil', { qty: 2, unit: 'el', name: 'olive oil' }],
+    ['1 pound ground beef', { qty: 1, unit: 'lb', name: 'ground beef' }],
+    ['16 ounces ricotta cheese', { qty: 16, unit: 'oz', name: 'ricotta cheese' }],
+    ['2 cloves garlic', { qty: 2, unit: 'zehe', name: 'garlic' }],
   ])('parses %s', (input, expected) => {
     const p = parseLine(input)
     expect({ qty: p.qty, unit: p.unit, name: p.name }).toEqual(expected)
