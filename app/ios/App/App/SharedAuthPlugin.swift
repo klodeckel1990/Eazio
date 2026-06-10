@@ -32,27 +32,44 @@ public class SharedAuthPlugin: CAPPlugin, CAPBridgedPlugin {
         ]
     }
 
+    /// Writes the token into the shared keychain group (or clears it for nil).
+    /// Also used by MainViewController, which mirrors the WebView's
+    /// localStorage token without any JS bridge involvement.
+    @discardableResult
+    static func store(token: String?) -> OSStatus {
+        guard let token, !token.isEmpty else {
+            return SecItemDelete(baseQuery as CFDictionary)
+        }
+        let data = Data(token.utf8)
+        let update: [String: Any] = [kSecValueData as String: data]
+        var status = SecItemUpdate(baseQuery as CFDictionary, update as CFDictionary)
+        if status == errSecItemNotFound {
+            var add = baseQuery
+            add[kSecValueData as String] = data
+            // widgets refresh in the background — must be readable after first unlock
+            add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            status = SecItemAdd(add as CFDictionary, nil)
+        }
+        return status
+    }
+
     @objc func setToken(_ call: CAPPluginCall) {
         guard let token = call.getString("token"), !token.isEmpty else {
             call.reject("token fehlt")
             return
         }
-        let data = Data(token.utf8)
-        let update: [String: Any] = [kSecValueData as String: data]
-        let status = SecItemUpdate(Self.baseQuery as CFDictionary, update as CFDictionary)
-        if status == errSecItemNotFound {
-            var add = Self.baseQuery
-            add[kSecValueData as String] = data
-            // widgets refresh in the background — must be readable after first unlock
-            add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-            SecItemAdd(add as CFDictionary, nil)
+        let status = Self.store(token: token)
+        print("[SharedAuth] keychain write status: \(status)")
+        guard status == errSecSuccess else {
+            call.reject("keychain write failed: \(status)")
+            return
         }
         WidgetCenter.shared.reloadAllTimelines()
         call.resolve()
     }
 
     @objc func clearToken(_ call: CAPPluginCall) {
-        SecItemDelete(Self.baseQuery as CFDictionary)
+        Self.store(token: nil)
         WidgetCenter.shared.reloadAllTimelines()
         call.resolve()
     }
