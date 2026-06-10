@@ -113,6 +113,25 @@ describe('matchFoodText with AI rerank', () => {
     expect(rerank).not.toHaveBeenCalled()
   })
 
+  it('local BLS hits rank before OFF supplements — branded junk never displaces base foods', async () => {
+    const { db, user } = await setup()
+    const onion = seed(db, 'Z1', 'Speisezwiebel roh', 28)
+    // sparse local result (1 < 3) triggers the OFF supplement
+    const off = vi.fn(async () => [
+      { code: '111', product_name: 'Snack Salat Thunfisch & Zwiebel', nutriments: { 'energy-kcal_100g': 180 } },
+      { code: '222', product_name: 'Zwiebel-Baguette', nutriments: { 'energy-kcal_100g': 250 } },
+    ])
+    const rerank: AiRerank = vi.fn(async (lines: RerankLine[]) => {
+      // the AI sees source tags on every candidate label
+      for (const l of lines) for (const c of l.candidates) expect(c.label).toMatch(/\[(BLS|Produkt|Eigenes)\]$/)
+      return lines.map(() => ({ id: null, retryQuery: null, pieceGrams: null }))
+    })
+    const lines = await matchFoodText(db, user.id, '100 g rote Zwiebel', off, rerank)
+    expect(lines[0]!.candidates[0]!.id).toBe(onion) // local first, OFF appended
+    expect(lines[0]!.candidates.length).toBeGreaterThan(1)
+    expect(lines[0]!.selectedFoodId).toBe(onion)
+  })
+
   it('does not cache picks of custom foods globally', async () => {
     const { db, user } = await setup()
     const custom = createCustomFood(db, user.id, { name: 'Paprika-Mix (meins)', kcal: 50 })

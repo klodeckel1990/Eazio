@@ -29,6 +29,31 @@ const STAPLE_MATCHES: Record<string, string> = {
   joghurt: 'Joghurt mild, mind. 3,5 % Fett',
   haferflocken: 'Hafer Flocken',
   milchreis: 'Milchreis gesüßt, mit Milch 3,5 % Fett',
+  // Audit einfachkochen.de: Grundzutaten, deren BLS-Name anders heißt
+  wasser: 'Trinkwasser',
+  sahne: 'Schlagsahne mind. 30 % Fett',
+  schlagsahne: 'Schlagsahne mind. 30 % Fett',
+  essig: 'Branntweinessig',
+  pilz: 'Champignon roh',
+  pilze: 'Champignon roh',
+  champignon: 'Champignon roh',
+  champignons: 'Champignon roh',
+  hackfleisch: 'Rind/Schwein, Hackfleisch gemischt, roh',
+  schweinehack: 'Schwein Hackfleisch, roh',
+  schweinehackfleisch: 'Schwein Hackfleisch, roh',
+  rinderhack: 'Rind Hackfleisch, roh',
+  rinderhackfleisch: 'Rind Hackfleisch, roh',
+  knoblauchzehe: 'Knoblauch roh',
+  knoblauchzehen: 'Knoblauch roh',
+  pflanzendrink: 'Haferdrink ungesüßt',
+  kuverture: 'Zartbitter-/Halbbitter-Kuvertüre', // normalizeName: ü→u
+  zartbitterkuverture: 'Zartbitter-/Halbbitter-Kuvertüre',
+  hefe: 'Backhefe frisch (Frischbackhefe)',
+  trockenhefe: 'Backhefe getrocknet (Trockenbackhefe)',
+  frischkase: 'Frischkäsezubereitung Natur, mind. 60 % Fett i. Tr.',
+  doppelrahmfrischkase: 'Frischkäsezubereitung Natur, mind. 60 % Fett i. Tr.',
+  chili: 'Pfefferschote rot, roh',
+  chilischote: 'Pfefferschote rot, roh',
 }
 
 export interface BlsSeed {

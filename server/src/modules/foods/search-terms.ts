@@ -41,7 +41,7 @@ export function compoundHeadFallback(name: string): string | null {
 const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /koerniger frischkaese|huettenkaese/, terms: 'huettenkaese hüttenkäse cottage cheese koerniger frischkaese' },
   { match: /fruehlingszwiebel/, terms: 'lauchzwiebel jungzwiebel' },
-  { match: /\bhaferdrink/, terms: 'hafermilch' },
+  { match: /\bhaferdrink/, terms: 'hafermilch pflanzendrink pflanzenmilch' },
   { match: /\bsojadrink/, terms: 'sojamilch' },
   { match: /\bmandeldrink/, terms: 'mandelmilch' },
   { match: /speisequark/, terms: 'quark magerquark' },
@@ -56,6 +56,17 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^milch (fettarm|entrahmt)/, terms: 'vollmilch kuhmilch trinkmilch frischmilch' },
   { match: /zuckermais/, terms: 'mais' },
   { match: /paprikaschote/, terms: 'paprika' },
+  // Audit-Funde (einfachkochen.de): BLS-Namen, die niemand so tippt
+  { match: /^pfefferschote/, terms: 'chili chilli chilischote thaichili thaichilli peperoni' },
+  { match: /^knoblauch roh/, terms: 'knoblauchzehe knoblauchzehen zehe' },
+  { match: /^schlagsahne/, terms: 'sahne schlagobers' },
+  { match: /^trinkwasser/, terms: 'wasser leitungswasser' },
+  { match: /^schwein hackfleisch/, terms: 'schweinehack schweinehackfleisch hackfleisch' },
+  { match: /hackfleisch gemischt/, terms: 'hackfleisch gemischtes hack' },
+  { match: /^frischkaesezubereitung/, terms: 'frischkaese doppelrahmfrischkaese' },
+  { match: /kuvertuere/, terms: 'kuvertuere zartbitterkuvertuere vollmilchkuvertuere schokoglasur' },
+  { match: /^backhefe/, terms: 'hefe trockenhefe frischhefe' },
+  { match: /^champignon roh/, terms: 'pilz pilze champignons' },
 ]
 
 export function foldGerman(text: string): string {

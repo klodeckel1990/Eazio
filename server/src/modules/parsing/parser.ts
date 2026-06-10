@@ -13,7 +13,13 @@ const KNOWN_UNITS = new Set([
   'bund', 'zehe', 'zehen', 'stange', 'stangen', 'kopf', 'zweig', 'zweige',
   'packung', 'päckchen', 'paeckchen', 'beutel', 'würfel', 'wuerfel',
   'handvoll', 'blatt', 'blätter', 'blaetter', 'kugel', 'kugeln',
+  'pck', 'pkt', 'bd',
 ])
+
+// Recipe-site abbreviations → the canonical unit word the rest of the pipeline
+// knows ("1 Pck. Vanillezucker", "1 Bd Lauchzwiebeln").
+const UNIT_ALIASES: Record<string, string> = { pck: 'packung', pkt: 'packung', bd: 'bund' }
+const canonicalUnit = (u: string): string => UNIT_ALIASES[u] ?? u
 
 // NOTE: simple fractions ("1/2 Apfel") are not parsed — the "/2" stays in the
 // name and the user corrects it in the review UI. Decimal qty ("0,5") works.
@@ -104,7 +110,7 @@ export function parseLine(raw: string): ParsedLine {
       // optional unit word right after the fraction ("1/2 TL Honig")
       const unitMatch = /^([a-zà-ÿ]+)\s+(.+)$/i.exec(rest)
       if (unitMatch && KNOWN_UNITS.has(unitMatch[1]!.toLowerCase())) {
-        return { raw, qty, unit: unitMatch[1]!.toLowerCase(), name: unitMatch[2]!.trim() }
+        return { raw, qty, unit: canonicalUnit(unitMatch[1]!.toLowerCase()), name: unitMatch[2]!.trim() }
       }
       return { raw, qty, unit: null, name: rest }
     }
@@ -122,7 +128,7 @@ export function parseLine(raw: string): ParsedLine {
     if (word && KNOWN_UNITS.has(word)) {
       // A quantity+unit with no ingredient name (e.g. "200ml") leaves an empty
       // name; parseIngredients() drops such chunks.
-      return { raw, qty: num(n), unit: word, name: rest }
+      return { raw, qty: num(n), unit: canonicalUnit(word), name: rest }
     }
     return { raw, qty: num(n), unit: null, name: `${lead[2] ?? ''} ${rest}`.trim() }
   }
@@ -133,7 +139,7 @@ export function parseLine(raw: string): ParsedLine {
     const n = trail[2]!
     const word = (trail[3] ?? '').toLowerCase()
     if (name && (!word || KNOWN_UNITS.has(word))) {
-      return { raw, qty: num(n), unit: word || null, name }
+      return { raw, qty: num(n), unit: word ? canonicalUnit(word) : null, name }
     }
   }
 

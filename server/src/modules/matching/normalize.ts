@@ -19,6 +19,8 @@ const QUALIFIERS = new Set([
   'getrocknet', 'getrocknete', 'tiefgekuhlt', 'tiefgekuhlte', 'gefroren', 'gefrorene',
   'gemischt', 'gemischte', 'gemischter', 'geschrotet', 'geschrotete',
   'gemahlen', 'gemahlene', 'gehackt', 'gehackte', 'gerieben', 'geriebene',
+  'weich', 'weiche', 'weicher', 'weiches', 'zerlassen', 'zerlassene',
+  'geschmolzen', 'geschmolzene', 'gewurfelt', 'gewurfelte', 'gedampft', 'gedampfte',
   'puriert', 'purierte', 'fein', 'feine', 'feiner', 'grob', 'grobe',
   'optional', 'ca', 'etwa', 'etwas', 'evtl', 'ggf', 'ungefahr',
   'nach', 'geschmack', 'wahl', 'belieben', 'saison', 'pro', 'portion', 'stuck',

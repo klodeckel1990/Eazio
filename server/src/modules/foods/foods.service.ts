@@ -213,19 +213,33 @@ export async function matchFoodText(
     if (isSeasoning(line.name)) continue
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
     const query = buildSearchQuery(line.name)
-    let candidates = await searchSmart(db, userId, query, 12, fetchSearch)
+    // LOCAL results (BLS/custom) first — including the fallbacks. OFF branded
+    // products only ever supplement; they must never displace base foods
+    // ("rote Zwiebel" → Speisezwiebel, not a tuna-salad snack product).
+    let candidates = search(db, userId, query, 12)
     if (candidates.length === 0) {
       // unknown compound ("Romatomaten") — search its head ("tomate") and let
       // the AI rerank pick the fitting base product
       const head = compoundHeadFallback(line.name)
-      if (head) candidates = await searchSmart(db, userId, head, 12, fetchSearch)
+      if (head) candidates = search(db, userId, head, 12)
     }
     if (candidates.length === 0) {
       // multi-word zero hit ("Cherry-Tomaten"): try the tokens individually
       for (const token of query.split(/\s+/).slice(0, 3)) {
         if (token.length < 3) continue
-        candidates = await searchSmart(db, userId, token, 12, fetchSearch)
+        candidates = search(db, userId, token, 12)
         if (candidates.length > 0) break
+      }
+    }
+    if (candidates.length < 3) {
+      const offResults = await searchSmart(db, userId, query, 12, fetchSearch)
+      const seen = new Set(candidates.map((c) => c.id))
+      for (const c of offResults) {
+        if (candidates.length >= 12) break
+        if (!seen.has(c.id)) {
+          candidates.push(c)
+          seen.add(c.id)
+        }
       }
     }
     const normalizedName = normalizeName(line.name)
@@ -291,7 +305,9 @@ export async function matchFoodText(
     perPiece: p.normalizedUnit === 'serving' && p.line.qty !== null,
     candidates: p.candidates.map((c) => ({
       id: c.id,
-      label: c.brand ? `${c.name} – ${c.brand}` : c.name,
+      label:
+        (c.brand ? `${c.name} – ${c.brand}` : c.name) +
+        (c.source === 'bls' ? ' [BLS]' : c.source === 'custom' ? ' [Eigenes]' : ' [Produkt]'),
     })),
   })
   const applyPick = (p: Pending, pickId: string, pieceGrams: number | null) => {
