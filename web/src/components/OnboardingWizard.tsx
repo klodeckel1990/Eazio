@@ -44,11 +44,18 @@ export function OnboardingWizard() {
 
   useEffect(() => {
     let alive = true
-    api.settings
-      .get()
-      .then((s) => { if (alive && !s.onboardingDone) setShow(true) })
-      .catch(() => {})
-    return () => { alive = false }
+    // the feature tour waits until the profile wizard is done — never both at once
+    const check = () => {
+      Promise.all([api.settings.get(), api.goals.get()])
+        .then(([s, g]) => { if (alive && !s.onboardingDone && g.onboardedAt) setShow(true) })
+        .catch(() => {})
+    }
+    check()
+    window.addEventListener('tellerwert:onboarded', check)
+    return () => {
+      alive = false
+      window.removeEventListener('tellerwert:onboarded', check)
+    }
   }, [])
 
   const finish = () => {

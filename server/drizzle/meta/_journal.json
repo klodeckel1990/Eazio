@@ -78,6 +78,13 @@
       "when": 1781130000000,
       "tag": "0010_match_cache_grams",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1781140000000,
+      "tag": "0011_profile",
+      "breakpoints": true
     }
   ]
 }

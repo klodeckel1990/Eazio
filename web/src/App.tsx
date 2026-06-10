@@ -3,6 +3,7 @@ import { AuthProvider } from './auth/AuthContext'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { AppBar, TabBar } from './components/Nav'
 import { OnboardingWizard } from './components/OnboardingWizard'
+import { ProfileOnboarding } from './components/ProfileOnboarding'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { TrackerPage } from './pages/TrackerPage'
@@ -21,6 +22,7 @@ function Shell() {
         <Outlet />
       </main>
       <TabBar />
+      <ProfileOnboarding />
       <OnboardingWizard />
     </div>
   )

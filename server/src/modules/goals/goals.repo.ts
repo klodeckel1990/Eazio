@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
 import { userGoals } from '../../db/schema.js'
+import type { ActivityLevel, Gender, GoalType } from './plan.service.js'
 
 export interface Goals {
   kcalTarget: number
@@ -10,6 +11,14 @@ export interface Goals {
   waterMl: number
   weightKg: number | null
   weightGoalKg: number | null
+  // onboarding profile
+  gender: Gender | null
+  birthYear: number | null
+  heightCm: number | null
+  activityLevel: ActivityLevel | null
+  goalType: GoalType | null
+  paceKgWeek: number | null
+  onboardedAt: number | null
 }
 
 export const DEFAULT_GOALS: Goals = {
@@ -20,6 +29,13 @@ export const DEFAULT_GOALS: Goals = {
   waterMl: 2000,
   weightKg: null,
   weightGoalKg: null,
+  gender: null,
+  birthYear: null,
+  heightCm: null,
+  activityLevel: null,
+  goalType: null,
+  paceKgWeek: null,
+  onboardedAt: null,
 }
 
 export function getGoals(db: DB, userId: string): Goals {
@@ -33,6 +49,13 @@ export function getGoals(db: DB, userId: string): Goals {
     waterMl: row.waterMl,
     weightKg: row.weightKg,
     weightGoalKg: row.weightGoalKg,
+    gender: row.gender as Gender | null,
+    birthYear: row.birthYear,
+    heightCm: row.heightCm,
+    activityLevel: row.activityLevel as ActivityLevel | null,
+    goalType: row.goalType as GoalType | null,
+    paceKgWeek: row.paceKgWeek,
+    onboardedAt: row.onboardedAt,
   }
 }
 

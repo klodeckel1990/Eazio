@@ -130,6 +130,10 @@ export interface Streak {
   lastLoggedDate: string | null
 }
 
+export type Gender = 'female' | 'male' | 'diverse'
+export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'
+export type GoalType = 'lose' | 'maintain' | 'gain'
+
 export interface Goals {
   kcalTarget: number
   proteinG: number | null
@@ -138,6 +142,35 @@ export interface Goals {
   waterMl: number
   weightKg: number | null
   weightGoalKg: number | null
+  gender: Gender | null
+  birthYear: number | null
+  heightCm: number | null
+  activityLevel: ActivityLevel | null
+  goalType: GoalType | null
+  paceKgWeek: number | null
+  onboardedAt: number | null
+}
+
+export interface OnboardingInput {
+  gender: Gender
+  birthYear: number
+  heightCm: number
+  weightKg: number
+  activityLevel: ActivityLevel
+  goalType: GoalType
+  weightGoalKg?: number | null
+  paceKgWeek?: number | null
+}
+
+export interface OnboardingPlan {
+  bmr: number
+  tdee: number
+  kcalTarget: number
+  proteinG: number
+  fatG: number
+  carbsG: number
+  waterMl: number
+  etaWeeks: number | null
 }
 
 export interface DiaryDay {

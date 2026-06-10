@@ -1174,6 +1174,108 @@ input[type='search']:focus {
 .wiz-nav { display: flex; gap: 0.6rem; width: 100%; }
 .wiz-nav .btn { flex: 1; justify-content: center; }
 
+/* ---- Profil-Onboarding (Fragebogen) -------------------------------------- */
+.ob-card { max-width: 440px; min-height: 380px; justify-content: flex-start; }
+.ob-card .wiz-skip {
+  width: auto;
+  height: auto;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.ob-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+  margin: 0.4rem 0 0.5rem;
+}
+.ob-progress span {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  transition: width 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.ob-options { display: flex; flex-direction: column; gap: 0.55rem; width: 100%; }
+.ob-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.ob-option:active { transform: scale(0.985); }
+.ob-option.selected {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+.ob-option strong { font-size: 1rem; }
+.ob-option span { color: var(--ink-2); font-size: 0.85rem; }
+.ob-feedback {
+  color: var(--primary-700);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  font-weight: 500;
+  animation: fadeIn 0.25s ease;
+}
+.ob-error { color: var(--danger, #c0392b); font-size: 0.9rem; }
+.ob-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: center;
+  margin: 0.6rem 0;
+}
+.ob-input-row input {
+  width: 9rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.55rem 0.6rem;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--ink);
+}
+.ob-input-row input:focus { outline: none; border-color: var(--primary); }
+.ob-unit { font-size: 1.1rem; color: var(--ink-2); font-weight: 600; }
+.ob-plan-kcal { display: flex; flex-direction: column; margin: 0.4rem 0 0.2rem; }
+.ob-plan-kcal strong {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  line-height: 1.05;
+  color: var(--primary-700);
+}
+.ob-plan-kcal span { color: var(--ink-2); font-size: 0.9rem; }
+.ob-plan-macros {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0.3rem 0 0.2rem;
+}
+.ob-plan-macros div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.55rem 0.25rem;
+  background: var(--surface-2);
+  border-radius: var(--r-lg);
+}
+.ob-plan-macros strong { font-size: 0.98rem; }
+.ob-plan-macros span { font-size: 0.72rem; color: var(--ink-2); }
+
 /* ---- Desktop ≥720px: nav moves to top bar, tab bar hidden ---------------- */
 @media (min-width: 720px) {
   :root { --maxw: 660px; }

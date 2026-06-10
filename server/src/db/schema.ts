@@ -195,6 +195,14 @@ export const userGoals = sqliteTable('user_goals', {
   waterMl: integer('water_ml').notNull().default(2000),
   weightKg: real('weight_kg'),
   weightGoalKg: real('weight_goal_kg'),
+  // onboarding profile — feeds the kcal/macro plan computation
+  gender: text('gender'), // female|male|diverse
+  birthYear: integer('birth_year'),
+  heightCm: real('height_cm'),
+  activityLevel: text('activity_level'), // sedentary|light|moderate|active|very_active
+  goalType: text('goal_type'), // lose|maintain|gain
+  paceKgWeek: real('pace_kg_week'),
+  onboardedAt: integer('onboarded_at'),
   updatedAt: integer('updated_at').notNull(),
 })
 

@@ -139,6 +139,14 @@ export function AccountsPage() {
       {goals && (
         <div className="card pad-lg">
           <h2 className="section-title">Tagesziele</h2>
+          <button
+            type="button"
+            className="btn btn-soft btn-block"
+            style={{ marginTop: '0.6rem' }}
+            onClick={() => window.dispatchEvent(new CustomEvent('tellerwert:edit-profile', { detail: goals }))}
+          >
+            Profil-Assistent öffnen (Plan neu berechnen)
+          </button>
           <form className="stack" style={{ marginTop: '0.6rem' }} onSubmit={(e) => { void saveGoals(e) }}>
             <div className="field">
               <label htmlFor="goal-kcal">Kalorienziel (kcal/Tag)</label>

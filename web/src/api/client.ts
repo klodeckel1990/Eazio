@@ -2,7 +2,7 @@ import type {
   Account, AuthResponse, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
-  ImportHistoryResult, StatsResult,
+  ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan,
 } from './types'
 
 export class ApiError extends Error {
@@ -147,6 +147,9 @@ export const api = {
   goals: {
     get: () => req<Goals>('GET', '/goals'),
     update: (patch: Partial<Goals>) => req<Goals>('PUT', '/goals', patch),
+    onboarding: (input: OnboardingInput) =>
+      req<{ goals: Goals; plan: OnboardingPlan }>('POST', '/goals/onboarding', input),
+    skipOnboarding: () => req<Goals>('POST', '/goals/onboarding/skip'),
   },
   stats: {
     get: (days: number) => req<StatsResult>('GET', `/stats?days=${days}`),
