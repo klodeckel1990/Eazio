@@ -144,6 +144,53 @@ describe('foods routes', () => {
     expect(fetchOffProduct).toHaveBeenCalledTimes(1)
   })
 
+  it('suggests piece weights from servings, scaled by count and picked by unit word', async () => {
+    const db = createTestDb()
+    const now = Date.now()
+    upsertSourcedFood(db, {
+      id: 'bls:BAN',
+      source: 'bls',
+      sourceId: 'BAN',
+      name: 'Banane roh',
+      searchTerms: buildSearchTerms('Banane roh'),
+      kcal: 79,
+      servingsJson: JSON.stringify([{ label: 'Stück', grams: 120 }]),
+      createdAt: now,
+      updatedAt: now,
+    })
+    upsertSourcedFood(db, {
+      id: 'bls:RAD',
+      source: 'bls',
+      sourceId: 'RAD',
+      name: 'Radieschen roh',
+      searchTerms: buildSearchTerms('Radieschen roh'),
+      kcal: 16,
+      servingsJson: JSON.stringify([
+        { label: 'Stück', grams: 10 },
+        { label: 'Bund', grams: 120 },
+      ]),
+      createdAt: now,
+      updatedAt: now,
+    })
+    const app = buildApp(db)
+    const auth = await login(app, 'pieces')
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/foods/match',
+      headers: auth,
+      payload: { text: '1 Banane\n2 Bananen\n1 Bund Radieschen\n5 Radieschen\n150g Banane' },
+    })
+    expect(res.statusCode).toBe(200)
+    const { lines } = res.json() as { lines: { raw: string; suggestedAmountG: number }[] }
+    const byRaw = Object.fromEntries(lines.map((l) => [l.raw, l.suggestedAmountG]))
+    expect(byRaw['1 Banane']).toBe(120)
+    expect(byRaw['2 Bananen']).toBe(240)
+    expect(byRaw['1 Bund Radieschen']).toBe(120) // unit word picks the Bund serving
+    expect(byRaw['5 Radieschen']).toBe(50) // 5 × Stück 10 g
+    expect(byRaw['150g Banane']).toBe(150) // explicit grams always win
+  })
+
   it('falls back to OFF text search when the local index is sparse and caches results', async () => {
     const app = buildApp(createTestDb())
     const auth = await login(app, 'sparse')

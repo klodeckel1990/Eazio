@@ -13,6 +13,7 @@ import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
 import { buildSearchQuery, isSeasoning, normalizeName } from '../matching/normalize.js'
 import { getFoodAlias } from './food-aliases.repo.js'
+import { foldGerman } from './search-terms.js'
 
 // Cached OFF rows older than this are refreshed in the background on access.
 const OFF_REFRESH_MS = 1000 * 60 * 60 * 24 * 30
@@ -205,9 +206,11 @@ export async function matchFoodText(
       }
     }
 
-    // count units ("2 Stück") scale the per-piece default when one is known
+    // count units ("2 Stück", "3 Scheiben") scale the per-piece default; the
+    // unit word picks the matching serving ("Scheibe" 50 g over "Stück").
     const qtyFactor = normalizedUnit === 'serving' && line.qty ? line.qty : 1
-    const perPiece = aliasDefaultG ?? candidates[0]?.servings[0]?.grams ?? null
+    const perPiece =
+      aliasDefaultG ?? pickServingGrams(candidates[0]?.servings ?? [], line.unit)
     const suggestedAmountG =
       amountGrams ?? (perPiece !== null ? Math.round(perPiece * qtyFactor) : 100)
 
@@ -223,6 +226,21 @@ export async function matchFoodText(
     })
   }
   return out
+}
+
+/** Serving whose label matches the typed unit word ("scheiben" → "Scheibe"),
+ *  else the first serving; null when the food has none. */
+function pickServingGrams(servings: ServingDef[], unitWord: string | null): number | null {
+  if (servings.length === 0) return null
+  if (unitWord) {
+    const u = foldGerman(unitWord)
+    const hit = servings.find((s) => {
+      const l = foldGerman(s.label)
+      return l.startsWith(u) || u.startsWith(l)
+    })
+    if (hit) return hit.grams
+  }
+  return servings[0]?.grams ?? null
 }
 
 async function refreshOffFood(db: DB, ean: string, fetchProduct: FetchOffProduct): Promise<void> {

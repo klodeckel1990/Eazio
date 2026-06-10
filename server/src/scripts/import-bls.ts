@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { DB } from '../db/client.js'
 import { upsertSourcedFood, type NewFood } from '../modules/foods/foods.repo.js'
 import { buildSearchTerms } from '../modules/foods/search-terms.js'
+import { PIECE_SERVINGS } from '../modules/foods/piece-weights.js'
 
 export interface BlsSeed {
   meta: { source: string; attribution: string; count: number }
@@ -70,6 +71,7 @@ export function importBlsSeed(db: DB, seed: BlsSeed): { imported: number; skippe
         sodium: food.nutrients.NA ?? null,
         alcohol: food.nutrients.ALC ?? null,
         nutrientsJson: JSON.stringify(rest),
+        servingsJson: PIECE_SERVINGS[food.name] ? JSON.stringify(PIECE_SERVINGS[food.name]) : null,
         createdAt: now,
         updatedAt: now,
       }
