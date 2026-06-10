@@ -208,12 +208,21 @@ export async function matchFoodText(
   for (const line of parseIngredients(text)) {
     if (isSeasoning(line.name)) continue
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
-    let candidates = await searchSmart(db, userId, buildSearchQuery(line.name), 10, fetchSearch)
+    const query = buildSearchQuery(line.name)
+    let candidates = await searchSmart(db, userId, query, 10, fetchSearch)
     if (candidates.length === 0) {
       // unknown compound ("Romatomaten") — search its head ("tomate") and let
       // the AI rerank pick the fitting base product
       const head = compoundHeadFallback(line.name)
       if (head) candidates = await searchSmart(db, userId, head, 10, fetchSearch)
+    }
+    if (candidates.length === 0) {
+      // multi-word zero hit ("Cherry-Tomaten"): try the tokens individually
+      for (const token of query.split(/\s+/).slice(0, 3)) {
+        if (token.length < 3) continue
+        candidates = await searchSmart(db, userId, token, 10, fetchSearch)
+        if (candidates.length > 0) break
+      }
     }
     const normalizedName = normalizeName(line.name)
 

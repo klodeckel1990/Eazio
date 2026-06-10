@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { env } from '../../config/env.js'
 import type { DB } from '../../db/client.js'
 import { dateInTz, resolveDaytime, type Daytime } from '../meals/daytime.js'
-import { getFoodById } from '../foods/foods.repo.js'
+import { getFoodById, upsertCachedMatch } from '../foods/foods.repo.js'
 import { upsertFoodAlias } from '../foods/food-aliases.repo.js'
 import { normalizeName } from '../matching/normalize.js'
 import { getSettings } from '../settings/settings.repo.js'
@@ -143,11 +143,18 @@ export function createEntries(
       const line = input.lines[i]!
       const row = rows[i]!
       if (row.foodId && line.rawText) {
-        upsertFoodAlias(txDb, userId, normalizeName(line.rawText), {
+        const normalized = normalizeName(line.rawText)
+        upsertFoodAlias(txDb, userId, normalized, {
           foodId: row.foodId,
           defaultAmountG: line.amountG,
           defaultServingLabel: line.servingLabel ?? null,
         })
+        // a human's confirmed choice outranks any LLM guess — promote it to
+        // the global match memory (shared foods only, custom stays private)
+        const food = getFoodById(txDb, row.foodId, userId)
+        if (food && food.source !== 'custom') {
+          upsertCachedMatch(txDb, normalized, row.foodId)
+        }
       }
     }
     streak = updateStreakOnLog(txDb, userId, date)

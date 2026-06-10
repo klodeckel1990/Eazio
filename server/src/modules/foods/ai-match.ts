@@ -21,8 +21,9 @@ const SYSTEM = `Du ordnest getippte Zutaten dem fachlich passenden Eintrag einer
 Du bekommst nummerierte Zutaten, jede mit nummerierten Kandidaten. Wähle pro Zutat den Kandidaten, der die Zutat ernährungsphysiologisch am besten repräsentiert:
 - Generische Entsprechungen sind richtig (Spitzpaprika → Gemüsepaprika; Hähnchen → Hähnchenbrustfilet).
 - Für pur genannte Zutaten das Grundprodukt (roh/natur) bevorzugen, keine Gerichte, Saucen oder Süßspeisen daraus.
-- Fettstufen/Prozentangaben in der Zutat ernst nehmen.
-- candidate = -1 NUR, wenn kein Kandidat auch nur entfernt passt.
+- Ist ein pures Grundlebensmittel genannt (z. B. "Zwiebel") und es gibt KEIN Grundprodukt unter den Kandidaten, sondern nur Verarbeitetes daraus (Wurst, Kuchen, Suppe, Sauce), dann candidate = -1. Eine Zwiebel ist keine Zwiebelwurst.
+- Fettstufen/Prozentangaben und Zusätze wie "mager"/"light" in der Zutat ernst nehmen und die passende Variante wählen.
+- candidate = -1, wenn kein Kandidat die Zutat ernährungsphysiologisch sinnvoll repräsentiert.
 
 Antworte ausschließlich mit dem JSON.`
 

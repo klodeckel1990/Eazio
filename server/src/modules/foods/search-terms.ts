@@ -47,6 +47,9 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /speisequark/, terms: 'quark magerquark' },
   { match: /moehre|karotte/, terms: 'moehre möhre karotte wurzel' },
   { match: /gemuesepaprika/, terms: 'spitzpaprika paprika' },
+  { match: /^tomate roh$/, terms: 'kirschtomate cherrytomate cocktailtomate cherry romatomate' },
+  { match: /^rind hackfleisch/, terms: 'rinderhack rinderhackfleisch hackfleisch hack' },
+  { match: /^speisezwiebel/, terms: 'zwiebel zwiebeln' },
   { match: /zuckermais/, terms: 'mais' },
   { match: /paprikaschote/, terms: 'paprika' },
 ]

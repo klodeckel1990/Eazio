@@ -28,6 +28,10 @@ const QUALIFIERS = new Set([
   'packung', 'packchen', 'beutel', 'wurfel', 'handvoll', 'blatt', 'blatter',
   // fraction words (safety net for already-saved texts)
   'halb', 'halbe', 'halber', 'halbes', 'viertel', 'dreiviertel',
+  // leanness adjectives — the AI rerank still sees the full name and can
+  // prefer the matching fat level among the candidates
+  'mager', 'magere', 'mageres', 'magerer',
+  'fettarm', 'fettarme', 'fettarmes', 'fettarmer',
 ])
 
 /**
