@@ -117,7 +117,7 @@ const SEASONINGS = new Set([
   'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
   'anisstern', 'gewurznelke', 'gewurznelken', 'vanillemark',
   'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung', 'brotgewurz',
-  'rosenbluten', 'rosenblutenblatter', 'koriandergrun',
+  'rosenbluten', 'rosenblutenblatter', 'koriandergrun', 'kapuzinerkresse',
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
@@ -167,6 +167,9 @@ export function isSeasoning(name: string): boolean {
     .split(/[^\p{L}\p{N}]+/u)
     .some((tok) => {
       if (SEASONINGS.has(tok)) return true
+      // …gewürz/…pfeffer-Komposita sind immer Würzmittel (Brotgewürz,
+      // Peperonigewürz, Zitronenpfeffer) — Gewürzgurke beginnt damit, endet nicht
+      if (tok.length > 7 && (tok.endsWith('gewurz') || tok.endsWith('pfeffer'))) return true
       for (const form of SPICE_FORMS) {
         if (tok.length > form.length + 2 && tok.endsWith(form)) {
           const head = tok.slice(0, -form.length)

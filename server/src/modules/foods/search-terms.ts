@@ -150,6 +150,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^pekannuss$/, terms: 'pecan pecans pekannuesse pekannusskerne' },
   { match: /^weisswein trocken/, terms: 'riesling chardonnay weissburgunder' },
   { match: /^tomatenmark/, terms: 'salca' },
+  { match: /^weizenbaguette$/, terms: 'baguette baguettescheiben baguettebrot' },
+  { match: /^rucola roh/, terms: 'rauke arugula rocket' },
 ]
 
 export function foldGerman(text: string): string {
