@@ -6,7 +6,7 @@ export interface ParsedLine {
 }
 
 const KNOWN_UNITS = new Set([
-  'g', 'gr', 'gramm', 'kg', 'ml', 'l',
+  'g', 'gr', 'gramm', 'kg', 'ml', 'l', 'liter',
   'stück', 'stk', 'stueck', 'portion', 'portionen', 'el', 'tl',
   'scheibe', 'scheiben', 'prise', 'prisen', 'becher', 'glas', 'dose', 'tasse',
   // bundle/count words common in recipes ("1 Bund Radieschen", "2 Zehen Knoblauch")
@@ -23,7 +23,7 @@ const KNOWN_UNITS = new Set([
 // Recipe-site abbreviations → the canonical unit word the rest of the pipeline
 // knows ("1 Pck. Vanillezucker", "1 Bd Lauchzwiebeln").
 const UNIT_ALIASES: Record<string, string> = {
-  pck: 'packung', pkt: 'packung', bd: 'bund',
+  pck: 'packung', pkt: 'packung', bd: 'bund', liter: 'l',
   cups: 'cup', tsp: 'tl', teaspoon: 'tl', teaspoons: 'tl',
   tbsp: 'el', tablespoon: 'el', tablespoons: 'el',
   lbs: 'lb', pound: 'lb', pounds: 'lb', ounce: 'oz', ounces: 'oz',
