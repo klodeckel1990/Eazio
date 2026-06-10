@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { api } from '../api/client'
 import type { DiaryMonth, Streak } from '../api/types'
 import { addMonths, monthGrid, monthLabel, monthOf, todayStr } from '../lib/dates'
@@ -37,7 +38,9 @@ export function CalendarSheet({ selected, streak, onPick, onClose }: Props) {
     return data && kcal > data.kcalTarget ? 'red' : 'green'
   }
 
-  return (
+  // Portal: innerhalb von .main (-webkit-overflow-scrolling) ist position:fixed
+  // in WKWebView kaputt — der Overlay würde von Appbar/Tabbar überdeckt.
+  return createPortal(
     <div className="cal-overlay" role="dialog" aria-modal="true" aria-label="Kalender">
       <div className="cal-sheet">
         <div className="cal-head">
@@ -98,6 +101,7 @@ export function CalendarSheet({ selected, streak, onPick, onClose }: Props) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
