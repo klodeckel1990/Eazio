@@ -28,7 +28,8 @@ export function LoginPage() {
       if (err instanceof ApiError) {
         setError('Anmeldung fehlgeschlagen')
       } else {
-        throw err
+        // network/TLS/CORS failures land here — never swallow them silently
+        setError('Server nicht erreichbar. Bitte Verbindung prüfen.')
       }
     } finally {
       setSubmitting(false)

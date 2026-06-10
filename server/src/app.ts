@@ -49,6 +49,8 @@ export function buildApp(db: DB, opts: { webDir?: string } = {}): FastifyInstanc
     origin: (origin, cb) => cb(null, !origin || corsOrigins.has(origin)),
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['authorization', 'content-type'],
+    // belt & suspenders: older app builds fetch with credentials:'include'
+    credentials: true,
   })
 
   // CSP is the main XSS mitigation for the bearer token in localStorage:

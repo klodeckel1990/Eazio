@@ -42,7 +42,7 @@ export function RegisterPage() {
       if (err instanceof ApiError) {
         setError(errorMessage(err))
       } else {
-        throw err
+        setError('Server nicht erreichbar. Bitte Verbindung prüfen.')
       }
     } finally {
       setSubmitting(false)

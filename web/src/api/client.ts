@@ -43,9 +43,13 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
   const headers: Record<string, string> = {}
   if (body !== undefined) headers['content-type'] = 'application/json'
   if (token) headers.authorization = `Bearer ${token}`
+  // 'same-origin' keeps the legacy cookie fallback on the web, while requests
+  // from the Capacitor shell (cross-origin) stay uncredentialed — credentialed
+  // CORS would require Allow-Credentials on every response and WKWebView
+  // silently rejects without it. Auth travels in the Authorization header.
   const res = await fetch(`${API_BASE}/api${path}`, {
     method,
-    credentials: 'include',
+    credentials: 'same-origin',
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
