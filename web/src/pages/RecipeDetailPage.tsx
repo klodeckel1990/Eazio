@@ -108,7 +108,7 @@ export function RecipeDetailPage() {
         <p className="loading-inline"><span className="spinner" /> Lade Rezept…</p>
       ) : recipe ? (
         <div className="stack">
-          {recipe.hasImage && <img className="detail-hero" src={api.recipes.imageUrl(recipe.id)} alt="" />}
+          {recipe.hasImage && <img className="detail-hero" src={api.recipes.imageUrl(recipe.id, recipe.shareToken)} alt="" />}
           <h1 className="detail-title">{recipe.title}</h1>
           <div className="detail-meta">
             {recipe.difficulty && <span className="diff-badge static">{DIFF_LABEL[recipe.difficulty] ?? recipe.difficulty}</span>}

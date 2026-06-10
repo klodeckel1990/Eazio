@@ -52,6 +52,8 @@ export interface RecipeSummary {
   totalMinutes: number | null
   isFavorite: boolean
   hasImage: boolean
+  /** HMAC token for the public image route (null without image) */
+  imageToken: string | null
 }
 export interface RecipeDetail extends RecipeSummary {
   sourceUrl: string | null

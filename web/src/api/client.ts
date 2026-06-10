@@ -118,7 +118,10 @@ export const api = {
     remove: (id: string) => req<void>('DELETE', `/recipes/${id}`),
     setFavorite: (id: string, isFavorite: boolean) =>
       req<void>('PATCH', `/recipes/${id}`, { isFavorite }),
-    imageUrl: (id: string) => `/api/recipes/${id}/image`,
+    // token-guarded public route: works in plain <img> tags (no Authorization
+    // header possible), absolute so the native app hits the server
+    imageUrl: (id: string, token: string) =>
+      `${API_BASE}/r/${id}/image?t=${encodeURIComponent(token)}`,
   },
   settings: {
     get: () => req<UserSettings>('GET', '/settings'),

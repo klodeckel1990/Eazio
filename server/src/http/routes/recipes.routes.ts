@@ -122,7 +122,14 @@ export function registerRecipeRoutes(app: FastifyInstance, db: DB): void {
     return reply.status(201).send(summary)
   })
 
-  app.get('/api/recipes', { preHandler: requireAuth }, async (req) => listRecipes(db, req.user!.id))
+  app.get('/api/recipes', { preHandler: requireAuth }, async (req) =>
+    listRecipes(db, req.user!.id).map((r) => ({
+      ...r,
+      // img tags cannot send Authorization headers (relevant in the native
+      // app) — expose the HMAC-guarded public image route instead
+      imageToken: r.hasImage ? recipeShareToken(r.id) : null,
+    })),
+  )
 
   app.get('/api/recipes/:id', { preHandler: requireAuth }, async (req, reply) => {
     const { id } = IdParams.parse(req.params)

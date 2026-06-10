@@ -99,7 +99,7 @@ export function RecipesPage() {
             >
               <div className="thumb">
                 {r.hasImage ? (
-                  <img src={api.recipes.imageUrl(r.id)} alt="" loading="lazy" />
+                  <img src={api.recipes.imageUrl(r.id, r.imageToken ?? '')} alt="" loading="lazy" />
                 ) : (
                   <span className="thumb-ph"><IconBook /></span>
                 )}
