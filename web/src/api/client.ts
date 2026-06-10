@@ -2,7 +2,7 @@ import type {
   Account, AuthResponse, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
-  ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan,
+  ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan, DiaryMonth,
 } from './types'
 
 export class ApiError extends Error {
@@ -143,6 +143,7 @@ export const api = {
     addWater: (ml: number, date?: string) =>
       req<{ id: string; ml: number }>('POST', '/diary/water', { ml, date }),
     removeWater: (id: string) => req<void>('DELETE', `/diary/water/${id}`),
+    month: (month: string) => req<DiaryMonth>('GET', `/diary/month?month=${month}`),
   },
   goals: {
     get: () => req<Goals>('GET', '/goals'),

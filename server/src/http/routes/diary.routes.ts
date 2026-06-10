@@ -10,8 +10,9 @@ import {
   getDay,
   updateEntry,
 } from '../../modules/diary/diary.service.js'
-import { addWater, deleteWater } from '../../modules/diary/diary.repo.js'
+import { addWater, deleteWater, monthKcalByDay } from '../../modules/diary/diary.repo.js'
 import { dateInTz } from '../../modules/meals/daytime.js'
+import { getGoals } from '../../modules/goals/goals.repo.js'
 import { env } from '../../config/env.js'
 
 const DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -58,6 +59,18 @@ export function registerDiaryRoutes(app: FastifyInstance, db: DB): void {
   app.get('/api/diary', { preHandler: requireAuth }, async (req, reply) => {
     const { date } = z.object({ date: DateSchema.optional() }).parse(req.query)
     return reply.send(getDay(db, req.user!.id, date))
+  })
+
+  // calendar overview: kcal per logged day of a month + the current target
+  app.get('/api/diary/month', { preHandler: requireAuth }, async (req, reply) => {
+    const { month } = z
+      .object({ month: z.string().regex(/^\d{4}-\d{2}$/) })
+      .parse(req.query)
+    return reply.send({
+      month,
+      kcalTarget: getGoals(db, req.user!.id).kcalTarget,
+      days: monthKcalByDay(db, req.user!.id, month),
+    })
   })
 
   app.post('/api/diary/entries', { preHandler: requireAuth }, async (req, reply) => {

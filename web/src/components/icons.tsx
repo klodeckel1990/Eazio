@@ -341,3 +341,23 @@ export function IconArrowRight(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+/** Kalender — Monatsübersicht. */
+export function IconCalendar(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+      <path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" />
+      <path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.5h2M11 16.5h2" />
+    </Svg>
+  )
+}
+
+/** Chevron rechts. */
+export function IconChevronRight(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="m9 5 7 7-7 7" />
+    </Svg>
+  )
+}

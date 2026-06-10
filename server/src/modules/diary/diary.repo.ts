@@ -63,6 +63,20 @@ export function dayTotals(db: DB, userId: string, date: string): DayTotals {
   }
 }
 
+/** kcal sums per day for one month ("YYYY-MM") — feeds the calendar overview. */
+export function monthKcalByDay(db: DB, userId: string, month: string): { date: string; kcal: number }[] {
+  return db
+    .select({
+      date: diaryEntries.date,
+      kcal: sql<number>`COALESCE(SUM(${diaryEntries.kcal}), 0)`,
+    })
+    .from(diaryEntries)
+    .where(and(eq(diaryEntries.userId, userId), sql`${diaryEntries.date} LIKE ${month + '-%'}`))
+    .groupBy(diaryEntries.date)
+    .all()
+    .map((r) => ({ date: r.date, kcal: Math.round(r.kcal) }))
+}
+
 export function updateEntryRow(
   db: DB,
   userId: string,

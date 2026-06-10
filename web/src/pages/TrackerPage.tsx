@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine } from '../api/types'
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
 import { round } from '../lib/nutrition'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
+import { addDays, dayLabel, todayStr } from '../lib/dates'
 import { initHealthSync } from '../lib/health'
 import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
-import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconFlame, IconSteps, IconDrop } from '../components/icons'
+import { CalendarSheet } from '../components/CalendarSheet'
+import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconFlame, IconSteps, IconDrop, IconCalendar, IconChevronLeft, IconChevronRight } from '../components/icons'
 
 interface RowState {
   foodId: string
@@ -23,6 +25,11 @@ const DAYTIME_ORDER: Daytime[] = ['breakfast', 'lunch', 'dinner', 'snack']
 export function TrackerPage() {
   const seeded = (useLocation().state as { presetText?: string } | null)?.presetText ?? ''
   const [day, setDay] = useState<DiaryDay | null>(null)
+  const [date, setDate] = useState(todayStr())
+  const [calOpen, setCalOpen] = useState(false)
+  const dateRef = useRef(date)
+  dateRef.current = date
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
   const [text, setText] = useState(seeded)
   const [matching, setMatching] = useState(false)
   const [lines, setLines] = useState<FoodMatchLine[]>([])
@@ -36,7 +43,7 @@ export function TrackerPage() {
   const [error, setError] = useState<string | null>(null)
 
   const refreshDay = () => {
-    api.diary.day()
+    api.diary.day(dateRef.current)
       .then(setDay)
       .catch((e) => { if (e instanceof ApiError) setError(e.message); else throw e })
     refreshWidgets() // keep the home-screen widget in sync with diary writes
@@ -44,8 +51,27 @@ export function TrackerPage() {
 
   useEffect(() => {
     refreshDay()
+  }, [date])
+
+  useEffect(() => {
     initHealthSync(refreshDay) // Apple Health → Server → Tagesansicht aktualisieren
   }, [])
+
+  // Wischgesten: links/rechts wechselt den Tag (vertikales Scrollen gewinnt)
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0]
+    if (t) touchStart.current = { x: t.clientX, y: t.clientY }
+  }
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStart.current
+    touchStart.current = null
+    const t = e.changedTouches[0]
+    if (!start || !t) return
+    const dx = t.clientX - start.x
+    const dy = t.clientY - start.y
+    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 2) return
+    setDate((d) => addDays(d, dx < 0 ? 1 : -1))
+  }
 
   const handleMatch = async () => {
     if (!text.trim()) return
@@ -157,6 +183,7 @@ export function TrackerPage() {
     setLogging(true)
     try {
       const result = await api.diary.log({
+        date,
         daytime,
         lines: loggableRows.map((r) => ({
           foodId: r.foodId,
@@ -204,7 +231,7 @@ export function TrackerPage() {
 
   const handleWater = async (ml: number) => {
     try {
-      await api.diary.addWater(ml)
+      await api.diary.addWater(ml, date)
       refreshDay()
     } catch (e) {
       if (e instanceof ApiError) setError(e.message)
@@ -267,9 +294,30 @@ export function TrackerPage() {
   })).filter((g) => g.entries.length > 0)
 
   return (
-    <div className="page">
-      <header className="page-head">
-        <h1>Tagebuch</h1>
+    <div className="page" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <header className="page-head diary-head">
+        <div className="diary-head-row">
+          <h1>Tagebuch</h1>
+          <button
+            type="button"
+            className="cal-open"
+            onClick={() => setCalOpen(true)}
+            aria-label="Kalender öffnen"
+          >
+            <IconCalendar />
+          </button>
+        </div>
+        <div className="diary-datenav">
+          <button type="button" className="datenav-btn" onClick={() => setDate((d) => addDays(d, -1))} aria-label="Voriger Tag">
+            <IconChevronLeft />
+          </button>
+          <button type="button" className="datenav-label" onClick={() => setCalOpen(true)}>
+            {dayLabel(date)}
+          </button>
+          <button type="button" className="datenav-btn" onClick={() => setDate((d) => addDays(d, 1))} aria-label="Nächster Tag">
+            <IconChevronRight />
+          </button>
+        </div>
         <span className="sub">
           {day && day.streak.currentStreak > 1
             ? <><IconFlame className="inline-ico" /> {day.streak.currentStreak} Tage in Folge</>
@@ -485,7 +533,7 @@ export function TrackerPage() {
 
       {grouped.length > 0 && (
         <>
-          <h2 className="section-title">Heute</h2>
+          <h2 className="section-title">{dayLabel(date)}</h2>
           <div className="stack">
             {grouped.map((g) => (
               <div key={g.daytime} className="card diary-group">
@@ -517,6 +565,14 @@ export function TrackerPage() {
             ))}
           </div>
         </>
+      )}
+      {calOpen && (
+        <CalendarSheet
+          selected={date}
+          streak={day?.streak ?? null}
+          onPick={setDate}
+          onClose={() => setCalOpen(false)}
+        />
       )}
     </div>
   )

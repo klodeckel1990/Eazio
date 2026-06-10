@@ -193,6 +193,12 @@ export interface DiaryDay {
   activity: DayActivity | null
 }
 
+export interface DiaryMonth {
+  month: string
+  kcalTarget: number
+  days: { date: string; kcal: number }[]
+}
+
 export interface DiaryLogLine {
   foodId: string
   amountG: number

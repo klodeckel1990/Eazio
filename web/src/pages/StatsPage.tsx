@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api, ApiError } from '../api/client'
 import type { StatsDay, StatsResult } from '../api/types'
 import { round } from '../lib/nutrition'
-import { IconAlert, IconDrop, IconFlame } from '../components/icons'
+import { IconAlert, IconChart, IconCheckCircle, IconDrop, IconFlame } from '../components/icons'
 
 type Range = 7 | 14 | 30
 
@@ -168,7 +168,7 @@ export function StatsPage() {
         <p className="loading-inline"><span className="spinner" /> Lade Auswertung…</p>
       ) : stats.daysLogged === 0 ? (
         <div className="empty">
-          <span className="emoji">📊</span>
+          <span className="empty-ico"><IconChart /></span>
           <h3>Noch nichts zu sehen</h3>
           <p>Tracke ein paar Tage, dann zeigt sich hier dein Verlauf.</p>
         </div>
@@ -189,6 +189,23 @@ export function StatsPage() {
                 <span className="l">Tage<br />in Folge</span>
               </div>
             )}
+          </div>
+
+          <div className="stat-grid">
+            <div className="stat-tile">
+              <span className="stat-ico steps"><IconCheckCircle /></span>
+              <span className="stat-text">
+                <span className="stat-val">{stats.days.filter((d) => d.kcal > 0 && d.kcal <= stats.goals.kcalTarget).length} / {stats.days.length}</span>
+                <span className="stat-lbl">grüne Tage</span>
+              </span>
+            </div>
+            <div className="stat-tile">
+              <span className="stat-ico water"><IconDrop /></span>
+              <span className="stat-text">
+                <span className="stat-val">{stats.avg.waterMl.toLocaleString('de-DE')} ml</span>
+                <span className="stat-lbl">Wasser im Schnitt</span>
+              </span>
+            </div>
           </div>
 
           <div className="card stats-card">

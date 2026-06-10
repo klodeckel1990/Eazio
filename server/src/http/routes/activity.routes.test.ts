@@ -18,6 +18,26 @@ async function login(app: ReturnType<typeof buildApp>, username: string) {
   return { authorization: `Bearer ${(res.json() as { token: string }).token}` }
 }
 
+describe('diary month overview', () => {
+  it('returns kcal per logged day and the target', async () => {
+    const db = createTestDb()
+    const app = buildApp(db, { bootstrapToken: BOOTSTRAP })
+    const headers = await login(app, 'cal1')
+
+    await app.inject({
+      method: 'POST',
+      url: '/api/diary/entries',
+      headers,
+      payload: { date: '2026-06-06', daytime: 'lunch', lines: [{ name: 'Testessen', kcal: 700, amountG: 350 }] },
+    })
+    const res = await app.inject({ method: 'GET', url: '/api/diary/month?month=2026-06', headers })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { month: string; kcalTarget: number; days: { date: string; kcal: number }[] }
+    expect(body.kcalTarget).toBeGreaterThan(0)
+    expect(body.days).toContainEqual({ date: '2026-06-06', kcal: 700 })
+  })
+})
+
 describe('activity sync', () => {
   it('upserts steps/active kcal and merges partial updates', async () => {
     const db = createTestDb()
