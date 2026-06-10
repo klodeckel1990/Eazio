@@ -5,6 +5,7 @@ import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine } fro
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
 import { round } from '../lib/nutrition'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
+import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan } from '../components/icons'
 
@@ -37,6 +38,7 @@ export function TrackerPage() {
     api.diary.day()
       .then(setDay)
       .catch((e) => { if (e instanceof ApiError) setError(e.message); else throw e })
+    refreshWidgets() // keep the home-screen widget in sync with diary writes
   }
 
   useEffect(refreshDay, [])

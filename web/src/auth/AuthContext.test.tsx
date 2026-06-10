@@ -13,6 +13,7 @@ vi.mock('../api/client', () => ({
     }
   },
   setToken: vi.fn(),
+  getToken: vi.fn(() => null),
   api: {
     auth: {
       me: vi.fn(),

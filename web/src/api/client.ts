@@ -29,6 +29,10 @@ function readStoredToken(): string | null {
 
 let token: string | null = readStoredToken()
 
+export function getToken(): string | null {
+  return token
+}
+
 export function setToken(next: string | null): void {
   token = next
   try {

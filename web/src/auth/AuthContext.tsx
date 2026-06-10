@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { api, ApiError, setToken } from '../api/client'
+import { api, ApiError, getToken, setToken } from '../api/client'
+import { pushTokenToWidgets } from '../lib/shared-auth'
 import type { User } from '../api/types'
 
 interface AuthState {
@@ -19,7 +20,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let alive = true
     api.auth
       .me()
-      .then((u) => { if (alive) setUser(u) })
+      .then((u) => {
+        if (alive) setUser(u)
+        // existing session: make sure the widget has the current token too
+        void pushTokenToWidgets(getToken())
+      })
       .catch(() => { if (alive) setUser(null) })
       .finally(() => { if (alive) setLoading(false) })
     return () => {
@@ -31,16 +36,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api.auth.login(username, password)
     setToken(res.token)
     setUser({ id: res.id, username: res.username })
+    void pushTokenToWidgets(res.token)
   }
   const register = async (username: string, email: string, password: string) => {
     const res = await api.auth.register(username, email, password)
     setToken(res.token)
     setUser({ id: res.id, username: res.username })
+    void pushTokenToWidgets(res.token)
   }
   const logout = async () => {
     await api.auth.logout().catch((e) => { if (!(e instanceof ApiError)) throw e })
     setToken(null)
     setUser(null)
+    void pushTokenToWidgets(null)
     // Drop the service worker's API caches so a later login on this device
     // never sees the previous user's offline data.
     if ('caches' in window) {
