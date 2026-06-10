@@ -4,7 +4,7 @@
   "webDir": "../web/dist",
   "backgroundColor": "#fbf6ee",
   "ios": {
-    "contentInset": "automatic"
+    "contentInset": "never"
   },
   "android": {
     "allowMixedContent": false
