@@ -10,9 +10,26 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { DB } from '../db/client.js'
-import { upsertSourcedFood, type NewFood } from '../modules/foods/foods.repo.js'
+import { upsertCachedMatch, upsertSourcedFood, type NewFood } from '../modules/foods/foods.repo.js'
 import { buildSearchTerms } from '../modules/foods/search-terms.js'
 import { PIECE_SERVINGS } from '../modules/foods/piece-weights.js'
+
+// Deterministic match-cache seeds for staples: core terms must never depend
+// on FTS ranking or an AI pick. Keys are normalized query names, values are
+// EXACT BLS names (resolved to ids after import).
+const STAPLE_MATCHES: Record<string, string> = {
+  milch: 'Milch fettarm, frisch, 1,5 % Fett, pasteurisiert', // BLS 4.0 hat keine Vollmilch
+  vollmilch: 'Milch fettarm, frisch, 1,5 % Fett, pasteurisiert',
+  kuhmilch: 'Milch fettarm, frisch, 1,5 % Fett, pasteurisiert',
+  ei: 'Hühnerei roh',
+  eier: 'Hühnerei roh',
+  mehl: 'Weizen Mehl, Type 405',
+  zucker: 'Zucker weiß (Raffinadezucker/Weißzucker)',
+  butter: 'Butter mild gesäuert',
+  joghurt: 'Joghurt mild, mind. 3,5 % Fett',
+  haferflocken: 'Hafer Flocken',
+  milchreis: 'Milchreis gesüßt, mit Milch 3,5 % Fett',
+}
 
 export interface BlsSeed {
   meta: { source: string; attribution: string; count: number }
@@ -77,6 +94,13 @@ export function importBlsSeed(db: DB, seed: BlsSeed): { imported: number; skippe
       }
       upsertSourcedFood(tx as unknown as DB, row)
       imported++
+    }
+    // staple seeds: name → id lookup against what we just imported
+    const byName = new Map(seed.foods.map((f) => [f.name, `bls:${f.code}`]))
+    for (const [term, blsName] of Object.entries(STAPLE_MATCHES)) {
+      const foodId = byName.get(blsName)
+      if (foodId) upsertCachedMatch(tx as unknown as DB, term, foodId)
+      else console.warn(`staple seed skipped, BLS name not found: ${blsName}`)
     }
   })
   return { imported, skipped }

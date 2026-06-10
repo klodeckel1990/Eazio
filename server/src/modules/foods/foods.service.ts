@@ -310,18 +310,29 @@ export async function matchFoodText(
     })
 
     if (retries.length > 0) {
+      const originals = new Map<Pending, FoodSummary[]>()
       for (const { p, query } of retries) {
         const extra = await searchSmart(db, userId, query, 12, fetchSearch)
         if (extra.length > 0) {
+          originals.set(p, p.candidates)
           const seen = new Set(extra.map((c) => c.id))
           p.candidates = [...extra, ...p.candidates.filter((c) => !seen.has(c.id))].slice(0, 12)
-          p.selectedFoodId = p.candidates[0]!.id
         }
       }
       const secondPicks = await rerank(retries.map(({ p }) => toRerankLine(p)))
       retries.forEach(({ p }, i) => {
         const pick = secondPicks[i]
-        if (pick?.id) applyPick(p, pick.id)
+        if (pick?.id) {
+          applyPick(p, pick.id)
+        } else {
+          // the requery did not convince the model either — keep the original
+          // FTS list instead of leaving requeried noise on top
+          const original = originals.get(p)
+          if (original) {
+            p.candidates = original
+            p.selectedFoodId = original[0]?.id ?? null
+          }
+        }
       })
     }
   }
