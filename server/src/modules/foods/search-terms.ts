@@ -136,6 +136,12 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^kartoffel (geschaelt|ungeschaelt), roh/, terms: 'potato potatoes russet' },
   { match: /^roemischer salat/, terms: 'roemersalat romana roemersalatherzen salatherzen romaine' },
   { match: /^teigwaren eifrei, roh$/, terms: 'rigatoni farfalle' },
+  { match: /^blaetterteig eifrei/, terms: 'filoteig yufkateig strudelteig filoteigplatten tk-blaetterteig' },
+  { match: /^lamm kotelett/, terms: 'lammkarree karree lammkoteletts' },
+  { match: /^obstbrand/, terms: 'himbeergeist birnengeist' },
+  { match: /bratwurst-grundbraet|^bratwurst/, terms: 'bratwurstbraet braet' },
+  { match: /^gouda 48/, terms: 'goudakaese gouda' },
+  { match: /^kokos fruchtfleisch, geraspelt/, terms: 'kokosraspel kokosraspeln kokosflocken' },
 ]
 
 export function foldGerman(text: string): string {

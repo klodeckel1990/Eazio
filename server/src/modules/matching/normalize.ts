@@ -113,6 +113,8 @@ const SEASONINGS = new Set([
   'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
   'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
   'anisstern', 'gewurznelke', 'gewurznelken', 'vanillemark',
+  'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung',
+  'rosenbluten', 'rosenblutenblatter', 'koriandergrun',
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
@@ -135,6 +137,14 @@ export function isPrepNote(name: string): boolean {
   return PREP_NOTE.test(normalizeName(name))
 }
 
+// Gewürz-Komposita: <Gewürz> + Form ("Zimtstange", "Pimentkörner",
+// "Thymianzweig", "Koriandergrün") — die Form trägt keine Kalorienrelevanz.
+const SPICE_FORMS = [
+  'korner', 'koerner', 'korn', 'stange', 'stangen', 'rinde', 'stangel',
+  'staengel', 'zweig', 'zweige', 'grun', 'gruen', 'blatt', 'blatter',
+  'blaetter', 'pulver', 'mischung', 'samen', 'saat',
+]
+
 /** True if the ingredient name is a pure seasoning/spice (any whole word matches
  *  the curated list). Ambiguous foods like "Paprika" or "Knoblauch" return false. */
 export function isSeasoning(name: string): boolean {
@@ -144,5 +154,14 @@ export function isSeasoning(name: string): boolean {
   // Nicht-Buchstaben-Grenzen statt Whitespace: "Togarashi-Gewürz" → gewurz
   return normalized
     .split(/[^\p{L}\p{N}]+/u)
-    .some((tok) => SEASONINGS.has(tok))
+    .some((tok) => {
+      if (SEASONINGS.has(tok)) return true
+      for (const form of SPICE_FORMS) {
+        if (tok.length > form.length + 2 && tok.endsWith(form)) {
+          const head = tok.slice(0, -form.length)
+          if (SEASONINGS.has(head) || SEASONINGS.has(head.replace(/n$/, ''))) return true
+        }
+      }
+      return false
+    })
 }
