@@ -272,19 +272,39 @@ struct TellerwertWidgetView: View {
                 MacroRow(label: "Kohlenhydrate", value: s.carbs, color: TW.amber)
                 MacroRow(label: "Protein", value: s.protein, color: TW.green)
                 MacroRow(label: "Fett", value: s.fat, color: TW.teal)
-                HStack(alignment: .bottom, spacing: 8) {
-                    WaterBar(summary: s)
-                    Button(intent: AddWaterIntent(ml: 250)) {
-                        HStack(spacing: 2) {
-                            Image(systemName: "drop.fill").font(.caption2)
-                            Text("+250").font(.caption2.weight(.bold)).monospacedDigit()
+                // Wasser: Label und Button auf einer Linie, Balken in voller Breite darunter
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        HStack(spacing: 3) {
+                            Image(systemName: "drop.fill")
+                                .font(.caption2)
+                                .foregroundStyle(TW.teal)
+                            Text("\(s.waterMl) ml")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(TW.ink)
+                                .monospacedDigit()
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 5)
-                        .background(TW.teal.opacity(0.16), in: Capsule())
-                        .foregroundStyle(TW.teal)
+                        Spacer()
+                        Button(intent: AddWaterIntent(ml: 250)) {
+                            Text("+250")
+                                .font(.caption2.weight(.bold))
+                                .monospacedDigit()
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 3.5)
+                                .background(TW.teal.opacity(0.16), in: Capsule())
+                                .foregroundStyle(TW.teal)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(TW.track)
+                            Capsule().fill(TW.teal).frame(
+                                width: max(4, geo.size.width * min(1.0, s.waterTargetMl > 0
+                                    ? Double(s.waterMl) / Double(s.waterTargetMl) : 0)))
+                        }
+                    }
+                    .frame(height: 5)
                 }
             }
         }
