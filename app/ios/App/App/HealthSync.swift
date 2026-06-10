@@ -33,20 +33,84 @@ final class HealthSync: NSObject, WKScriptMessageHandler {
         controller.add(self, name: Self.handlerName)
     }
 
+    /// Ernährungs-Typen, die Tellerwert nach Health zurückschreibt.
+    private var shareTypes: Set<HKSampleType> {
+        var types: Set<HKSampleType> = []
+        let ids: [HKQuantityTypeIdentifier] = [
+            .dietaryEnergyConsumed, .dietaryProtein, .dietaryFatTotal,
+            .dietaryCarbohydrates, .dietaryWater,
+        ]
+        for id in ids {
+            if let q = HKObjectType.quantityType(forIdentifier: id) { types.insert(q) }
+        }
+        return types
+    }
+
     func userContentController(_ userContentController: WKUserContentController,
                                didReceive message: WKScriptMessage) {
         guard message.name == Self.handlerName else { return }
-        sync()
+        let body = message.body as? [String: Any]
+        if body?["action"] as? String == "writeDay", let body {
+            writeDay(body)
+        } else {
+            sync()
+        }
     }
 
     func sync() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
-        store.requestAuthorization(toShare: nil, read: readTypes) { [weak self] granted, _ in
+        store.requestAuthorization(toShare: shareTypes, read: readTypes) { [weak self] granted, _ in
             guard granted else {
                 self?.dispatch(["error": "denied"])
                 return
             }
             self?.queryToday()
+        }
+    }
+
+    /// Tages-Abgleich: löscht die von Tellerwert geschriebenen Samples des
+    /// Tages und schreibt die aktuellen Summen neu — idempotent, Edits und
+    /// Löschungen im Tagebuch zählen in Health nie doppelt.
+    private func writeDay(_ body: [String: Any]) {
+        guard HKHealthStore.isHealthDataAvailable(),
+              let dateStr = body["date"] as? String else { return }
+        store.requestAuthorization(toShare: shareTypes, read: readTypes) { [weak self] granted, _ in
+            guard granted else { return }
+            self?.reconcileDay(dateStr, body)
+        }
+    }
+
+    private func reconcileDay(_ dateStr: String, _ body: [String: Any]) {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = .current
+        guard let dayStart = fmt.date(from: dateStr) else { return }
+        // HealthKit lehnt Samples mit Enddatum in der Zukunft ab
+        let dayEnd = min(dayStart.addingTimeInterval(86_399), Date())
+        guard dayEnd > dayStart else { return }
+
+        let metrics: [(HKQuantityTypeIdentifier, HKUnit, String)] = [
+            (.dietaryEnergyConsumed, .kilocalorie(), "kcal"),
+            (.dietaryProtein, .gram(), "protein"),
+            (.dietaryFatTotal, .gram(), "fat"),
+            (.dietaryCarbohydrates, .gram(), "carbs"),
+            (.dietaryWater, .literUnit(with: .milli), "waterMl"),
+        ]
+        let dayPredicate = HKQuery.predicateForSamples(
+            withStart: dayStart, end: dayStart.addingTimeInterval(86_400), options: [])
+        for (id, unit, key) in metrics {
+            guard let type = HKObjectType.quantityType(forIdentifier: id) else { continue }
+            let value = (body[key] as? NSNumber)?.doubleValue ?? 0
+            // deleteObjects entfernt nur Samples, die DIESE App geschrieben hat
+            store.deleteObjects(of: type, predicate: dayPredicate) { [weak self] _, _, _ in
+                guard value > 0 else { return }
+                let sample = HKQuantitySample(
+                    type: type,
+                    quantity: HKQuantity(unit: unit, doubleValue: value),
+                    start: dayStart,
+                    end: dayEnd)
+                self?.store.save(sample) { _, _ in }
+            }
         }
     }
 

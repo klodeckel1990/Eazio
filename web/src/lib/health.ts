@@ -7,6 +7,7 @@
 
 import { api } from '../api/client'
 import { isNativeApp } from './barcode'
+import { todayStr } from './dates'
 
 interface HealthPayload {
   steps?: number
@@ -54,6 +55,35 @@ export function requestHealthSync(): void {
     window.webkit!.messageHandlers!.eazioHealth!.postMessage({ action: 'sync' })
   } catch {
     // handler vanished (webview teardown) — next foreground retries
+  }
+}
+
+export interface HealthDayTotals {
+  date: string
+  kcal: number
+  protein: number
+  fat: number
+  carbs: number
+  waterMl: number
+}
+
+/** Schreibt die Tagessummen nach Apple Health (Tages-Abgleich, idempotent).
+ *  Zukunftstage werden übersprungen — HealthKit lehnt Future-Samples ab. */
+export function pushDayToHealth(day: HealthDayTotals): void {
+  if (!healthAvailable() || !healthOptedIn()) return
+  if (day.date > todayStr()) return
+  try {
+    window.webkit!.messageHandlers!.eazioHealth!.postMessage({
+      action: 'writeDay',
+      date: day.date,
+      kcal: Math.round(day.kcal),
+      protein: Math.round(day.protein * 10) / 10,
+      fat: Math.round(day.fat * 10) / 10,
+      carbs: Math.round(day.carbs * 10) / 10,
+      waterMl: Math.round(day.waterMl),
+    })
+  } catch {
+    // handler weg (Teardown) — nächster Refresh gleicht ab
   }
 }
 

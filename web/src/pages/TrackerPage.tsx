@@ -6,7 +6,7 @@ import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
 import { round } from '../lib/nutrition'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
 import { addDays, dayLabel, todayStr } from '../lib/dates'
-import { initHealthSync } from '../lib/health'
+import { initHealthSync, pushDayToHealth } from '../lib/health'
 import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { CalendarSheet } from '../components/CalendarSheet'
@@ -44,7 +44,18 @@ export function TrackerPage() {
 
   const refreshDay = () => {
     api.diary.day(dateRef.current)
-      .then(setDay)
+      .then((d) => {
+        setDay(d)
+        // Mahlzeiten & Wasser zurück nach Apple Health (Tages-Abgleich)
+        pushDayToHealth({
+          date: d.date,
+          kcal: d.totals.kcal,
+          protein: d.totals.protein,
+          fat: d.totals.fat,
+          carbs: d.totals.carbs,
+          waterMl: d.water.totalMl,
+        })
+      })
       .catch((e) => { if (e instanceof ApiError) setError(e.message); else throw e })
     refreshWidgets() // keep the home-screen widget in sync with diary writes
   }

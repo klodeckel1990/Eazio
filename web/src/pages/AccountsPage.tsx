@@ -267,7 +267,7 @@ export function AccountsPage() {
             <div>
               <strong>Apple Health</strong>
               <p className="muted" style={{ margin: 0 }}>
-                Schritte, Aktivitätskalorien und Gewicht (Smart Scale) automatisch übernehmen.
+                Schritte, Aktivität und Gewicht lesen — Mahlzeiten und Wasser zurückschreiben.
               </p>
             </div>
             <button
