@@ -11,7 +11,7 @@ const ML_UNITS: Record<string, number> = { ml: 1, l: 1000, pint: 473, quart: 946
 // 1 TL ≈ 5 g, 1 Handvoll ≈ 30 g) that the user can fine-tune per line in the
 // review UI — better than asking the AI for the weight of "one piece" of a
 // loose ingredient like Rucola.
-const SPOON_UNITS: Record<string, number> = { el: 15, tl: 5, handvoll: 30, cup: 240, stick: 113, tasse: 240 }
+const SPOON_UNITS: Record<string, number> = { el: 15, tl: 5, handvoll: 30, cup: 240, stick: 113, tasse: 240, prise: 1, prisen: 1 }
 
 export function resolveAmount(qty: number | null, unit: string | null): ResolvedAmount {
   const q = qty ?? 1

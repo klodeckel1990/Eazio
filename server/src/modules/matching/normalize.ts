@@ -60,7 +60,7 @@ const QUALIFIERS = new Set([
 export function isQualifierOnly(name: string): boolean {
   const tokens = name
     .split(/[^\p{L}\p{N}]+/u)
-    .filter((t) => t.length > 0)
+    .filter((t) => t.length > 0 && !/^\d+$/.test(t)) // nackte Zahlen zählen nicht
   return tokens.length > 0 && tokens.every((t) => QUALIFIERS.has(normalizeName(t)))
 }
 
