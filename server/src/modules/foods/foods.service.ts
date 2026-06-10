@@ -204,6 +204,8 @@ export async function matchFoodText(
     pieceGrams: number | null
     normalizedName: string
     needsAi: boolean
+    /** already resolved — the AI is only asked for the piece weight */
+    gramsOnly: boolean
   }
 
   const pending: Pending[] = []
@@ -265,6 +267,11 @@ export async function matchFoodText(
       }
     }
 
+    const isCount = normalizedUnit === 'serving' && line.qty !== null
+    // unresolved lines go to the AI for ranking (>=2), a grams estimate on a
+    // single count candidate, or a retry-query proposal on ZERO candidates.
+    // Resolved count lines without any weight info get a grams-only pass.
+    const gramsOnly = resolved && isCount && pieceGrams === null && aliasDefaultG === null
     pending.push({
       line,
       normalizedUnit,
@@ -274,12 +281,8 @@ export async function matchFoodText(
       aliasDefaultG,
       pieceGrams,
       normalizedName,
-      // a single candidate needs no ranking — except for count entries, where
-      // the AI still estimates the piece weight ("18 Cocktailtomaten")
-      needsAi:
-        !resolved &&
-        (candidates.length >= 2 ||
-          (candidates.length >= 1 && normalizedUnit === 'serving' && line.qty !== null)),
+      needsAi: (!resolved && (candidates.length !== 1 || isCount)) || gramsOnly,
+      gramsOnly,
     })
   }
 
@@ -316,6 +319,16 @@ export async function matchFoodText(
     aiLines.forEach((p, i) => {
       const pick = picks[i]
       if (!pick) return
+      if (p.gramsOnly) {
+        // pick stays as resolved — only the weight estimate is taken
+        if (pick.pieceGrams !== null && p.selectedFoodId) {
+          p.pieceGrams = pick.pieceGrams
+          if (p.candidates[0] && p.candidates[0].source !== 'custom') {
+            upsertCachedMatch(db, p.normalizedName, p.selectedFoodId, pick.pieceGrams)
+          }
+        }
+        return
+      }
       if (pick.id) applyPick(p, pick.id, pick.pieceGrams)
       else if (pick.retryQuery) retries.push({ p, query: pick.retryQuery })
     })
