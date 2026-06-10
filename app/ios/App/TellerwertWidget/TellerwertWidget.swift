@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 // MARK: - Daten
 
@@ -259,6 +260,108 @@ struct TellerwertWidgetView: View {
     }
 }
 
+// MARK: - Interaktives Wasser-Widget (App Intents, iOS 17+)
+
+/// Loggt Wasser direkt aus dem Widget — ohne die App zu öffnen. Läuft in der
+/// Widget-Extension selbst; der Bearer kommt aus der geteilten Keychain.
+struct AddWaterIntent: AppIntent {
+    static var title: LocalizedStringResource = "Wasser hinzufügen"
+    static var isDiscoverable: Bool = false
+
+    @Parameter(title: "Menge (ml)")
+    var ml: Int
+
+    init() { self.ml = 250 }
+    init(ml: Int) { self.ml = ml }
+
+    func perform() async throws -> some IntentResult {
+        guard let token = sharedToken(),
+              let url = URL(string: "\(SummaryProvider.apiBase)/api/diary/water") else {
+            return .result()
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["ml": ml])
+        request.timeoutInterval = 12
+        _ = try? await URLSession(configuration: .ephemeral).data(for: request)
+        WidgetCenter.shared.reloadAllTimelines()
+        return .result()
+    }
+}
+
+struct WaterAddButton: View {
+    let ml: Int
+    var body: some View {
+        Button(intent: AddWaterIntent(ml: ml)) {
+            Text("+\(ml)")
+                .font(.caption.weight(.bold))
+                .monospacedDigit()
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .background(TW.teal.opacity(0.16), in: Capsule())
+                .foregroundStyle(TW.teal)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct WaterWidgetView: View {
+    let entry: SummaryEntry
+
+    var body: some View {
+        Group {
+            if let s = entry.summary {
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "drop.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(TW.teal)
+                        Text("\(s.waterMl) ml")
+                            .font(.system(.headline, design: .serif).weight(.semibold))
+                            .foregroundStyle(TW.ink)
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(1)
+                    }
+                    Text("von \(s.waterTargetMl) ml")
+                        .font(.caption2)
+                        .foregroundStyle(TW.ink2)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(TW.track)
+                            Capsule().fill(TW.teal).frame(
+                                width: max(4, geo.size.width * min(1.0, s.waterTargetMl > 0
+                                    ? Double(s.waterMl) / Double(s.waterTargetMl) : 0)))
+                        }
+                    }
+                    .frame(height: 6)
+                    Spacer(minLength: 2)
+                    HStack(spacing: 6) {
+                        WaterAddButton(ml: 250)
+                        WaterAddButton(ml: 500)
+                    }
+                }
+            } else {
+                LoggedOutView()
+            }
+        }
+        .containerBackground(TW.paper, for: .widget)
+    }
+}
+
+struct TellerwertWaterWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "TellerwertWater", provider: SummaryProvider()) { entry in
+            WaterWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Wasser")
+        .description("Wasserstand sehen und direkt vom Home-Screen loggen.")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
 // MARK: - Deklaration
 
 struct TellerwertWidget: Widget {
@@ -276,5 +379,6 @@ struct TellerwertWidget: Widget {
 struct TellerwertWidgetBundle: WidgetBundle {
     var body: some Widget {
         TellerwertWidget()
+        TellerwertWaterWidget()
     }
 }
