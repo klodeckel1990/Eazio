@@ -278,3 +278,66 @@ export function IconScan(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+/** Schritte — footprints. */
+export function IconSteps(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M7.5 3.8c1.7 0 2.6 1.6 2.6 3.6 0 1.5-.5 2.6-1.3 3.6H5.6c-.5-1.2-.8-2.3-.8-3.6 0-2 1-3.6 2.7-3.6Z" />
+      <path d="M6 13h3v1.6a1.5 1.5 0 0 1-3 0V13Z" />
+      <path d="M16.5 9.3c1.7 0 2.7 1.6 2.7 3.6 0 1.3-.3 2.4-.8 3.6h-3.2c-.8-1-1.3-2.1-1.3-3.6 0-2 .9-3.6 2.6-3.6Z" />
+      <path d="M15 18.5h3v1.6a1.5 1.5 0 0 1-3 0v-1.6Z" />
+    </Svg>
+  )
+}
+
+/** Ziel — target rings. */
+export function IconTarget(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="0.8" fill="currentColor" />
+    </Svg>
+  )
+}
+
+/** Körperwaage — bathroom scale. */
+export function IconScale(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <rect x="4" y="4" width="16" height="16" rx="3.5" />
+      <path d="M8.5 9.5a4.6 4.6 0 0 1 7 0l-2.2 2.2a1.6 1.6 0 0 0-2.6 0Z" />
+    </Svg>
+  )
+}
+
+/** Aktivität — Figur mit offenen Armen. */
+export function IconFigure(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="6" r="2.4" />
+      <path d="M4.5 14.5C6.5 11.6 9 10.2 12 10.2s5.5 1.4 7.5 4.3" />
+      <path d="M9.2 20.5c.7-2.6 1.6-4.4 2.8-5.8 1.2 1.4 2.1 3.2 2.8 5.8" />
+    </Svg>
+  )
+}
+
+/** Profil-Formular — Karte mit Zeilen. */
+export function IconClipboard(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <rect x="5" y="3.5" width="14" height="17" rx="3" />
+      <path d="M9 8.5h6M9 12h6M9 15.5h3.5" />
+    </Svg>
+  )
+}
+
+/** Pfeil rechts — weiter. */
+export function IconArrowRight(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M4.5 12h15M13.5 6l6 6-6 6" />
+    </Svg>
+  )
+}

@@ -8,7 +8,7 @@ import { isNativeApp, scanBarcode } from '../lib/barcode'
 import { initHealthSync } from '../lib/health'
 import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
-import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan } from '../components/icons'
+import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconFlame, IconSteps, IconDrop } from '../components/icons'
 
 interface RowState {
   foodId: string
@@ -272,7 +272,7 @@ export function TrackerPage() {
         <h1>Tagebuch</h1>
         <span className="sub">
           {day && day.streak.currentStreak > 1
-            ? `🔥 ${day.streak.currentStreak} Tage in Folge`
+            ? <><IconFlame className="inline-ico" /> {day.streak.currentStreak} Tage in Folge</>
             : 'Mahlzeiten eintippen und loggen.'}
         </span>
       </header>
@@ -306,9 +306,13 @@ export function TrackerPage() {
       {day?.activity && (day.activity.steps !== null || day.activity.activeKcal !== null) && (
         <div className="card water-card">
           <span className="water-label">
-            {day.activity.steps !== null ? `👟 ${day.activity.steps.toLocaleString('de-DE')} Schritte` : ''}
+            {day.activity.steps !== null && (
+              <><IconSteps className="inline-ico" /> {day.activity.steps.toLocaleString('de-DE')} Schritte</>
+            )}
             {day.activity.steps !== null && day.activity.activeKcal !== null ? ' · ' : ''}
-            {day.activity.activeKcal !== null ? `🔥 ${Math.round(day.activity.activeKcal)} kcal aktiv` : ''}
+            {day.activity.activeKcal !== null && (
+              <><IconFlame className="inline-ico" /> {Math.round(day.activity.activeKcal)} kcal aktiv</>
+            )}
             {day.activity.countedKcal > 0 ? ' · im Budget' : ''}
           </span>
         </div>
@@ -316,7 +320,7 @@ export function TrackerPage() {
 
       {day && (
         <div className="card water-card">
-          <span className="water-label">💧 {day.water.totalMl} / {day.goals.waterMl} ml</span>
+          <span className="water-label"><IconDrop className="inline-ico" /> {day.water.totalMl} / {day.goals.waterMl} ml</span>
           <div className="btn-row">
             <button type="button" className="btn btn-soft btn-sm" onClick={() => { void handleWater(250) }}>+250</button>
             <button type="button" className="btn btn-soft btn-sm" onClick={() => { void handleWater(500) }}>+500</button>
