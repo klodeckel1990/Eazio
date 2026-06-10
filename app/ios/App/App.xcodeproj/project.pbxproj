@@ -8,17 +8,22 @@
 
 /* Begin PBXBuildFile section */
 		0F36AF74FE5EDBDEB4277CBA /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E7AEC8187B17CD588326594 /* Foundation.framework */; };
+		285E85F444741E56168082FE /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA3472A856DE2918E7254C6 /* ShareViewController.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		41AFA81C7805F4BD1F8474C9 /* TellerwertWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AE40ACA98878927E6357C6 /* TellerwertWidget.swift */; };
+		42C72F5D2BB79C909F90AF17 /* PendingShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379DA276FC95C50FB6F94D8B /* PendingShare.swift */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		55627CAF53B07E333D1C4E2C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E7AEC8187B17CD588326594 /* Foundation.framework */; };
+		57E5D15B10207ABAE27FA4CC /* TellerwertShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 50F19172BFA059E211D02EB0 /* TellerwertShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5AF310C5D88795955908ECAE /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F2F887302D530AF560E38BB /* MainViewController.swift */; };
 		965783351661F9AB35538964 /* TellerwertWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B54302F5119E15FC1FE939E2 /* TellerwertWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
+		E963EEC45AE4640FEF14E601 /* PendingShare.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379DA276FC95C50FB6F94D8B /* PendingShare.swift */; };
 		F714209F7DA25FC427ABF667 /* SharedAuthPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41C4AFD2F932346BB00B7BD4 /* SharedAuthPlugin.swift */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +35,13 @@
 			remoteGlobalIDString = 02ADE1A5A7AFDAF6A770D005;
 			remoteInfo = TellerwertWidget;
 		};
+		EF50465D2EA9D46297B82FFC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6A03C0274BA4CBB7E6A0945D;
+			remoteInfo = TellerwertShare;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -40,6 +52,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				965783351661F9AB35538964 /* TellerwertWidget.appex in Embed Foundation Extensions */,
+				57E5D15B10207ABAE27FA4CC /* TellerwertShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -48,6 +61,7 @@
 
 /* Begin PBXFileReference section */
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
+		379DA276FC95C50FB6F94D8B /* PendingShare.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingShare.swift; sourceTree = "<group>"; };
 		39AE40ACA98878927E6357C6 /* TellerwertWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TellerwertWidget.swift; sourceTree = "<group>"; };
 		41C4AFD2F932346BB00B7BD4 /* SharedAuthPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedAuthPlugin.swift; sourceTree = "<group>"; };
 		4E7AEC8187B17CD588326594 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -59,10 +73,12 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		50F19172BFA059E211D02EB0 /* TellerwertShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TellerwertShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F2F887302D530AF560E38BB /* MainViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		B54302F5119E15FC1FE939E2 /* TellerwertWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TellerwertWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		EEA3472A856DE2918E7254C6 /* ShareViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -72,6 +88,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		663E48E45F9AB2F779FEBA2E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				55627CAF53B07E333D1C4E2C /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +127,7 @@
 				7F8756D8B27F46E3366F6CEA /* Pods */,
 				27E2DDA53C4D2A4D1A88CE4A /* Frameworks */,
 				56ECE11CDFB59F5D4D88FAB2 /* TellerwertWidget */,
+				8A5C84C92E3D14E25E547C87 /* TellerwertShare */,
 			);
 			sourceTree = "<group>";
 		};
@@ -111,6 +136,7 @@
 			children = (
 				504EC3041FED79650016851F /* App.app */,
 				B54302F5119E15FC1FE939E2 /* TellerwertWidget.appex */,
+				50F19172BFA059E211D02EB0 /* TellerwertShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -128,6 +154,7 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 				41C4AFD2F932346BB00B7BD4 /* SharedAuthPlugin.swift */,
 				7F2F887302D530AF560E38BB /* MainViewController.swift */,
+				379DA276FC95C50FB6F94D8B /* PendingShare.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -148,6 +175,15 @@
 				AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */,
 			);
 			name = Pods;
+			sourceTree = "<group>";
+		};
+		8A5C84C92E3D14E25E547C87 /* TellerwertShare */ = {
+			isa = PBXGroup;
+			children = (
+				EEA3472A856DE2918E7254C6 /* ShareViewController.swift */,
+			);
+			name = TellerwertShare;
+			path = TellerwertShare;
 			sourceTree = "<group>";
 		};
 		9638D3D4159CE31D94BA93F4 /* iOS */ = {
@@ -193,11 +229,29 @@
 			);
 			dependencies = (
 				7129EAB9B94B09420F6B80DA /* PBXTargetDependency */,
+				176BA0D3FB5CC63660DDDD2B /* PBXTargetDependency */,
 			);
 			name = App;
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		6A03C0274BA4CBB7E6A0945D /* TellerwertShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 531DBBC2B5217CB8B3982A65 /* Build configuration list for PBXNativeTarget "TellerwertShare" */;
+			buildPhases = (
+				50C154A1C2FFCA7057126E84 /* Sources */,
+				663E48E45F9AB2F779FEBA2E /* Frameworks */,
+				CC705A64A5986964DF444FA9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TellerwertShare;
+			productName = TellerwertShare;
+			productReference = 50F19172BFA059E211D02EB0 /* TellerwertShare.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -230,6 +284,7 @@
 			targets = (
 				504EC3031FED79650016851F /* App */,
 				02ADE1A5A7AFDAF6A770D005 /* TellerwertWidget */,
+				6A03C0274BA4CBB7E6A0945D /* TellerwertShare */,
 			);
 		};
 /* End PBXProject section */
@@ -245,6 +300,13 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC705A64A5986964DF444FA9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,6 +363,16 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				F714209F7DA25FC427ABF667 /* SharedAuthPlugin.swift in Sources */,
 				5AF310C5D88795955908ECAE /* MainViewController.swift in Sources */,
+				42C72F5D2BB79C909F90AF17 /* PendingShare.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		50C154A1C2FFCA7057126E84 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				285E85F444741E56168082FE /* ShareViewController.swift in Sources */,
+				E963EEC45AE4640FEF14E601 /* PendingShare.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,6 +387,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		176BA0D3FB5CC63660DDDD2B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = TellerwertShare;
+			target = 6A03C0274BA4CBB7E6A0945D /* TellerwertShare */;
+			targetProxy = EF50465D2EA9D46297B82FFC /* PBXContainerItemProxy */;
+		};
 		7129EAB9B94B09420F6B80DA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = TellerwertWidget;
@@ -536,6 +614,47 @@
 			};
 			name = Release;
 		};
+		7CA808BD46DF476352055D8C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = TellerwertShare/TellerwertShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TellerwertShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tellerwert.app.TellerwertShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		981BF87FD6DACC675F7B3F2A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = TellerwertShare/TellerwertShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TellerwertShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.tellerwert.app.TellerwertShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -553,6 +672,15 @@
 			buildConfigurations = (
 				504EC3171FED79650016851F /* Debug */,
 				504EC3181FED79650016851F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		531DBBC2B5217CB8B3982A65 /* Build configuration list for PBXNativeTarget "TellerwertShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				981BF87FD6DACC675F7B3F2A /* Release */,
+				7CA808BD46DF476352055D8C /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

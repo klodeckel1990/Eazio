@@ -34,8 +34,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        // Called when the app was launched with a url. Feel free to add additional processing here,
-        // but if you want the App API to support tracking app url opens, make sure to keep this call
+        // tellerwert://import?url=…&text=… (Kurzbefehle/Share-Extension wake-up):
+        // drop the payload into the keychain mailbox and let MainViewController
+        // route the WebView — no JS bridge involved.
+        if url.scheme == "tellerwert" {
+            let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let sharedUrl = components?.queryItems?.first(where: { $0.name == "url" })?.value
+            let sharedText = components?.queryItems?.first(where: { $0.name == "text" })?.value
+            if sharedUrl != nil || sharedText != nil {
+                PendingShare.store(url: sharedUrl, text: sharedText)
+            }
+            NotificationCenter.default.post(name: Notification.Name("TellerwertPendingShare"), object: nil)
+            return true
+        }
         return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
     }
 
