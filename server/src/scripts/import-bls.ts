@@ -162,6 +162,8 @@ const STAPLE_MATCHES: Record<string, string> = {
   rinderbruhe: 'Rindfleischbrühe Konserve',
   'beef broth': 'Rindfleischbrühe Konserve',
   riesling: 'Weißwein trocken',
+  'coconut oil': 'Kokosöl',
+  kokosol: 'Kokosöl',
   raucherbauch: 'Schwein Bauch (wie gewachsen) Rohpökelware',
   // englische Grundbegriffe (Allrecipes/Serious Eats/Cookpad)
   flour: 'Weizen Mehl, Type 405',

@@ -156,9 +156,12 @@ const SPICE_FORMS = [
  *  the curated list). Ambiguous foods like "Paprika" or "Knoblauch" return false. */
 export function isSeasoning(name: string): boolean {
   const normalized = normalizeName(name)
+  // Currypaste/-sauce ist kalorisch relevant — nicht über das Token 'curry' skippen
+  if (/\bcurry[ -]?(paste|sauce|soße|sosse)\b/.test(normalized)) return false
   // mehrwortige englische Pfeffer-Formen (bare 'pepper' wäre bell pepper)
   if (/\b(black|white|ground|cracked) pepper\b/.test(normalized)) return true
   if (/\bbay (leaf|leaves)\b/.test(normalized)) return true
+  if (/\b(kaffir|lime) leaves\b/.test(normalized)) return true
   // Nicht-Buchstaben-Grenzen statt Whitespace: "Togarashi-Gewürz" → gewurz
   return normalized
     .split(/[^\p{L}\p{N}]+/u)
