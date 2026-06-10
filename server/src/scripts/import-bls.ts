@@ -165,6 +165,8 @@ const STAPLE_MATCHES: Record<string, string> = {
   baguette: 'Weizenbaguette',
   baguettescheiben: 'Weizenbaguette',
   rauke: 'Rucola roh',
+  sojahack: 'Sojaschnetzel/Sojagranulat, texturiert, trocken',
+  mungobohnensprossen: 'Mungbohnensprossen/Mungbohnenkeimlinge, roh',
   rucola: 'Rucola roh',
   'coconut oil': 'Kokosöl',
   kokosol: 'Kokosöl',

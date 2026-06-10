@@ -119,6 +119,7 @@ const SEASONINGS = new Set([
   'anisstern', 'gewurznelke', 'gewurznelken', 'vanillemark',
   'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung', 'brotgewurz',
   'rosenbluten', 'rosenblutenblatter', 'koriandergrun', 'kapuzinerkresse',
+  'fenchelsaat', 'fenchelsamen',
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
@@ -150,7 +151,7 @@ export function isPrepNote(name: string): boolean {
 const SPICE_FORMS = [
   'korner', 'koerner', 'korn', 'stange', 'stangen', 'rinde', 'stangel',
   'staengel', 'zweig', 'zweige', 'grun', 'gruen', 'blatt', 'blatter',
-  'blaetter', 'blute', 'bluten', 'pulver', 'mischung', 'samen', 'saat',
+  'blaetter', 'blattchen', 'blute', 'bluten', 'pulver', 'mischung', 'samen', 'saat',
 ]
 
 /** True if the ingredient name is a pure seasoning/spice (any whole word matches
@@ -171,7 +172,7 @@ export function isSeasoning(name: string): boolean {
       if (SEASONINGS.has(tok)) return true
       // …gewürz/…pfeffer-Komposita sind immer Würzmittel (Brotgewürz,
       // Peperonigewürz, Zitronenpfeffer) — Gewürzgurke beginnt damit, endet nicht
-      if (tok.length > 7 && (tok.endsWith('gewurz') || tok.endsWith('pfeffer'))) return true
+      if (tok.length > 7 && (tok.endsWith('gewurz') || tok.endsWith('pfeffer') || tok.endsWith('salz'))) return true
       for (const form of SPICE_FORMS) {
         if (tok.length > form.length + 2 && tok.endsWith(form)) {
           const head = tok.slice(0, -form.length)

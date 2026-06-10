@@ -152,6 +152,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^tomatenmark/, terms: 'salca' },
   { match: /^weizenbaguette$/, terms: 'baguette baguettescheiben baguettebrot' },
   { match: /^rucola roh/, terms: 'rauke arugula rocket' },
+  { match: /^sojaschnetzel\/sojagranulat, texturiert, trocken/, terms: 'sojahack veggie-hack veganes hack sojageschnetzeltes' },
+  { match: /^mungbohnensprossen/, terms: 'mungobohnensprossen mungosprossen' },
 ]
 
 export function foldGerman(text: string): string {
