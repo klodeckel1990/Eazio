@@ -9,12 +9,32 @@ const UMLAUT_MAP: Record<string, string> = { ä: 'ae', ö: 'oe', ü: 'ue', ß: '
 // Common food-compound heads: a token ending in one of these is additionally
 // indexed as the bare head ("kalbslende" → "lende"). Curated, not linguistic.
 const COMPOUND_HEADS = [
-  'aufstrich', 'auflauf', 'braten', 'brot', 'broetchen', 'butter', 'creme', 'eis',
-  'filet', 'flocken', 'fleisch', 'gemuese', 'joghurt', 'kaese', 'keule', 'kuchen',
-  'lende', 'marmelade', 'mehl', 'milch', 'mus', 'nudeln', 'oel', 'pulver', 'quark',
-  'reis', 'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse', 'speck',
-  'suppe', 'wurst', 'zucker',
+  'aufstrich', 'auflauf', 'beere', 'bohne', 'braten', 'brot', 'broetchen',
+  'butter', 'creme', 'eis', 'erbse', 'filet', 'flocken', 'fleisch', 'gemuese',
+  'joghurt', 'kaese', 'keule', 'kohl', 'kuchen', 'kuerbis', 'lende',
+  'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudeln', 'nuss', 'oel',
+  'paprika', 'pilz', 'pulver', 'quark', 'reis', 'saft', 'salat', 'sauce',
+  'schinken', 'schnitzel', 'sosse', 'speck', 'suppe', 'tomate', 'traube',
+  'wurst', 'zucker', 'zwiebel',
 ]
+
+/**
+ * Zero-hit fallback: for a compound the index does not know ("Romatomaten"),
+ * return the bare head ("tomate") as a retry query — the AI rerank then picks
+ * the fitting base product among the head's results.
+ */
+export function compoundHeadFallback(name: string): string | null {
+  for (const token of tokenize(name)) {
+    const folded = foldGerman(token)
+    const variants = [folded, ...depluralize(folded)]
+    for (const v of variants) {
+      for (const head of COMPOUND_HEADS) {
+        if (v.length > head.length + 2 && v.endsWith(head)) return head
+      }
+    }
+  }
+  return null
+}
 
 // Colloquial names → what the BLS actually calls the product. Matched against
 // the folded food name at index time; the extra terms land in search_terms.

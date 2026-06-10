@@ -16,7 +16,7 @@ import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
 import { buildSearchQuery, isSeasoning, normalizeName } from '../matching/normalize.js'
 import { getFoodAlias } from './food-aliases.repo.js'
-import { foldGerman } from './search-terms.js'
+import { compoundHeadFallback, foldGerman } from './search-terms.js'
 
 // Cached OFF rows older than this are refreshed in the background on access.
 const OFF_REFRESH_MS = 1000 * 60 * 60 * 24 * 30
@@ -208,7 +208,13 @@ export async function matchFoodText(
   for (const line of parseIngredients(text)) {
     if (isSeasoning(line.name)) continue
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
-    const candidates = await searchSmart(db, userId, buildSearchQuery(line.name), 10, fetchSearch)
+    let candidates = await searchSmart(db, userId, buildSearchQuery(line.name), 10, fetchSearch)
+    if (candidates.length === 0) {
+      // unknown compound ("Romatomaten") — search its head ("tomate") and let
+      // the AI rerank pick the fitting base product
+      const head = compoundHeadFallback(line.name)
+      if (head) candidates = await searchSmart(db, userId, head, 10, fetchSearch)
+    }
     const normalizedName = normalizeName(line.name)
 
     let selectedFoodId = candidates[0]?.id ?? null
@@ -271,12 +277,15 @@ export async function matchFoodText(
       const pickId = picks[i]
       if (!pickId) return
       const idx = p.candidates.findIndex((c) => c.id === pickId)
-      if (idx <= 0) return // not found, or FTS already had it first
-      const [pick] = p.candidates.splice(idx, 1)
-      p.candidates.unshift(pick!)
-      p.selectedFoodId = pick!.id
-      if (pick!.source !== 'custom') {
-        upsertCachedMatch(db, p.normalizedName, pick!.id)
+      if (idx < 0) return
+      if (idx > 0) {
+        const [pick] = p.candidates.splice(idx, 1)
+        p.candidates.unshift(pick!)
+      }
+      p.selectedFoodId = pickId
+      // cache confirmations too — otherwise every repeat pays the AI call
+      if (p.candidates[0]!.source !== 'custom') {
+        upsertCachedMatch(db, p.normalizedName, pickId)
       }
     })
   }
