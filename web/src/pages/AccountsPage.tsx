@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { healthAvailable, healthOptedIn, setHealthOptIn } from '../lib/health'
 import { liveActivityAvailable, liveActivityEnabled, setLiveActivityEnabled } from '../lib/live-activity'
+import { setThemePref, themePref, type ThemePref } from '../lib/theme'
 import { api, ApiError } from '../api/client'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
 import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck, IconCart } from '../components/icons'
@@ -27,6 +28,7 @@ export function AccountsPage() {
   const [importResult, setImportResult] = useState<string | null>(null)
   const [healthOn, setHealthOn] = useState(healthOptedIn())
   const [liveActivityOn, setLiveActivityOn] = useState(liveActivityEnabled())
+  const [theme, setTheme] = useState<ThemePref>(themePref())
   const [activityBudget, setActivityBudget] = useState<boolean | null>(null)
 
   const loadAccounts = () => {
@@ -57,6 +59,11 @@ export function AccountsPage() {
     const next = !healthOn
     setHealthOn(next)
     setHealthOptIn(next) // on: triggert sofort Permission-Sheet + ersten Sync
+  }
+
+  const selectTheme = (pref: ThemePref) => {
+    setTheme(pref)
+    setThemePref(pref)
   }
 
   const toggleLiveActivity = () => {
@@ -157,21 +164,21 @@ export function AccountsPage() {
     <div className="page">
       <header className="page-head">
         <h1>Einstellungen</h1>
-        <span className="sub">Yazio-Konten, App-Optionen und mehr.</span>
+        <span className="sub">Profil, App und Verknüpfungen.</span>
       </header>
 
+      {/* ---- Profil & Ziele -------------------------------------------- */}
+      <h2 className="section-title">Profil &amp; Ziele</h2>
       {goals && (
-        <div className="card pad-lg">
-          <h2 className="section-title">Tagesziele</h2>
+        <div className="card pad-lg stack">
           <button
             type="button"
             className="btn btn-soft btn-block"
-            style={{ marginTop: '0.6rem' }}
             onClick={() => window.dispatchEvent(new CustomEvent('tellerwert:edit-profile', { detail: goals }))}
           >
             Profil-Assistent öffnen (Plan neu berechnen)
           </button>
-          <form className="stack" style={{ marginTop: '0.6rem' }} onSubmit={(e) => { void saveGoals(e) }}>
+          <form className="stack" onSubmit={(e) => { void saveGoals(e) }}>
             <div className="field">
               <label htmlFor="goal-kcal">Kalorienziel (kcal/Tag)</label>
               <input
@@ -218,15 +225,95 @@ export function AccountsPage() {
         </div>
       )}
 
-      <h2 className="section-title">Yazio-Konten</h2>
+      {/* ---- Darstellung ------------------------------------------------ */}
+      <h2 className="section-title">Darstellung</h2>
+      <div className="card stack">
+        <p className="muted">Hell, Dunkel oder automatisch dem System folgen.</p>
+        <div className="seg" role="group" aria-label="Erscheinungsbild">
+          {([['system', 'System'], ['light', 'Hell'], ['dark', 'Dunkel']] as [ThemePref, string][]).map(([value, lbl]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={theme === value}
+              onClick={() => selectTheme(value)}
+            >
+              {lbl}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ---- Gesundheit & Motivation (nur native App) ------------------- */}
+      {(healthAvailable() || liveActivityAvailable()) && (
+        <>
+          <h2 className="section-title">Gesundheit &amp; Motivation</h2>
+          {healthAvailable() && (
+            <div className="card water-card">
+              <div>
+                <strong>Apple Health</strong>
+                <p className="muted" style={{ margin: 0 }}>
+                  Schritte, Aktivität und Gewicht lesen — Mahlzeiten und Wasser zurückschreiben.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={healthOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+                aria-pressed={healthOn}
+                onClick={toggleHealth}
+              >
+                {healthOn ? 'An' : 'Aus'}
+              </button>
+            </div>
+          )}
+          {healthAvailable() && healthOn && activityBudget !== null && (
+            <div className="card water-card">
+              <div>
+                <strong>Aktivität aufs Budget anrechnen</strong>
+                <p className="muted" style={{ margin: 0 }}>
+                  Verbrannte Aktivitätskalorien erhöhen dein Tagesbudget.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={activityBudget ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+                aria-pressed={activityBudget}
+                onClick={toggleActivityBudget}
+              >
+                {activityBudget ? 'An' : 'Aus'}
+              </button>
+            </div>
+          )}
+          {liveActivityAvailable() && (
+            <div className="card water-card">
+              <div>
+                <strong>Live Activity</strong>
+                <p className="muted" style={{ margin: 0 }}>
+                  Tagesbilanz auf Sperrbildschirm und Dynamic Island.
+                </p>
+              </div>
+              <button
+                type="button"
+                className={liveActivityOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+                aria-pressed={liveActivityOn}
+                onClick={toggleLiveActivity}
+              >
+                {liveActivityOn ? 'An' : 'Aus'}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ---- Yazio ------------------------------------------------------ */}
+      <h2 className="section-title">Yazio</h2>
 
       {accounts === null ? (
         <p className="loading-inline"><span className="spinner" /> Lade Konten…</p>
       ) : accounts.length === 0 ? (
         <div className="empty">
           <span className="emoji"><IconUser /></span>
-          <h3>Noch kein Konto</h3>
-          <p>Verknüpfe unten dein Yazio-Konto, um Mahlzeiten zu tracken.</p>
+          <h3>Kein Konto verknüpft</h3>
+          <p>Optional: Verknüpfe dein Yazio-Konto, um Einträge zu spiegeln und deinen Verlauf zu importieren.</p>
         </div>
       ) : (
         <ul className="list">
@@ -267,64 +354,6 @@ export function AccountsPage() {
             </li>
           ))}
         </ul>
-      )}
-
-      {healthAvailable() && (
-        <>
-          <div className="card water-card">
-            <div>
-              <strong>Apple Health</strong>
-              <p className="muted" style={{ margin: 0 }}>
-                Schritte, Aktivität und Gewicht lesen — Mahlzeiten und Wasser zurückschreiben.
-              </p>
-            </div>
-            <button
-              type="button"
-              className={healthOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
-              aria-pressed={healthOn}
-              onClick={toggleHealth}
-            >
-              {healthOn ? 'An' : 'Aus'}
-            </button>
-          </div>
-          {healthOn && activityBudget !== null && (
-            <div className="card water-card">
-              <div>
-                <strong>Aktivität aufs Budget anrechnen</strong>
-                <p className="muted" style={{ margin: 0 }}>
-                  Verbrannte Aktivitätskalorien erhöhen dein Tagesbudget.
-                </p>
-              </div>
-              <button
-                type="button"
-                className={activityBudget ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
-                aria-pressed={activityBudget}
-                onClick={toggleActivityBudget}
-              >
-                {activityBudget ? 'An' : 'Aus'}
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {liveActivityAvailable() && (
-        <div className="card water-card">
-          <div>
-            <strong>Live Activity</strong>
-            <p className="muted" style={{ margin: 0 }}>
-              Tagesbilanz auf Sperrbildschirm und Dynamic Island, aktualisiert bei jedem Log.
-            </p>
-          </div>
-          <button
-            type="button"
-            className={liveActivityOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
-            aria-pressed={liveActivityOn}
-            onClick={toggleLiveActivity}
-          >
-            {liveActivityOn ? 'An' : 'Aus'}
-          </button>
-        </div>
       )}
 
       {accounts !== null && accounts.length > 0 && mirror !== null && (
@@ -369,9 +398,9 @@ export function AccountsPage() {
         </div>
       )}
 
-      <div className="card pad-lg">
-        <h2 className="section-title">Konto verknüpfen</h2>
-        <form className="stack" style={{ marginTop: '0.6rem' }} onSubmit={(e) => { void handleLink(e) }}>
+      <div className="card pad-lg stack">
+        <strong>Konto verknüpfen</strong>
+        <form className="stack" onSubmit={(e) => { void handleLink(e) }}>
           <div className="field">
             <label htmlFor="link-label">Bezeichnung</label>
             <input
@@ -416,30 +445,11 @@ export function AccountsPage() {
         </form>
       </div>
 
-      <div className="card stack">
-        <h2 className="section-title">Teilen &amp; Import</h2>
-        <p className="muted">
-          Blende die Anleitung zum Teilen aus Instagram (iPhone-Kurzbefehl) auf der Rezepte-Seite wieder ein.
-        </p>
-        {hintReenabled ? (
-          <p className="banner success">
-            <IconCheck />
-            <span className="banner-text">Wird auf der Rezepte-Seite (am iPhone) wieder angezeigt.</span>
-          </p>
-        ) : (
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ alignSelf: 'flex-start' }}
-            onClick={() => { void reenableHint() }}
-          >
-            <IconShare /> Teilen-Anleitung erneut anzeigen
-          </button>
-        )}
-      </div>
+      {/* ---- App -------------------------------------------------------- */}
+      <h2 className="section-title">App</h2>
 
       <div className="card stack">
-        <h2 className="section-title"><IconCart /> Einkaufsliste</h2>
+        <strong><IconCart /> Einkaufsliste</strong>
         <p className="muted">
           Format, in dem die Zutaten eines Rezepts für die Einkaufsliste kopiert werden.
         </p>
@@ -461,6 +471,28 @@ export function AccountsPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="card stack">
+        <strong>Teilen &amp; Import</strong>
+        <p className="muted">
+          Blende die Anleitung zum Teilen aus Instagram (iPhone-Kurzbefehl) auf der Rezepte-Seite wieder ein.
+        </p>
+        {hintReenabled ? (
+          <p className="banner success">
+            <IconCheck />
+            <span className="banner-text">Wird auf der Rezepte-Seite (am iPhone) wieder angezeigt.</span>
+          </p>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ alignSelf: 'flex-start' }}
+            onClick={() => { void reenableHint() }}
+          >
+            <IconShare /> Teilen-Anleitung erneut anzeigen
+          </button>
+        )}
       </div>
     </div>
   )

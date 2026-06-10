@@ -56,6 +56,71 @@
   --tabbar-h: 68px;
 }
 
+/* ---- Dunkelmodus (Waldgrün-Anthrazit) ------------------------------------ */
+:root[data-theme='dark'] {
+  --bg: #181d1a;
+  --surface: #1f2622;
+  --surface-2: #29322c;
+  --surface-3: #333d36;
+  --ink: #ecf1ed;
+  --ink-2: #a3b3a9;
+  --ink-3: #76857b;
+  --line: #2e3831;
+  --line-2: #3a463e;
+
+  --primary: #35865c;
+  --primary-600: #79c498;
+  --primary-700: #8ccfa8;
+  --primary-100: #24382c;
+  --primary-050: #1f3026;
+
+  --coral: #ef8a64;
+  --coral-100: #3d2a22;
+  --amber: #e0b35c;
+  --amber-100: #3b3322;
+  --teal: #5fb3a9;
+  --teal-100: #20332f;
+  --gold: #dca53a;
+
+  --danger: #e0685c;
+  --danger-100: #3d2624;
+
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.25);
+  --sh-2: 0 10px 26px -12px rgba(0, 0, 0, 0.55);
+  --sh-3: 0 24px 50px -20px rgba(0, 0, 0, 0.7);
+  --ring: 0 0 0 4px rgba(121, 196, 152, 0.22);
+}
+
+:root[data-theme='dark'] body {
+  background-image:
+    radial-gradient(120% 80% at 100% -10%, rgba(226, 106, 63, 0.06), transparent 60%),
+    radial-gradient(110% 70% at -10% 0%, rgba(70, 160, 110, 0.07), transparent 55%);
+}
+:root[data-theme='dark'] body::before { opacity: 0.05; }
+
+/* Grün-Verläufe nutzen im Hellmodus --primary-700 als dunkles Ende; im
+   Dunkelmodus ist 700 eine helle TEXT-Farbe — feste dunkle Verläufe statt
+   Token-Missbrauch. Außerdem: kein weißer Fokus-Hintergrund. */
+:root[data-theme='dark'] input:focus,
+:root[data-theme='dark'] textarea:focus,
+:root[data-theme='dark'] select:focus { background: var(--surface); }
+:root[data-theme='dark'] .btn-primary {
+  background: linear-gradient(160deg, #35865c 5%, #2a6b4a);
+}
+:root[data-theme='dark'] .btn-primary:hover {
+  background: linear-gradient(160deg, #2a6b4a, #1f5839);
+}
+:root[data-theme='dark'] .totals {
+  background: linear-gradient(155deg, #2a6b4a 0%, #1d4732 95%);
+}
+:root[data-theme='dark'] .brand .leaf,
+:root[data-theme='dark'] .auth-brand .leaf {
+  background: linear-gradient(150deg, #35865c 10%, #1f5839);
+}
+:root[data-theme='dark'] .ob-plan-card {
+  background: linear-gradient(150deg, #2a6b4a, #1d4732);
+}
+
 /* ---- Reset --------------------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; }
 

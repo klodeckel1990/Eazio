@@ -2,6 +2,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles.css'
 import { App } from './App'
+import { initTheme } from './lib/theme'
+
+initTheme() // Erscheinungsbild vor dem ersten Paint auflösen
 
 // Auto-updating service worker (precached shell + offline read caches).
 // Only on http(s): inside the Capacitor shell (capacitor:// scheme) service
