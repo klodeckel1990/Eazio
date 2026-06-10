@@ -52,12 +52,18 @@ export function TrackerPage() {
     setMatching(true)
     try {
       const res = await api.foods.match(text)
-      setLines(res.lines)
-      setKeys(res.lines.map(() => nextKey()))
-      setRows(res.lines.map((l) => ({
-        foodId: l.selectedFoodId ?? l.candidates[0]?.id ?? '',
-        grams: l.suggestedAmountG,
-      })))
+      // append to whatever is already staged (e.g. gescannte Produkte) —
+      // the list only empties on Loggen, manuelles Entfernen oder Leeren
+      setLines((prev) => [...prev, ...res.lines])
+      setKeys((prev) => [...prev, ...res.lines.map(() => nextKey())])
+      setRows((prev) => [
+        ...prev,
+        ...res.lines.map((l) => ({
+          foodId: l.selectedFoodId ?? l.candidates[0]?.id ?? '',
+          grams: l.suggestedAmountG,
+        })),
+      ])
+      setText('') // matched — das Feld ist frei für weitere Zutaten
     } catch (e) {
       if (e instanceof ApiError) setError(e.message)
       else throw e
@@ -103,6 +109,12 @@ export function TrackerPage() {
         setError('Scan fehlgeschlagen.')
       }
     }
+  }
+
+  const handleReset = () => {
+    setLines([])
+    setRows([])
+    setKeys([])
   }
 
   const handleRowChange = (index: number, value: RowState) => {
@@ -354,7 +366,17 @@ export function TrackerPage() {
             </div>
           </div>
 
-          <h2 className="section-title">Zutaten</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 className="section-title">Zutaten</h2>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={handleReset}
+              aria-label="Liste leeren"
+            >
+              <IconClose /> Leeren
+            </button>
+          </div>
           <div className="stack">
             {lines.map((line, i) => (
               <FoodRow
