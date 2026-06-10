@@ -123,7 +123,7 @@ const SEASONINGS = new Set([
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
-  'saffron', 'turmeric', 'cardamom', 'allspice', 'anise',
+  'saffron', 'turmeric', 'cardamom', 'allspice', 'anise', 'cayenne',
 ])
 
 // Prep notes whose amount is negligible and unknowable: greasing the tin,
@@ -160,6 +160,8 @@ export function isSeasoning(name: string): boolean {
   const normalized = normalizeName(name)
   // Currypaste/-sauce ist kalorisch relevant — nicht über das Token 'curry' skippen
   if (/\bcurry[ -]?(paste|sauce|soße|sosse)\b/.test(normalized)) return false
+  // dill pickles sind Gewürzgurken, kein Dill-Kraut
+  if (/\bdill pickles?\b/.test(normalized)) return false
   // mehrwortige englische Pfeffer-Formen (bare 'pepper' wäre bell pepper)
   if (/\b(black|white|ground|cracked) pepper\b/.test(normalized)) return true
   if (/\bbay (leaf|leaves)\b/.test(normalized)) return true

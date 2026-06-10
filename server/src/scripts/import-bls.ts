@@ -169,6 +169,7 @@ const STAPLE_MATCHES: Record<string, string> = {
   mungobohnensprossen: 'Mungbohnensprossen/Mungbohnenkeimlinge, roh',
   rucola: 'Rucola roh',
   'coconut oil': 'Kokosöl',
+  'pinto beans': 'Kidneybohne reif, Konserve, abgetropft',
   kokosol: 'Kokosöl',
   raucherbauch: 'Schwein Bauch (wie gewachsen) Rohpökelware',
   // englische Grundbegriffe (Allrecipes/Serious Eats/Cookpad)

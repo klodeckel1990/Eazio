@@ -46,10 +46,11 @@ const MIXED = /^(\d+)\s+(?:(\d+)\/(\d+)|(½)|(¼)|(¾))\s+(.*)$/
 // bare fractions beyond the German word list ("2/3 cup milk")
 const FRAC = /^(\d+)\/(\d+)\s+(.*)$/
 // canned-goods weight in parens: "1 (28 ounce) can crushed tomatoes" → 794 g
-const CANNED = /^(\d+(?:[.,]\d+)?)\s*\((\d+(?:[.,]\d+)?)\s*-?\s*(ounce|ounces|oz|pound|pounds|lb|g|gramm|ml|l)\.?\)\s*(?:can|cans|dose|dosen|glas|packung|package|jar|tin)?s?\s*(.*)$/i
+const CANNED = /^(\d+(?:[.,]\d+)?)\s*\((\d+(?:[.,]\d+)?)\s*-?\s*(fluid ounces?|fl\.? ?oz|ounce|ounces|oz|pound|pounds|lb|g|gramm|ml|l)\.?\)\s*(?:can|cans|dose|dosen|glas|packung|package|jar|tin)?s?\s*(.*)$/i
 const CAN_FACTORS: Record<string, number> = {
   ounce: 28.35, ounces: 28.35, oz: 28.35, pound: 453.6, pounds: 453.6, lb: 453.6,
   g: 1, gramm: 1, ml: 1, l: 1000,
+  'fluid ounce': 29.57, 'fluid ounces': 29.57, 'fl oz': 29.57, 'fl. oz': 29.57, 'floz': 29.57,
 }
 const LEADING = new RegExp(`^${NUM}\\s*([a-zà-ÿ]+)?\\s*(.*)$`, 'i')
 const TRAILING = new RegExp(`^(.*?)\\s+${NUM}\\s*([a-zà-ÿ]+)?\\s*$`, 'i')
