@@ -1,11 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { registerSW } from 'virtual:pwa-register'
 import './styles.css'
 import { App } from './App'
 
-// auto-updating service worker: precached shell + offline read caches
-registerSW({ immediate: true })
+// Auto-updating service worker (precached shell + offline read caches).
+// Only on http(s): inside the Capacitor shell (capacitor:// scheme) service
+// workers are unsupported and registration breaks the boot. Dynamic import
+// keeps every SW byte out of the native startup path.
+if (location.protocol === 'http:' || location.protocol === 'https:') {
+  void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }))
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
