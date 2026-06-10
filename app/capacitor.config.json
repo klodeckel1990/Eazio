@@ -1,0 +1,11 @@
+{
+  "appId": "de.tellerwert.app",
+  "appName": "Tellerwert",
+  "webDir": "../web/dist",
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
