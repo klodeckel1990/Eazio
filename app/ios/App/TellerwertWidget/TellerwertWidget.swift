@@ -15,10 +15,12 @@ struct DaySummary: Codable {
     let waterMl: Int
     let waterTargetMl: Int
     let streak: Int
+    let steps: Int?
 
     static let sample = DaySummary(
         date: "2026-06-10", kcalTarget: 2000, kcalConsumed: 1430, kcalRemaining: 570,
-        protein: 82, fat: 50, carbs: 140, waterMl: 1250, waterTargetMl: 2000, streak: 12
+        protein: 82, fat: 50, carbs: 140, waterMl: 1250, waterTargetMl: 2000, streak: 12,
+        steps: 6480
     )
 }
 
@@ -153,6 +155,21 @@ struct StreakBadge: View {
     }
 }
 
+struct StepsBadge: View {
+    let steps: Int?
+    var body: some View {
+        if let steps, steps > 0 {
+            HStack(spacing: 3) {
+                Image(systemName: "figure.walk").font(.caption2)
+                Text(steps.formatted(.number.grouping(.automatic)))
+                    .font(.caption.weight(.bold))
+                    .monospacedDigit()
+            }
+            .foregroundStyle(TW.green)
+        }
+    }
+}
+
 struct MacroRow: View {
     let label: String
     let value: Double
@@ -244,17 +261,31 @@ struct TellerwertWidgetView: View {
             KcalRing(summary: s, lineWidth: 10)
                 .frame(maxWidth: 110)
             VStack(alignment: .leading, spacing: 5) {
-                HStack {
+                HStack(spacing: 8) {
                     Text("Heute")
                         .font(.system(.subheadline, design: .serif).weight(.semibold))
                         .foregroundStyle(TW.ink)
                     Spacer()
+                    StepsBadge(steps: s.steps)
                     StreakBadge(streak: s.streak)
                 }
                 MacroRow(label: "Kohlenhydrate", value: s.carbs, color: TW.amber)
                 MacroRow(label: "Protein", value: s.protein, color: TW.green)
                 MacroRow(label: "Fett", value: s.fat, color: TW.teal)
-                WaterBar(summary: s)
+                HStack(alignment: .bottom, spacing: 8) {
+                    WaterBar(summary: s)
+                    Button(intent: AddWaterIntent(ml: 250)) {
+                        HStack(spacing: 2) {
+                            Image(systemName: "drop.fill").font(.caption2)
+                            Text("+250").font(.caption2.weight(.bold)).monospacedDigit()
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(TW.teal.opacity(0.16), in: Capsule())
+                        .foregroundStyle(TW.teal)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }

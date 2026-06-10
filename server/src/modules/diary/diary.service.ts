@@ -287,6 +287,7 @@ export interface WidgetSummary {
   waterMl: number
   waterTargetMl: number
   streak: number
+  steps: number | null
 }
 
 /** Compact payload for home-screen widgets — a handful of indexed queries. */
@@ -312,5 +313,6 @@ export function getWidgetSummary(db: DB, userId: string, date?: string): WidgetS
     waterMl: dayWaterTotal(db, userId, d),
     waterTargetMl: goals.waterMl,
     streak: streak.currentStreak,
+    steps: activityRow?.steps ?? null,
   }
 }
