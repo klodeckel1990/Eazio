@@ -1139,11 +1139,14 @@ input[type='search']:focus {
 .recipe-card:active { transform: scale(0.985); }
 .recipe-card:focus-visible { outline: none; box-shadow: var(--ring); }
 
-.recipe-card .thumb { position: relative; aspect-ratio: 4 / 3; background: var(--surface-2); }
-.recipe-card .thumb img { width: 100%; object-fit: cover; display: block; }
+/* KEIN aspect-ratio auf .thumb: Mobile-WebKit dimensioniert das %-breite
+   Bild darunter sonst an der Viewport-Höhe (Bug-Repro: /tmp/masonry-test).
+   Bilder rendern in natürlichem Seitenverhältnis, der Platzhalter bringt
+   sein 4:3 selbst mit. */
+.recipe-card .thumb { position: relative; background: var(--surface-2); }
+.recipe-card .thumb img { width: 100%; max-width: 100%; height: auto; display: block; }
 .thumb-ph {
-  position: absolute;
-  inset: 0;
+  aspect-ratio: 4 / 3;
   display: grid;
   place-items: center;
   color: var(--primary);
