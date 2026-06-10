@@ -39,7 +39,8 @@ export interface HistoryClient {
     getConsumedItems: (opts: { date: Date }) => Promise<{ products: ConsumedProduct[] }>
   }
   products: {
-    get: (opts: { id: string }) => Promise<ProductDetails>
+    // plain string id — an options object turns into /products/[object Object]
+    get: (id: string) => Promise<ProductDetails>
   }
 }
 
@@ -94,7 +95,7 @@ export async function importYazioHistory(
   const productCache = new Map<string, ProductDetails | null>()
   const getProduct = async (id: string): Promise<ProductDetails | null> => {
     if (!productCache.has(id)) {
-      productCache.set(id, await client.products.get({ id }).catch(() => null))
+      productCache.set(id, await client.products.get(id).catch(() => null))
     }
     return productCache.get(id)!
   }

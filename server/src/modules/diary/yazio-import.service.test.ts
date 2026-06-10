@@ -12,7 +12,7 @@ const today = dateInTz(new Date(), env.TZ)
 const yesterday = previousDay(today)
 
 function fakeClient(byDate: Record<string, { id: string; product_id: string; daytime: string; amount: number }[]>) {
-  const productsGet = vi.fn(async ({ id }: { id: string }) => {
+  const productsGet = vi.fn(async (id: string) => {
     if (id === 'p-dead') throw new Error('product gone')
     return {
       name: `Produkt ${id}`,
