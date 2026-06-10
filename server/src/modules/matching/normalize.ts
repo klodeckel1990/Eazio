@@ -72,6 +72,22 @@ const SEASONINGS = new Set([
   'schnittlauch', 'dill', 'estragon', 'kerbel', 'minze', 'pfefferminze', 'bohnenkraut', 'kresse',
 ])
 
+// Prep notes whose amount is negligible and unknowable: greasing the tin,
+// flouring the work surface, dusting. NOT "zum Braten/Ausbacken" — frying fat
+// is largely consumed and belongs in the diary.
+const PREP_NOTE = new RegExp(
+  [
+    'fur (die |das |eine )?(form|backform|kastenform|springform|kuchenform|muffinform|auflaufform|blech|backblech|pfanne|arbeitsflache|arbeitsplatte)',
+    'zum (einfetten|ausfetten|befetten|fetten|bemehlen|bestauben|ausstauben|bestreuen der form)',
+  ].join('|'),
+)
+
+/** True for negligible prep notes ("etwas Butter für die Form", "Mehl zum
+ *  Bestäuben") — skipped like seasonings instead of defaulting to 100 g. */
+export function isPrepNote(name: string): boolean {
+  return PREP_NOTE.test(normalizeName(name))
+}
+
 /** True if the ingredient name is a pure seasoning/spice (any whole word matches
  *  the curated list). Ambiguous foods like "Paprika" or "Knoblauch" return false. */
 export function isSeasoning(name: string): boolean {

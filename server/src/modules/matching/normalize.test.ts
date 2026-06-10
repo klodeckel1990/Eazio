@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeName, buildSearchQuery, isSeasoning } from './normalize.js'
+import { normalizeName, buildSearchQuery, isPrepNote, isSeasoning } from './normalize.js'
 
 describe('normalizeName', () => {
   it('lowercases, strips accents, collapses whitespace', () => {
@@ -44,5 +44,22 @@ describe('isSeasoning', () => {
     expect(isSeasoning('Knoblauch')).toBe(false)
     expect(isSeasoning('Salzkartoffeln')).toBe(false)
     expect(isSeasoning('Haferflocken')).toBe(false)
+  })
+})
+
+describe('isPrepNote', () => {
+  it('flags negligible greasing/dusting notes', () => {
+    expect(isPrepNote('etwas Butter für die Form')).toBe(true)
+    expect(isPrepNote('Butter für die Springform')).toBe(true)
+    expect(isPrepNote('Öl zum Einfetten')).toBe(true)
+    expect(isPrepNote('Mehl für die Arbeitsfläche')).toBe(true)
+    expect(isPrepNote('Mehl zum Bestäuben')).toBe(true)
+  })
+
+  it('keeps consumed fats and regular ingredients', () => {
+    expect(isPrepNote('Öl zum Braten')).toBe(false)
+    expect(isPrepNote('Butterschmalz zum Ausbacken')).toBe(false)
+    expect(isPrepNote('100 g weiche Butter')).toBe(false)
+    expect(isPrepNote('Butter')).toBe(false)
   })
 })
