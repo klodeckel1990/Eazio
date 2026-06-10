@@ -1579,6 +1579,9 @@ input[type='search']:focus {
 .cal-sheet {
   width: 100%;
   max-width: 520px;
+  max-height: calc(100dvh - max(1.5rem, env(safe-area-inset-top)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   box-shadow: var(--sh-3);
