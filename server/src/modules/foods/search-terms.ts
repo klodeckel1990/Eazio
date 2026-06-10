@@ -142,6 +142,9 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /bratwurst-grundbraet|^bratwurst/, terms: 'bratwurstbraet braet' },
   { match: /^gouda 48/, terms: 'goudakaese gouda' },
   { match: /^kokos fruchtfleisch, geraspelt/, terms: 'kokosraspel kokosraspeln kokosflocken' },
+  { match: /^rind gulasch/, terms: 'rindergulasch gulasch beef stew meat schmorfleisch' },
+  { match: /^tahin/, terms: 'tahini sesammus sesampaste' },
+  { match: /^rindfleischbruehe/, terms: 'rinderbruehe beef broth stock' },
 ]
 
 export function foldGerman(text: string): string {

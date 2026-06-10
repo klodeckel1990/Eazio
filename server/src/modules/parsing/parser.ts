@@ -18,7 +18,7 @@ const KNOWN_UNITS = new Set([
   'cup', 'cups', 'tsp', 'teaspoon', 'teaspoons', 'tbsp', 'tablespoon', 'tablespoons',
   'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces',
   'clove', 'cloves', 'slice', 'slices', 'can', 'cans', 'stick', 'sticks', 'pinch',
-  'pint', 'pints', 'quart', 'quarts',
+  'pint', 'pints', 'quart', 'quarts', 'dash', 'stalk', 'stalks',
 ])
 
 // Recipe-site abbreviations → the canonical unit word the rest of the pipeline
@@ -31,7 +31,7 @@ const UNIT_ALIASES: Record<string, string> = {
   lbs: 'lb', pound: 'lb', pounds: 'lb', ounce: 'oz', ounces: 'oz',
   clove: 'zehe', cloves: 'zehe', slice: 'scheibe', slices: 'scheibe',
   can: 'dose', cans: 'dose', sticks: 'stick', pinch: 'prise',
-  pints: 'pint', quarts: 'quart',
+  pints: 'pint', quarts: 'quart', dash: 'prise', stalk: 'stange', stalks: 'stange',
 }
 const canonicalUnit = (u: string): string => UNIT_ALIASES[u] ?? u
 
