@@ -102,6 +102,16 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^weinessig/, terms: 'weissweinessig rotweinessig' },
   { match: /^reis parboiled/, terms: 'basmatireis basmati' },
   { match: /^kartoffel (geschaelt|ungeschaelt), roh/, terms: 'kartoffeln fruehkartoffeln' },
+  // Audit v3
+  { match: /^broccoli/, terms: 'brokkoli' },
+  { match: /^lachs roh$/, terms: 'lachsfilet salmon' },
+  { match: /^sojasauce/, terms: 'soy sauce teriyaki' },
+  { match: /^teigwaren eifrei, roh$/, terms: 'nudeln nudel pasta spaghetti fusilli penne makkaroni spirelli' },
+  { match: /^rind filet\/lende, roh/, terms: 'rinderfilet beef filet' },
+  { match: /^schwein bauch \(wie gewachsen\) roh/, terms: 'schweinebauch pork belly' },
+  { match: /^zucker braun/, terms: 'brauner zucker rohrzucker brown sugar' },
+  { match: /^haehnchen (ober|unter)schenkel, mit haut, roh/, terms: 'haehnchenschenkel haehnchenkeule chicken thigh thighs' },
+  { match: /^schwein kochschinken/, terms: 'gekochter schinken kochschinken ham' },
 ]
 
 export function foldGerman(text: string): string {
@@ -176,6 +186,9 @@ export function buildFtsQuery(input: string): string | null {
     const prefix = (s: string) => `${exact(s)}*`
     const folded = foldGerman(t)
     const variants = new Set<string>([t, folded, ...depluralize(t), ...depluralize(folded)])
+    // Soße/Sauce-Schreibweisen gegenseitig auffindbar machen
+    if (folded.includes('sosse')) variants.add(folded.replace('sosse', 'sauce'))
+    if (folded.includes('sauce')) variants.add(folded.replace('sauce', 'sosse'))
     const alts: string[] = []
     for (const v of variants) {
       alts.push(exact(v), prefix(v))

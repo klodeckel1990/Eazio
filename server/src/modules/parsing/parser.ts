@@ -38,6 +38,8 @@ const NUM = String.raw`(\d+(?:[.,]\d+)?)`
 // quantity ranges ("2-3 EL Öl") → midpoint; without this the "-3" leaks into
 // the ingredient name and poisons search queries and cache keys
 const RANGE = new RegExp(`^${NUM}\\s*[-–—]\\s*${NUM}\\s+(.*)$`)
+// mixed numbers ("1 1/2 cups flour", "2 ½ EL") → decimal quantity
+const MIXED = /^(\d+)\s+(?:(\d+)\/(\d+)|(½)|(¼)|(¾))\s+(.*)$/
 const LEADING = new RegExp(`^${NUM}\\s*([a-zà-ÿ]+)?\\s*(.*)$`, 'i')
 const TRAILING = new RegExp(`^(.*?)\\s+${NUM}\\s*([a-zà-ÿ]+)?\\s*$`, 'i')
 
@@ -121,6 +123,15 @@ export function parseLine(raw: string): ParsedLine {
   if (range) {
     const mid = (num(range[1]!) + num(range[2]!)) / 2
     chunk = `${String(mid).replace('.', ',')} ${range[3]!}`
+  }
+
+  const mixed = MIXED.exec(chunk)
+  if (mixed) {
+    const frac = mixed[2]
+      ? Number(mixed[2]) / Number(mixed[3])
+      : mixed[4] ? 0.5 : mixed[5] ? 0.25 : 0.75
+    const qty = Number(mixed[1]) + frac
+    chunk = `${String(qty).replace('.', ',')} ${mixed[7]!}`
   }
 
   for (const [pattern, qty] of FRACTIONS) {

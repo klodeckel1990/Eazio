@@ -105,7 +105,9 @@ function alreadyTracked(db: DB, userId: string, consumedId: string): boolean {
     .where(
       and(
         eq(diaryEntries.userId, userId),
-        sql`(${diaryEntries.originRefId} = ${consumedId} OR ${diaryEntries.mirrorJson} LIKE '%' || ${consumedId} || '%')`,
+        // strukturell statt Substring — eine zufällige UUID, die die ID als
+        // Teilstring enthält, darf keinen False-Positive-Skip auslösen
+        sql`(${diaryEntries.originRefId} = ${consumedId} OR ${diaryEntries.mirrorJson} LIKE '%"consumedId":"' || ${consumedId} || '"%')`,
       ),
     )
     .limit(1)

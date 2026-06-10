@@ -24,6 +24,10 @@ describe('ingredient parser', () => {
     ['1 pound ground beef', { qty: 1, unit: 'lb', name: 'ground beef' }],
     ['16 ounces ricotta cheese', { qty: 16, unit: 'oz', name: 'ricotta cheese' }],
     ['2 cloves garlic', { qty: 2, unit: 'zehe', name: 'garlic' }],
+    // gemischte Brüche
+    ['1 1/2 cups all-purpose flour', { qty: 1.5, unit: 'cup', name: 'all-purpose flour' }],
+    ['1 1/4 cups milk', { qty: 1.25, unit: 'cup', name: 'milk' }],
+    ['2 ½ EL Zucker', { qty: 2.5, unit: 'el', name: 'Zucker' }],
   ])('parses %s', (input, expected) => {
     const p = parseLine(input)
     expect({ qty: p.qty, unit: p.unit, name: p.name }).toEqual(expected)

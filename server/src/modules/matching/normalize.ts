@@ -46,6 +46,10 @@ const QUALIFIERS = new Set([
   'rinsed', 'beaten', 'dried', 'fresh', 'freshly', 'large', 'medium', 'small',
   'whole', 'ripe', 'lean', 'boneless', 'skinless', 'unsalted', 'salted',
   'granulated', 'kosher',
+  'pitted', 'juiced', 'halved', 'quartered', 'seeded', 'deseeded', 'stemmed',
+  'trimmed', 'cored', 'shredded', 'cubed', 'crumbled', 'zested', 'roughly',
+  'finely', 'thinly', 'coarsely', 'lightly', 'firmly', 'loosely',
+  'und', 'and', 'of', 'plus', 'extra', 'more', 'to', 'taste',
 ])
 
 /** True wenn der Name NUR aus Qualifier-Wörtern besteht — Geister-Zeilen aus
@@ -106,6 +110,8 @@ const SEASONINGS = new Set([
   'kamillenblute', 'kamillenbluten', 'rosmarinnadeln', 'selleriesalz', 'knoblauchgranulat',
   'zitronenmelisse', 'melisse', 'zitronenschale', 'orangenschale', 'zitronenabrieb',
   'orangenabrieb', 'rauchsalz', 'gurkenwasser', 'spargelschalen', 'shisokresse',
+  'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
+  'matchapulver', 'daikonkresse',
   // englisch
   'salt', 'pepper', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
