@@ -20,7 +20,8 @@ interface ConsumedProduct {
   product_id: string
   date: string
   daytime: Daytime
-  amount: number
+  /** grams; null for purely serving-based entries */
+  amount: number | null
   serving: string | null
   serving_quantity: number | null
 }
@@ -34,7 +35,8 @@ interface ProductDetails {
 
 export interface HistoryClient {
   user: {
-    getConsumedItems: (opts: { date: string }) => Promise<{ products: ConsumedProduct[] }>
+    // the yazio lib validates `date` as a real Date object (zod), not a string
+    getConsumedItems: (opts: { date: Date }) => Promise<{ products: ConsumedProduct[] }>
   }
   products: {
     get: (opts: { id: string }) => Promise<ProductDetails>
@@ -105,11 +107,13 @@ export async function importYazioHistory(
       result.daysSkipped++
       continue
     }
-    const { products } = await client.user.getConsumedItems({ date })
+    // noon avoids any UTC/local off-by-one when the lib formats the date
+    const { products } = await client.user.getConsumedItems({ date: new Date(`${date}T12:00:00`) })
     if (products.length === 0) continue
 
     const rows: NewDiaryEntry[] = []
     for (const item of products) {
+      if (item.amount === null || item.amount <= 0) continue // no gram amount — nutrients not computable
       const product = await getProduct(item.product_id)
       if (!product) continue // deleted/unreachable product — skip the line, not the day
       const n = product.nutrients

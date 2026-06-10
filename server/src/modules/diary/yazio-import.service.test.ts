@@ -22,14 +22,18 @@ function fakeClient(byDate: Record<string, { id: string; product_id: string; day
   })
   const client = {
     user: {
-      getConsumedItems: vi.fn(async ({ date }: { date: string }) => ({
-        products: (byDate[date] ?? []).map((p) => ({
-          ...p,
-          date,
-          serving: null,
-          serving_quantity: null,
-        })),
-      })),
+      getConsumedItems: vi.fn(async ({ date }: { date: Date }) => {
+        expect(date).toBeInstanceOf(Date) // the yazio lib rejects strings
+        const key = date.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+        return {
+          products: (byDate[key] ?? []).map((p) => ({
+            ...p,
+            date: key,
+            serving: null,
+            serving_quantity: null,
+          })),
+        }
+      }),
     },
     products: { get: productsGet },
   } as unknown as HistoryClient
@@ -74,6 +78,20 @@ describe('yazio history import', () => {
     expect(second.entriesImported).toBe(0)
     expect(second.daysSkipped).toBe(1) // only the day that actually has imported entries
     expect(listDayEntries(db, user.id, today)).toHaveLength(1)
+  })
+
+  it('skips serving-only items without a gram amount', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'imp-null', 'pw-123456')
+    const account = createAccount(db, user.id, 'Y', { username: 'a@b.de', password: 'x' })
+    const { client } = fakeClient({
+      [today]: [
+        { id: 'c1', product_id: 'p1', daytime: 'lunch', amount: null as unknown as number },
+        { id: 'c2', product_id: 'p1', daytime: 'lunch', amount: 80 },
+      ],
+    })
+    const result = await importYazioHistory(db, user.id, { accountId: account.id, days: 1 }, () => client)
+    expect(result.entriesImported).toBe(1)
   })
 
   it('skips lines whose product cannot be resolved', async () => {
