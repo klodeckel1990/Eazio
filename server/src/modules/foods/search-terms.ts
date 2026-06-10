@@ -14,7 +14,7 @@ const COMPOUND_HEADS = [
   'gemuese', 'joghurt', 'kaese', 'kartoffel', 'keule', 'kohl', 'kuchen',
   'kuerbis', 'lende', 'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudel',
   'nudeln', 'nuss', 'oel', 'paprika', 'pilz', 'pulver', 'quark', 'reis',
-  'kotelett', 'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse',
+  'konfituere', 'kotelett', 'kuvertuere', 'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse',
   'speck', 'spinat', 'suppe', 'tomate', 'traube', 'wurst', 'zucker', 'zwiebel',
 ]
 
@@ -45,7 +45,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /\bsojadrink/, terms: 'sojamilch' },
   { match: /\bmandeldrink/, terms: 'mandelmilch' },
   { match: /speisequark/, terms: 'quark magerquark' },
-  { match: /moehre|karotte/, terms: 'moehre möhre karotte wurzel' },
+  { match: /moehre|karotte/, terms: 'moehre möhre karotte wurzel gelbruebe gelbe ruebe carrot carrots' },
   { match: /gemuesepaprika/, terms: 'spitzpaprika paprika paprikaschote paprikaschoten schote' },
   { match: /^tomate roh$/, terms: 'kirschtomate cherrytomate cocktailtomate cherry romatomate' },
   { match: /^rind hackfleisch/, terms: 'rinderhack rinderhackfleisch hackfleisch hack' },
@@ -96,7 +96,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^milch (fettarm|entrahmt)/, terms: 'milk' },
   { match: /^butter (mild|gesalzen)/, terms: 'unsalted salted' },
   // Audit v2 Batch 2
-  { match: /^wirsing/, terms: 'wirsingkohl' },
+  { match: /^wirsing/, terms: 'wirsingkohl wirsingblatt wirsingblaetter' },
   { match: /^zuckererbse/, terms: 'zuckerschote zuckerschoten kaiserschote kaiserschoten' },
   { match: /^pistazie/, terms: 'pistazien pistazienkerne' },
   { match: /^weinessig/, terms: 'weissweinessig rotweinessig' },
@@ -145,6 +145,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^rind gulasch/, terms: 'rindergulasch gulasch beef stew meat schmorfleisch' },
   { match: /^tahin/, terms: 'tahini sesammus sesampaste' },
   { match: /^rindfleischbruehe/, terms: 'rinderbruehe beef broth stock' },
+  { match: /^hirsch fleisch, roh/, terms: 'hirschgulasch hirschfleisch venison' },
+  { match: /^sahnejoghurt mind\. 10 % fett$/, terms: 'griechischer joghurt greek yogurt' },
 ]
 
 export function foldGerman(text: string): string {

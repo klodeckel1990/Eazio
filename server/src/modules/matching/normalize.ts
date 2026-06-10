@@ -18,7 +18,9 @@ const QUALIFIERS = new Set([
   'roh', 'rohe', 'roher', 'gekocht', 'gekochte', 'gedunstet', 'gedunstete',
   'getrocknet', 'getrocknete', 'tiefgekuhlt', 'tiefgekuhlte', 'gefroren', 'gefrorene',
   'gemischt', 'gemischte', 'gemischter', 'geschrotet', 'geschrotete',
-  'gemahlen', 'gemahlene', 'gehackt', 'gehackte', 'gerieben', 'geriebene',
+  'gemahlen', 'gemahlene', 'gehackt', 'gehackte', 'gerieben', 'geriebene', 'geriebener',
+  'geschaelt', 'geschaelte', 'geschaelter', 'gewaschen', 'gewaschene', 'entkernt',
+  'entkernte', 'enthaeutet', 'ganz', 'ganze', 'ganzer', 'ganzes',
   'weich', 'weiche', 'weicher', 'weiches', 'zerlassen', 'zerlassene',
   'geschmolzen', 'geschmolzene', 'gewurfelt', 'gewurfelte', 'gedampft', 'gedampfte',
   'puriert', 'purierte', 'fein', 'feine', 'feiner', 'grob', 'grobe',
@@ -161,7 +163,7 @@ export function isSeasoning(name: string): boolean {
       for (const form of SPICE_FORMS) {
         if (tok.length > form.length + 2 && tok.endsWith(form)) {
           const head = tok.slice(0, -form.length)
-          if (SEASONINGS.has(head) || SEASONINGS.has(head.replace(/n$/, ''))) return true
+          if (SEASONINGS.has(head) || SEASONINGS.has(head.replace(/n$/, '')) || SEASONINGS.has(head + 'e')) return true
         }
       }
       return false

@@ -151,6 +151,8 @@ const STAPLE_MATCHES: Record<string, string> = {
   rindergulasch: 'Rind Gulasch (Bug) roh',
   'beef stew meat': 'Rind Gulasch (Bug) roh',
   'stew meat': 'Rind Gulasch (Bug) roh',
+  hirschgulasch: 'Hirsch Fleisch, roh',
+  'griechischer joghurt': 'Sahnejoghurt mind. 10 % Fett',
   tahini: 'Tahin (Sesammus)',
   tahin: 'Tahin (Sesammus)',
   rinderbruhe: 'Rindfleischbrühe Konserve',
