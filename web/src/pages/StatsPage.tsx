@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api, ApiError } from '../api/client'
 import type { StatsDay, StatsResult } from '../api/types'
 import { round } from '../lib/nutrition'
-import { IconAlert, IconChart, IconCheckCircle, IconDrop, IconFlame } from '../components/icons'
+import { IconAlert, IconChart, IconCheckCircle, IconDrop, IconFlame, IconScale, IconSteps } from '../components/icons'
 
 type Range = 7 | 14 | 30
 
@@ -112,6 +112,47 @@ function WaterChart({ days, target }: { days: StatsDay[]; target: number }) {
   )
 }
 
+function WeightChart({ days, goal }: { days: StatsDay[]; goal: number | null }) {
+  const h = 120
+  const pts = days
+    .map((d, i) => ({ i, w: d.weightKg }))
+    .filter((p): p is { i: number; w: number } => p.w !== null)
+  if (pts.length === 0) return null
+  const n = days.length
+  const x = (i: number) => (n === 1 ? W / 2 : (i / (n - 1)) * (W - 16) + 8)
+  const values = pts.map((p) => p.w)
+  const lo = Math.min(...values, goal ?? Infinity)
+  const hi = Math.max(...values, goal ?? -Infinity)
+  const pad = Math.max((hi - lo) * 0.25, 0.8)
+  const y = (w: number) => 14 + (h - 38) * (1 - (w - (lo - pad)) / (hi + pad - (lo - pad)))
+  const path = pts.map((p, k) => `${k === 0 ? 'M' : 'L'}${x(p.i).toFixed(1)},${y(p.w).toFixed(1)}`).join(' ')
+  const fmt = (w: number) => w.toLocaleString('de-DE', { maximumFractionDigits: 1 })
+
+  return (
+    <svg className="chart" viewBox={`0 0 ${W} ${h}`} role="img" aria-label="Gewicht im Verlauf">
+      {goal !== null && (
+        <>
+          <line x1={0} x2={W} y1={y(goal)} y2={y(goal)} className="chart-goal" />
+          <text x={W - 2} y={y(goal) - 5} textAnchor="end" className="chart-goal-label">Ziel {fmt(goal)} kg</text>
+        </>
+      )}
+      <path d={path} className="chart-weight-line" />
+      {pts.map((p, k) => (
+        <g key={p.i}>
+          <circle cx={x(p.i)} cy={y(p.w)} r={4} className="chart-weight-dot" />
+          {(k === 0 || k === pts.length - 1) && pts.length > 1 && (
+            <text
+              x={x(p.i)} y={y(p.w) - 9}
+              textAnchor={k === 0 ? 'start' : 'end'}
+              className="chart-weight-label"
+            >{fmt(p.w)}</text>
+          )}
+        </g>
+      ))}
+    </svg>
+  )
+}
+
 // ---- page -------------------------------------------------------------------
 
 export function StatsPage() {
@@ -192,6 +233,24 @@ export function StatsPage() {
           </div>
 
           <div className="stat-grid">
+            {stats.avg.steps !== null && (
+              <div className="stat-tile">
+                <span className="stat-ico steps"><IconSteps /></span>
+                <span className="stat-text">
+                  <span className="stat-val">{stats.avg.steps.toLocaleString('de-DE')}</span>
+                  <span className="stat-lbl">Schritte im Schnitt</span>
+                </span>
+              </div>
+            )}
+            {stats.avg.activeKcal !== null && (
+              <div className="stat-tile">
+                <span className="stat-ico flame"><IconFlame /></span>
+                <span className="stat-text">
+                  <span className="stat-val">{stats.avg.activeKcal.toLocaleString('de-DE')} kcal</span>
+                  <span className="stat-lbl">aktiv im Schnitt</span>
+                </span>
+              </div>
+            )}
             <div className="stat-tile">
               <span className="stat-ico steps"><IconCheckCircle /></span>
               <span className="stat-text">
@@ -265,6 +324,31 @@ export function StatsPage() {
             </div>
             <WaterChart days={stats.days} target={stats.goals.waterMl} />
           </div>
+
+          {(() => {
+            const weights = stats.days.filter((d) => d.weightKg !== null)
+            if (weights.length === 0) return null
+            const first = weights[0]!.weightKg!
+            const last = weights[weights.length - 1]!.weightKg!
+            const delta = Math.round((last - first) * 10) / 10
+            const deltaGood = stats.goals.goalType === 'gain' ? delta > 0 : delta < 0
+            return (
+              <div className="card stats-card">
+                <div className="stats-card-head">
+                  <h2><IconScale /> Gewicht</h2>
+                  <span className="stats-sel">
+                    <strong>{last.toLocaleString('de-DE', { maximumFractionDigits: 1 })} kg</strong>
+                    {weights.length > 1 && delta !== 0 && (
+                      <span className={deltaGood ? 'goal-hit' : 'goal-miss'}>
+                        {' '}{delta > 0 ? '+' : ''}{delta.toLocaleString('de-DE')} kg
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <WeightChart days={stats.days} goal={stats.goals.weightGoalKg} />
+              </div>
+            )
+          })()}
         </>
       )}
     </div>

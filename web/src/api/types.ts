@@ -221,13 +221,16 @@ export interface StatsDay {
   carbs: number
   waterMl: number
   entryCount: number
+  steps: number | null
+  activeKcal: number | null
+  weightKg: number | null
 }
 
 export interface StatsResult {
   days: StatsDay[]
   goals: Goals
   streak: Streak
-  avg: { kcal: number; protein: number; fat: number; carbs: number; waterMl: number }
+  avg: { kcal: number; protein: number; fat: number; carbs: number; waterMl: number; steps: number | null; activeKcal: number | null }
   daysLogged: number
 }
 
