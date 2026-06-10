@@ -36,6 +36,10 @@ const QUALIFIERS = new Set([
   'fettarm', 'fettarme', 'fettarmes', 'fettarmer',
   // Herkunfts-/Größen-Präfixe ("Bio-Zitrone", "Baby-Blattspinat")
   'bio', 'baby', 'jung', 'junge',
+  // Koch-/Farb-Eigenschaften — die KI sieht den vollen Namen und wählt die Variante
+  'festkochend', 'festkochende', 'mehligkochend', 'mehligkochende', 'vorwiegend',
+  'dunkel', 'dunkle', 'dunkler', 'dunkles', 'hell', 'helle', 'heller', 'helles',
+  'weiss', 'weisse', 'weisser', 'weisses',
   // englische Rezepte (Allrecipes, Serious Eats, …)
   'softened', 'melted', 'diced', 'crushed', 'minced', 'chopped', 'sliced',
   'peeled', 'grated', 'toasted', 'mashed', 'packed', 'divided', 'drained',
@@ -100,6 +104,8 @@ const SEASONINGS = new Set([
   // Audit-Funde: Aroma-/Gewürzformen ohne relevante Kalorien
   'vanilleschote', 'vanilleschoten', 'koriandersaat', 'kardamomkapsel', 'kardamomkapseln',
   'kamillenblute', 'kamillenbluten', 'rosmarinnadeln', 'selleriesalz', 'knoblauchgranulat',
+  'zitronenmelisse', 'melisse', 'zitronenschale', 'orangenschale', 'zitronenabrieb',
+  'orangenabrieb', 'rauchsalz', 'gurkenwasser', 'spargelschalen', 'shisokresse',
   // englisch
   'salt', 'pepper', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',

@@ -95,6 +95,13 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^speisezwiebel/, terms: 'rot rote onion onions' },
   { match: /^milch (fettarm|entrahmt)/, terms: 'milk' },
   { match: /^butter (mild|gesalzen)/, terms: 'unsalted salted' },
+  // Audit v2 Batch 2
+  { match: /^wirsing/, terms: 'wirsingkohl' },
+  { match: /^zuckererbse/, terms: 'zuckerschote zuckerschoten kaiserschote kaiserschoten' },
+  { match: /^pistazie/, terms: 'pistazien pistazienkerne' },
+  { match: /^weinessig/, terms: 'weissweinessig rotweinessig' },
+  { match: /^reis parboiled/, terms: 'basmatireis basmati' },
+  { match: /^kartoffel (geschaelt|ungeschaelt), roh/, terms: 'kartoffeln fruehkartoffeln' },
 ]
 
 export function foldGerman(text: string): string {
