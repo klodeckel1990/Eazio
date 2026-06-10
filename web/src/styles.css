@@ -350,7 +350,8 @@ select {
   width: 100%;
   padding: 0.7rem 0.85rem;
   font: inherit;
-  font-size: 0.97rem;
+  /* never below 16px: iOS WebViews zoom hard into focused smaller inputs */
+  font-size: 1rem;
   color: var(--ink);
   background: var(--surface);
   border: 1.5px solid var(--line-2);

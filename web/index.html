@@ -2,7 +2,12 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- max-scale/user-scalable tame the Capacitor WKWebView; Safari ignores
+         user-scalable for accessibility, so web pinch-zoom keeps working -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="description" content="Tellerwert – dein entspanntes Ernährungstagebuch." />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#fbf6ee" />

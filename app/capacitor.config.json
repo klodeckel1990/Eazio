@@ -2,6 +2,7 @@
   "appId": "de.tellerwert.app",
   "appName": "Tellerwert",
   "webDir": "../web/dist",
+  "backgroundColor": "#fbf6ee",
   "ios": {
     "contentInset": "automatic"
   },
