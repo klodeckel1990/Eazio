@@ -67,6 +67,55 @@ describe('yazio history import', () => {
     })
   })
 
+  it('imports recipe portions with fraction-of-total nutrients', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'imp-recipe', 'pw-123456')
+    const account = createAccount(db, user.id, 'Y', { username: 'a@b.de', password: 'x' })
+    const recipesGet = vi.fn(async () => ({
+      name: 'Bolo Auflauf',
+      portion_count: 4,
+      nutrients: { 'energy.energy': 2000, 'nutrient.protein': 120, 'nutrient.carb': 200, 'nutrient.fat': 80 },
+      servings: [{ amount: 800 }, { amount: 400 }],
+    }))
+    const client = {
+      user: {
+        getConsumedItems: vi.fn(async ({ date }: { date: Date }) => {
+          const key = date.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+          return {
+            products: [],
+            recipe_portions:
+              key === today
+                ? [
+                    { id: 'rp1', date: key, daytime: 'dinner', recipe_id: 'r1', portion_count: 2 },
+                    { id: 'rp2', date: key, daytime: 'lunch', recipe_id: 'r1', portion_count: 0.5 },
+                  ]
+                : [],
+          }
+        }),
+      },
+      products: { get: vi.fn() },
+      recipes: { get: recipesGet },
+    } as unknown as HistoryClient
+
+    const result = await importYazioHistory(db, user.id, { accountId: account.id, days: 2 }, () => client)
+    expect(result.entriesImported).toBe(2)
+    expect(recipesGet).toHaveBeenCalledTimes(1) // cached across portions
+
+    const entries = listDayEntries(db, user.id, today)
+    // 2 of 4 portions: half the recipe total, 600 g of 1200 g
+    expect(entries[0]).toMatchObject({
+      nameSnapshot: 'Bolo Auflauf',
+      kcal: 1000,
+      protein: 60,
+      amountG: 600,
+      servingLabel: 'Portion',
+      servingQuantity: 2,
+      origin: 'yazio_import',
+    })
+    // 0.5 of 4 portions: an eighth
+    expect(entries[1]).toMatchObject({ kcal: 250, amountG: 150 })
+  })
+
   it('is idempotent per day on a second run', async () => {
     const db = createTestDb()
     const user = await createUser(db, 'imp2', 'pw-123456')

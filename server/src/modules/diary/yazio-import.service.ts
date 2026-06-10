@@ -11,6 +11,7 @@ import type { DB } from '../../db/client.js'
 import { diaryEntries } from '../../db/schema.js'
 import { getAccount, getDefaultAccount, type AccountRecord } from '../accounts/accounts.repo.js'
 import { buildYazioClient } from '../yazio/client.js'
+import { buildRecipeFetcher, type RecipeFetcher, type YazioRecipeDetails } from '../yazio/recipes.js'
 import { dateInTz, type Daytime } from '../meals/daytime.js'
 import { previousDay } from './streak.js'
 import { insertEntries, type NewDiaryEntry } from './diary.repo.js'
@@ -26,6 +27,15 @@ interface ConsumedProduct {
   serving_quantity: number | null
 }
 
+interface ConsumedRecipePortion {
+  id: string
+  date: string
+  daytime: Daytime
+  recipe_id: string
+  /** portions eaten (0.5 = half a portion) */
+  portion_count: number
+}
+
 interface ProductDetails {
   name: string
   producer: string | null
@@ -36,18 +46,27 @@ interface ProductDetails {
 export interface HistoryClient {
   user: {
     // the yazio lib validates `date` as a real Date object (zod), not a string
-    getConsumedItems: (opts: { date: Date }) => Promise<{ products: ConsumedProduct[] }>
+    getConsumedItems: (opts: { date: Date }) => Promise<{
+      products: ConsumedProduct[]
+      recipe_portions: ConsumedRecipePortion[]
+    }>
   }
   products: {
     // plain string id — an options object turns into /products/[object Object]
     get: (id: string) => Promise<ProductDetails>
   }
+  /** recipes are not covered by the yazio package — raw v15 API fetcher */
+  recipes: {
+    get: RecipeFetcher
+  }
 }
 
 export type HistoryClientFactory = (db: DB, account: AccountRecord) => HistoryClient
 
-const defaultFactory: HistoryClientFactory = (db, account) =>
-  buildYazioClient(db, account) as unknown as HistoryClient
+const defaultFactory: HistoryClientFactory = (db, account) => {
+  const client = buildYazioClient(db, account) as unknown as Omit<HistoryClient, 'recipes'>
+  return { ...client, user: client.user, products: client.products, recipes: { get: buildRecipeFetcher(db, account) } }
+}
 
 export interface ImportResult {
   daysScanned: number
@@ -99,6 +118,13 @@ export async function importYazioHistory(
     }
     return productCache.get(id)!
   }
+  const recipeCache = new Map<string, YazioRecipeDetails | null>()
+  const getRecipe = async (id: string): Promise<YazioRecipeDetails | null> => {
+    if (!recipeCache.has(id)) {
+      recipeCache.set(id, await client.recipes.get(id).catch(() => null))
+    }
+    return recipeCache.get(id)!
+  }
 
   const result: ImportResult = { daysScanned: 0, daysSkipped: 0, entriesImported: 0 }
   let date = dateInTz(new Date(), env.TZ)
@@ -109,8 +135,10 @@ export async function importYazioHistory(
       continue
     }
     // noon avoids any UTC/local off-by-one when the lib formats the date
-    const { products } = await client.user.getConsumedItems({ date: new Date(`${date}T12:00:00`) })
-    if (products.length === 0) continue
+    const { products, recipe_portions: recipePortions = [] } = await client.user.getConsumedItems({
+      date: new Date(`${date}T12:00:00`),
+    })
+    if (products.length === 0 && recipePortions.length === 0) continue
 
     const rows: NewDiaryEntry[] = []
     for (const item of products) {
@@ -139,6 +167,40 @@ export async function importYazioHistory(
         originRefId: item.id,
         mirrorStatus: 'mirrored',
         mirrorJson: JSON.stringify({ accountId: account.id, consumedId: item.id, imported: true }),
+        createdAt: ts,
+        updatedAt: ts,
+      })
+    }
+    for (const item of recipePortions) {
+      if (!item.portion_count || item.portion_count <= 0) continue
+      const recipe = await getRecipe(item.recipe_id)
+      if (!recipe) continue // deleted/unreachable recipe — skip the line, not the day
+      // recipe.nutrients are the TOTAL of the ingredient list; portion_count
+      // says how many portions that total yields.
+      const fraction = item.portion_count / (recipe.portion_count || 1)
+      const n = recipe.nutrients
+      const totalG = (recipe.servings ?? []).reduce((s, sv) => s + (sv.amount ?? 0), 0)
+      const ts = Date.now()
+      rows.push({
+        id: randomUUID(),
+        userId,
+        date,
+        daytime: item.daytime,
+        foodId: null,
+        nameSnapshot: recipe.name,
+        amountG: totalG > 0 ? r1(totalG * fraction) : 1,
+        servingLabel: 'Portion',
+        servingQuantity: item.portion_count,
+        kcal: r1((n['energy.energy'] ?? 0) * fraction),
+        protein: r1((n['nutrient.protein'] ?? 0) * fraction),
+        fat: r1((n['nutrient.fat'] ?? 0) * fraction),
+        carbs: r1((n['nutrient.carb'] ?? 0) * fraction),
+        sugar: r1((n['nutrient.sugar'] ?? 0) * fraction),
+        fiber: r1((n['nutrient.dietaryfiber'] ?? 0) * fraction),
+        origin: 'yazio_import',
+        originRefId: item.id,
+        mirrorStatus: 'mirrored',
+        mirrorJson: JSON.stringify({ accountId: account.id, consumedId: item.id, imported: true, recipe: true }),
         createdAt: ts,
         updatedAt: ts,
       })
