@@ -394,8 +394,11 @@ export async function matchFoodText(
     const qtyFactor = normalizedUnit === 'serving' && line.qty ? line.qty : 1
     const perPiece =
       aliasDefaultG ?? p.pieceGrams ?? pickServingGrams(candidates[0]?.servings ?? [], line.unit)
+    // unquantified frying fat ("Öl zum Braten") ≈ 1 EL, not the 100 g default
+    const fryingFat =
+      line.qty === null && /zum (an|aus)?braten|zum frittieren|zum ausbacken/.test(normalizeName(line.name))
     const suggestedAmountG =
-      amountGrams ?? (perPiece !== null ? Math.round(perPiece * qtyFactor) : 100)
+      amountGrams ?? (perPiece !== null ? Math.round(perPiece * qtyFactor) : fryingFat ? 15 : 100)
 
     out.push({
       raw: line.raw,

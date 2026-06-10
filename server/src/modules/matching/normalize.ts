@@ -44,7 +44,10 @@ const QUALIFIERS = new Set([
  */
 export function buildSearchQuery(name: string): string {
   const firstAlternative = name.split(/\s+(?:oder|bzw\.?|alternativ)\s+/i)[0] ?? name
-  const kept = firstAlternative
+  // purpose clauses are not part of the product name: "Öl zum Braten" → "Öl"
+  // (otherwise FTS matches dishes/spreads whose NAME contains "zum Braten")
+  const withoutPurpose = firstAlternative.replace(/\s+(?:zum|zur|für|fuer)\s+.+$/i, '')
+  const kept = withoutPurpose
     .split(/\s+/)
     .map((tok) => tok.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
     .filter((tok) => tok.length > 0 && !QUALIFIERS.has(normalizeName(tok)))

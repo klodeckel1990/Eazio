@@ -47,6 +47,14 @@ describe('isSeasoning', () => {
   })
 })
 
+describe('purpose clauses in buildSearchQuery', () => {
+  it('strips "zum/für …" tails so the product term remains', () => {
+    expect(buildSearchQuery('Öl zum Braten')).toBe('Öl')
+    expect(buildSearchQuery('Schokolade zum Verzieren')).toBe('Schokolade')
+    expect(buildSearchQuery('Butterschmalz zum Ausbacken')).toBe('Butterschmalz')
+  })
+})
+
 describe('isPrepNote', () => {
   it('flags negligible greasing/dusting notes', () => {
     expect(isPrepNote('etwas Butter für die Form')).toBe(true)
