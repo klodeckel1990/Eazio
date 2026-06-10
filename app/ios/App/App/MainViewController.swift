@@ -17,6 +17,10 @@ class MainViewController: CAPBridgeViewController {
         let center = NotificationCenter.default
         center.addObserver(self, selector: #selector(syncTokenToKeychain),
                            name: UIApplication.didEnterBackgroundNotification, object: nil)
+        // also fires on the app-switcher peek, before didEnterBackground —
+        // the widget is fresh the moment the home screen becomes visible
+        center.addObserver(self, selector: #selector(syncTokenToKeychain),
+                           name: UIApplication.willResignActiveNotification, object: nil)
         center.addObserver(self, selector: #selector(consumePendingShare),
                            name: UIApplication.didBecomeActiveNotification, object: nil)
         center.addObserver(self, selector: #selector(consumePendingShare),

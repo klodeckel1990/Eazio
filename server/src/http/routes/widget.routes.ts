@@ -11,6 +11,6 @@ export function registerWidgetRoutes(app: FastifyInstance, db: DB): void {
     const { date } = z
       .object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() })
       .parse(req.query)
-    return reply.send(getWidgetSummary(db, req.user!.id, date))
+    return reply.header('cache-control', 'no-store').send(getWidgetSummary(db, req.user!.id, date))
   })
 }

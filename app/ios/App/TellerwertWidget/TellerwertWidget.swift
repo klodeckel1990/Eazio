@@ -76,7 +76,9 @@ struct SummaryProvider: TimelineProvider {
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 12
-        URLSession.shared.dataTask(with: request) { data, response, _ in
+        // a cached summary defeats the whole point of reloading the timeline
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        URLSession(configuration: .ephemeral).dataTask(with: request) { data, response, _ in
             if let http = response as? HTTPURLResponse, http.statusCode == 401 {
                 completion(SummaryEntry(date: .now, summary: nil, loggedIn: false))
                 return
