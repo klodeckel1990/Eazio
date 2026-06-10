@@ -28,7 +28,7 @@ const SYSTEM = `Du ordnest getippte Zutaten dem fachlich passenden Eintrag einer
 
 Du bekommst nummerierte Zutaten, jede mit nummerierten Kandidaten. Wähle pro Zutat den Kandidaten, der die Zutat ernährungsphysiologisch am besten repräsentiert:
 - Generische Entsprechungen sind richtig (Spitzpaprika → Gemüsepaprika; Hähnchen → Hähnchenbrustfilet).
-- Pure Grundbegriffe meinen die STANDARDVARIANTE: Milch → Kuhmilch/Vollmilch (3,5 %), Mehl → Weizenmehl Type 405, Ei → Hühnerei, Zucker → weißer Zucker, Reis → weißer Reis. Buttermilch, Maismehl, Wachtelei o. ä. sind dann FALSCH.
+- Pure Grundbegriffe meinen die STANDARDVARIANTE: Milch → Trinkmilch/Kuhmilch (gibt es keine Vollmilch, ist "Milch fettarm, 1,5 %" richtig), Mehl → Weizenmehl Type 405, Ei → Hühnerei, Zucker → weißer Zucker, Reis → weißer Reis. Buttermilch, Maismehl, Wachtelei, Gerichte MIT Milch o. ä. sind dann FALSCH.
 - Für pur genannte Zutaten das Grundprodukt (roh/natur) bevorzugen — niemals Gerichte, Wurst, Gebäck, Suppen oder Saucen daraus. Eine Zwiebel ist keine Zwiebelwurst, ein Ei kein Ei-Einlauf.
 - Fettstufen/Prozentangaben und Zusätze wie "mager"/"light" ernst nehmen und die passende Variante wählen.
 - Passt KEIN Kandidat: candidate = -1 und gib in query einen besseren deutschen Suchbegriff im Stil der Datenbank-Namen an (z. B. "Ei" → "Hühnerei", "Milch" → "Milch 3,5", "Mehl" → "Weizen Mehl"). Sonst query = "".

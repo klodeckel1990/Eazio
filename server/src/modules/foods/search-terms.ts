@@ -52,6 +52,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^speisezwiebel/, terms: 'zwiebel zwiebeln' },
   { match: /^huehnerei/, terms: 'ei eier' },
   { match: /^eier gekocht/, terms: 'ei' },
+  // BLS 4.0 kennt keine Vollmilch — die Trinkmilch-Einträge sichtbar machen
+  { match: /^milch (fettarm|entrahmt)/, terms: 'vollmilch kuhmilch trinkmilch frischmilch' },
   { match: /zuckermais/, terms: 'mais' },
   { match: /paprikaschote/, terms: 'paprika' },
 ]
