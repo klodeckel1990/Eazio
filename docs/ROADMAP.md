@@ -18,7 +18,7 @@ vorbereiten) · Umbenennung vor Store-Launch (Bundle-IDs!).
 | 3 | Tagebuch | `diary_entries` (denormalisierte Nährwert-Snapshots) als Quelle der Wahrheit, Ziele/Wasser/Streak, asynchroner Yazio-Mirror (`pending→mirrored/skipped/failed`), `GET /api/widget/summary`, TrackerPage-Umbau | ✅ 09.06.2026 |
 | 4 | PWA | vite-plugin-pwa, Offline-Lesen (NetworkFirst für Diary, SWR für Foods), Cache-Clear bei Logout | ✅ 09.06.2026 |
 | 5 | Capacitor-Shell | `app/`-Workspace ✅, **iOS im Simulator verifiziert** (iPhone 16 Pro/iOS 26.5, gebündelte Assets, Login rendert). Gotcha behoben: SW-Registrierung crashte den `capacitor://`-Boot. Offen: Android (SDK-Lizenzen beim User), Gerät (iOS-26.5-Device-Support in Xcode laden), Barcode-Scanner, `SharedAuth`, TestFlight (Apple-Account) | 🔄 fast fertig |
-| 6 | Widgets + Live Activities | WidgetKit/Glance: Kalorienring + interaktives Wasser-Widget; Live Activity (Fasten/Tagesbilanz) + APNs-Pipeline | offen |
+| 6 | Widgets + Live Activities | **iOS-Widget ✅** (Kalorienring + Streak klein, + Makros/Wasser mittel; Token via Shared-Keychain-Gruppe `$(AppIdentifierPrefix)de.tellerwert.shared` — App Groups gehen NICHT auf Personal Teams; Reload nach jedem Log). Offen: interaktives Wasser-Widget (App Intents), Live Activities (brauchen APNs = bezahlter Account), Android Glance | 🔄 |
 | 7 | Launch-Paket | Hosting-Migration (EU-Cloud, Postgres), DSGVO, Premium/IAP | offen |
 
 ~~Parallel zu 2–4: Namensfindung~~ → **Entschieden (09.06.2026): „Tellerwert"**. Logos liegen in
