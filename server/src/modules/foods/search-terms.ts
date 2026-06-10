@@ -112,6 +112,20 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^zucker braun/, terms: 'brauner zucker rohrzucker brown sugar' },
   { match: /^haehnchen (ober|unter)schenkel, mit haut, roh/, terms: 'haehnchenschenkel haehnchenkeule chicken thigh thighs' },
   { match: /^schwein kochschinken/, terms: 'gekochter schinken kochschinken ham' },
+  // Audit v4
+  { match: /^erbse gruen/, terms: 'erbsen peas tk-erbsen' },
+  { match: /^paniermehl/, terms: 'bread crumbs breadcrumbs semmelbroesel' },
+  { match: /^senf mittelscharf/, terms: 'mustard' },
+  { match: /^teigwaren eifrei, roh$/, terms: 'fettuccine tagliatelle bandnudeln linguine' },
+  { match: /^suesskirsche/, terms: 'kirsche kirschen cherry cherries' },
+  { match: /^austernpilz/, terms: 'kraeuterseitling kraeuterseitlinge seitling seitlinge' },
+  { match: /^pak choi/, terms: 'pakchoi bok choy bokchoy' },
+  { match: /^sardelle/, terms: 'anchovy anchovies anchovis' },
+  { match: /^schwein filet\/lende, roh/, terms: 'schweinefilet pork tenderloin' },
+  { match: /^mandel suess$/, terms: 'mandeln mandelkerne almonds' },
+  { match: /^feta mind/, terms: 'feta schafskaese' },
+  { match: /^obstbrand/, terms: 'kirschwasser obstler williams' },
+  { match: /^reis poliert/, terms: 'rice weisser reis white langkornreis' },
 ]
 
 export function foldGerman(text: string): string {

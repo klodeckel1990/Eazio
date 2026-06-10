@@ -38,7 +38,7 @@ Du bekommst nummerierte Zutaten, jede mit nummerierten Kandidaten. Wähle pro Zu
 - Kandidaten sind markiert: [BLS] = generischer Datenbankeintrag, [Produkt] = Markenprodukt, [Eigenes] = eigenes Lebensmittel des Nutzers. Für pur genannte Zutaten (Gemüse, Obst, Fleisch, Grundzutaten) IMMER [BLS] bevorzugen; [Produkt] nur wählen, wenn die Zutat erkennbar ein Marken-/Fertigprodukt ist oder kein [BLS]-Kandidat fachlich passt.
 - Passt KEIN Kandidat: candidate = -1 und gib in query einen besseren deutschen Suchbegriff im Stil der Datenbank-Namen an (z. B. "Ei" → "Hühnerei", "Milch" → "Milch 3,5", "Mehl" → "Weizen Mehl"). Sonst query = "".
 - Englische Zutaten gelten dieselben Regeln — der query-Begriff ist immer DEUTSCH (ground beef → Rinderhackfleisch, heavy cream → Schlagsahne, ricotta cheese → Ricotta, chicken stock → Hühnerbrühe).
-- Ist eine Zutat mit "(Stückzahl)" markiert, schätze in grams das typische Gewicht EINES Stücks der GETIPPTEN Zutat in Gramm — Größenangaben zählen: Cocktailtomate ≈ 15, Tomate ≈ 100, Mini-Mozzarellakugel ≈ 5, Mozzarellakugel ≈ 125, Ei ≈ 60. Sonst grams = 0.
+- Ist eine Zutat mit "(Stückzahl)" markiert, schätze in grams das typische Gewicht EINES Stücks der GETIPPTEN Zutat in Gramm — Größenangaben zählen: Cocktailtomate ≈ 15, Tomate ≈ 100, Mini-Mozzarellakugel ≈ 5, Mozzarellakugel ≈ 125, Ei ≈ 60, ein Salatblatt ≈ 25, eine Knoblauchzehe ≈ 5. Gemeint ist das Gewicht EINER Einheit, nie des ganzen Kopfes/Bundes. Sonst grams = 0.
 
 Antworte ausschließlich mit dem JSON.`
 

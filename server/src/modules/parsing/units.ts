@@ -6,7 +6,7 @@ export interface ResolvedAmount {
 }
 
 const GRAM_UNITS: Record<string, number> = { g: 1, gr: 1, gramm: 1, kg: 1000, lb: 453.6, oz: 28.35 }
-const ML_UNITS: Record<string, number> = { ml: 1, l: 1000 }
+const ML_UNITS: Record<string, number> = { ml: 1, l: 1000, pint: 473, quart: 946 }
 // Spoon/hand measures → approximate grams. Rough defaults (1 EL ≈ 15 g,
 // 1 TL ≈ 5 g, 1 Handvoll ≈ 30 g) that the user can fine-tune per line in the
 // review UI — better than asking the AI for the weight of "one piece" of a

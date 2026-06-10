@@ -34,8 +34,8 @@ const QUALIFIERS = new Set([
   // prefer the matching fat level among the candidates
   'mager', 'magere', 'mageres', 'magerer',
   'fettarm', 'fettarme', 'fettarmes', 'fettarmer',
-  // Herkunfts-/Größen-Präfixe ("Bio-Zitrone", "Baby-Blattspinat")
-  'bio', 'baby', 'jung', 'junge',
+  // Herkunfts-/Größen-Präfixe ("Bio-Zitrone", "Baby-Blattspinat", "TK-Erbsen")
+  'bio', 'baby', 'jung', 'junge', 'mini', 'tk', 'tiefkuhl', 'tiefkuehl',
   // Koch-/Farb-Eigenschaften — die KI sieht den vollen Namen und wählt die Variante
   'festkochend', 'festkochende', 'mehligkochend', 'mehligkochende', 'vorwiegend',
   'dunkel', 'dunkle', 'dunkler', 'dunkles', 'hell', 'helle', 'heller', 'helles',
@@ -78,7 +78,7 @@ export function stripPurpose(name: string): string {
 export function buildSearchQuery(name: string): string {
   const firstAlternative = name.split(/\s+(?:oder|bzw\.?|alternativ)\s+/i)[0] ?? name
   // Bindestrich-Präfixe überleben die Token-Filterung ("Bio-Zitrone")
-  const dePrefixed = firstAlternative.replace(/\b(bio|baby|demeter)-/gi, '')
+  const dePrefixed = firstAlternative.replace(/\b(bio|baby|demeter|mini|tk|tiefkuehl|tiefkuhl|tiefkühl)-/gi, '')
   const kept = stripPurpose(dePrefixed)
     .split(/\s+/)
     .map((tok) => tok.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
@@ -111,7 +111,7 @@ const SEASONINGS = new Set([
   'zitronenmelisse', 'melisse', 'zitronenschale', 'orangenschale', 'zitronenabrieb',
   'orangenabrieb', 'rauchsalz', 'gurkenwasser', 'spargelschalen', 'shisokresse',
   'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
-  'matchapulver', 'daikonkresse',
+  'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
   // englisch
   'salt', 'pepper', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',
