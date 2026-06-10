@@ -87,6 +87,7 @@ const STAPLE_MATCHES: Record<string, string> = {
   penne: 'Teigwaren eifrei, roh',
   lachs: 'Lachs roh',
   lachsfilet: 'Lachs roh',
+  lachskotelett: 'Lachs roh',
   rinderfilet: 'Rind Filet/Lende, roh',
   schweinebauch: 'Schwein Bauch (wie gewachsen) roh',
   brokkoli: 'Broccoli roh',

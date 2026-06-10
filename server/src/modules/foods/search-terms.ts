@@ -104,7 +104,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^kartoffel (geschaelt|ungeschaelt), roh/, terms: 'kartoffeln fruehkartoffeln' },
   // Audit v3
   { match: /^broccoli/, terms: 'brokkoli' },
-  { match: /^lachs roh$/, terms: 'lachsfilet salmon' },
+  { match: /^lachs roh$/, terms: 'lachsfilet lachskotelett lachssteak salmon' },
   { match: /^sojasauce/, terms: 'soy sauce teriyaki' },
   { match: /^teigwaren eifrei, roh$/, terms: 'nudeln nudel pasta spaghetti fusilli penne makkaroni spirelli' },
   { match: /^rind filet\/lende, roh/, terms: 'rinderfilet beef filet' },
