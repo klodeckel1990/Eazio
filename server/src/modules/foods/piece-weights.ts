@@ -46,6 +46,10 @@ export const PIECE_SERVINGS: Record<string, ServingDef[]> = {
   // Eier
   'Hühnerei roh': ST(60),
   'Hühnerei gekocht': ST(60),
+  'Eier gekocht': ST(60),
+  'Eier gekocht, gesalzen': ST(60),
+  'Spiegelei gebraten': ST(60),
+  'Spiegelei gebraten in Butter': ST(60),
 
   // Brot & Backwaren
   'Weizenbrötchen': ST(60),
