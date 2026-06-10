@@ -730,6 +730,54 @@ select {
   padding: 0.7rem 1rem;
 }
 .water-label { font-weight: 600; }
+
+/* stat tiles (Schritte / Aktivität / Wasser): big tinted icon badge + value */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+.stat-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+  min-width: 0;
+}
+.stat-ico {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: var(--r-pill);
+  display: grid;
+  place-items: center;
+}
+.stat-ico svg { width: 23px; height: 23px; }
+.stat-ico.steps { background: var(--primary-100); color: var(--primary-700); }
+.stat-ico.flame { background: var(--coral-100); color: var(--coral); }
+.stat-ico.water { background: var(--teal-100); color: var(--teal); }
+.stat-text { min-width: 0; flex: 1; }
+.stat-val {
+  display: block;
+  font-weight: 700;
+  font-size: 1.08rem;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.stat-lbl {
+  display: block;
+  color: var(--ink-2);
+  font-size: 0.78rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .diary-group { padding: 0.8rem 1rem; }
 .diary-group-head {
   display: flex;

@@ -304,23 +304,35 @@ export function TrackerPage() {
       )}
 
       {day?.activity && (day.activity.steps !== null || day.activity.activeKcal !== null) && (
-        <div className="card water-card">
-          <span className="water-label">
-            {day.activity.steps !== null && (
-              <><IconSteps className="inline-ico" /> {day.activity.steps.toLocaleString('de-DE')} Schritte</>
-            )}
-            {day.activity.steps !== null && day.activity.activeKcal !== null ? ' · ' : ''}
-            {day.activity.activeKcal !== null && (
-              <><IconFlame className="inline-ico" /> {Math.round(day.activity.activeKcal)} kcal aktiv</>
-            )}
-            {day.activity.countedKcal > 0 ? ' · im Budget' : ''}
-          </span>
+        <div className="stat-grid">
+          {day.activity.steps !== null && (
+            <div className="stat-tile">
+              <span className="stat-ico steps"><IconSteps /></span>
+              <span className="stat-text">
+                <span className="stat-val">{day.activity.steps.toLocaleString('de-DE')}</span>
+                <span className="stat-lbl">Schritte heute</span>
+              </span>
+            </div>
+          )}
+          {day.activity.activeKcal !== null && (
+            <div className="stat-tile">
+              <span className="stat-ico flame"><IconFlame /></span>
+              <span className="stat-text">
+                <span className="stat-val">{Math.round(day.activity.activeKcal)} kcal</span>
+                <span className="stat-lbl">{day.activity.countedKcal > 0 ? 'aktiv · im Budget' : 'aktiv verbrannt'}</span>
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {day && (
         <div className="card water-card">
-          <span className="water-label"><IconDrop className="inline-ico" /> {day.water.totalMl} / {day.goals.waterMl} ml</span>
+          <span className="stat-ico water"><IconDrop /></span>
+          <span className="stat-text">
+            <span className="stat-val">{day.water.totalMl.toLocaleString('de-DE')} ml</span>
+            <span className="stat-lbl">von {day.goals.waterMl.toLocaleString('de-DE')} ml Wasser</span>
+          </span>
           <div className="btn-row">
             <button type="button" className="btn btn-soft btn-sm" onClick={() => { void handleWater(250) }}>+250</button>
             <button type="button" className="btn btn-soft btn-sm" onClick={() => { void handleWater(500) }}>+500</button>
