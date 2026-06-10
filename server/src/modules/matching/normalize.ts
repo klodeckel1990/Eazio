@@ -26,6 +26,8 @@ const QUALIFIERS = new Set([
   // bundle/packaging words that survive parsing in older saved texts
   'bund', 'zehe', 'zehen', 'stange', 'stangen', 'kopf', 'zweig', 'zweige',
   'packung', 'packchen', 'beutel', 'wurfel', 'handvoll', 'blatt', 'blatter',
+  // fraction words (safety net for already-saved texts)
+  'halb', 'halbe', 'halber', 'halbes', 'viertel', 'dreiviertel',
 ])
 
 /**

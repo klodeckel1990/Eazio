@@ -55,19 +55,25 @@ function recombineVertical(rawLines: string[]): string[] {
   return out
 }
 
-// Splits one line on top-level commas/semicolons; commas inside parentheses stay
-// put so "(Honig, Ahornsirup, …)" is not torn apart.
+// Splits one line on top-level commas/semicolons; commas inside parentheses
+// stay put so "(Honig, Ahornsirup, …)" is not torn apart, and a comma BETWEEN
+// DIGITS is a German decimal ("Joghurt 3,5% Fett"), not a list separator.
 function splitTopLevel(line: string): string[] {
   const parts: string[] = []
   let buf = ''
   let depth = 0
-  for (const ch of line) {
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]!
     if (ch === '(' || ch === '[') depth++
     else if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1)
     else if ((ch === ',' || ch === ';') && depth === 0) {
-      parts.push(buf)
-      buf = ''
-      continue
+      const isDecimalComma =
+        ch === ',' && /\d/.test(line[i - 1] ?? '') && /\d/.test(line[i + 1] ?? '')
+      if (!isDecimalComma) {
+        parts.push(buf)
+        buf = ''
+        continue
+      }
     }
     buf += ch
   }
@@ -75,8 +81,34 @@ function splitTopLevel(line: string): string[] {
   return parts
 }
 
+// German fraction spellings ("halbe Spitzpaprika", "½ Zitrone", "1/2 TL").
+const FRACTIONS: [RegExp, number][] = [
+  [/^(?:eine?\s+)?halbe[rsn]?\s+/i, 0.5],
+  [/^(?:ein\s+)?viertel\s+/i, 0.25],
+  [/^(?:ein\s+)?dreiviertel\s+/i, 0.75],
+  [/^½\s*/, 0.5],
+  [/^¼\s*/, 0.25],
+  [/^¾\s*/, 0.75],
+  [/^1\/2\s+/, 0.5],
+  [/^1\/4\s+/, 0.25],
+  [/^3\/4\s+/, 0.75],
+]
+
 export function parseLine(raw: string): ParsedLine {
   const chunk = stripParens(raw.trim())
+
+  for (const [pattern, qty] of FRACTIONS) {
+    const match = pattern.exec(chunk)
+    if (match) {
+      const rest = chunk.slice(match[0].length).trim()
+      // optional unit word right after the fraction ("1/2 TL Honig")
+      const unitMatch = /^([a-zà-ÿ]+)\s+(.+)$/i.exec(rest)
+      if (unitMatch && KNOWN_UNITS.has(unitMatch[1]!.toLowerCase())) {
+        return { raw, qty, unit: unitMatch[1]!.toLowerCase(), name: unitMatch[2]!.trim() }
+      }
+      return { raw, qty, unit: null, name: rest }
+    }
+  }
 
   const lead = LEADING.exec(chunk)
   if (lead) {

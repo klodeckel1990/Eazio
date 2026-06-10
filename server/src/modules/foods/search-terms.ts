@@ -26,6 +26,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /\bmandeldrink/, terms: 'mandelmilch' },
   { match: /speisequark/, terms: 'quark magerquark' },
   { match: /moehre|karotte/, terms: 'moehre möhre karotte wurzel' },
+  { match: /gemuesepaprika/, terms: 'spitzpaprika paprika' },
   { match: /zuckermais/, terms: 'mais' },
   { match: /paprikaschote/, terms: 'paprika' },
 ]
@@ -48,7 +49,9 @@ function tokenize(text: string): string[] {
   return text
     .toLowerCase()
     .split(/[^\p{L}\p{N}]+/u)
-    .filter((t) => t.length > 1)
+    // single digits stay: "Joghurt 3,5%" → joghurt, 3, 5 — the fat percentage
+    // is exactly what distinguishes the plain product from compounds
+    .filter((t) => t.length > 1 || /^\d$/.test(t))
 }
 
 /** Variants for one token: ue/oe/ae transliteration + compound-head split. */

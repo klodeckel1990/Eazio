@@ -53,3 +53,27 @@ describe('ingredient parser', () => {
     ])
   })
 })
+
+describe('decimal commas and fractions', () => {
+  it('keeps German decimal commas intact instead of splitting', () => {
+    const lines = parseIngredients('100g Joghurt 3,5% Fett')
+    expect(lines).toHaveLength(1)
+    expect(lines[0]).toMatchObject({ qty: 100, unit: 'g', name: 'Joghurt 3,5% Fett' })
+  })
+
+  it('still splits on list commas', () => {
+    const lines = parseIngredients('1 Apfel, 1 Banane')
+    expect(lines.map((l) => l.name)).toEqual(['Apfel', 'Banane'])
+  })
+
+  it('parses fraction words as quantities', () => {
+    expect(parseIngredients('Halbe Spitzpaprika')[0]).toMatchObject({ qty: 0.5, name: 'Spitzpaprika' })
+    expect(parseIngredients('eine halbe Zitrone')[0]).toMatchObject({ qty: 0.5, name: 'Zitrone' })
+    expect(parseIngredients('viertel Zwiebel')[0]).toMatchObject({ qty: 0.25, name: 'Zwiebel' })
+  })
+
+  it('parses numeric and unicode fractions, with optional unit', () => {
+    expect(parseIngredients('1/2 TL Honig')[0]).toMatchObject({ qty: 0.5, unit: 'tl', name: 'Honig' })
+    expect(parseIngredients('½ Banane')[0]).toMatchObject({ qty: 0.5, name: 'Banane' })
+  })
+})
