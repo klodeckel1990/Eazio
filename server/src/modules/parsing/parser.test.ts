@@ -30,6 +30,9 @@ describe('ingredient parser', () => {
     ['2 ½ EL Zucker', { qty: 2.5, unit: 'el', name: 'Zucker' }],
     ['2/3 cup milk', { qty: 0.667, unit: 'cup', name: 'milk' }],
     ['500 grams bread flour', { qty: 500, unit: 'g', name: 'bread flour' }],
+    // Dosen-Gewicht in Klammern (US-Rezepte)
+    ['1 (28 ounce) can crushed tomatoes', { qty: 793.8, unit: 'g', name: 'crushed tomatoes' }],
+    ['2 (15 ounce) cans black beans', { qty: 850.5, unit: 'g', name: 'black beans' }],
   ])('parses %s', (input, expected) => {
     const p = parseLine(input)
     expect({ qty: p.qty, unit: p.unit, name: p.name }).toEqual(expected)

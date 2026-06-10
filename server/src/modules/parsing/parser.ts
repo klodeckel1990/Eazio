@@ -45,6 +45,12 @@ const RANGE = new RegExp(`^${NUM}\\s*[-–—]\\s*${NUM}\\s+(.*)$`)
 const MIXED = /^(\d+)\s+(?:(\d+)\/(\d+)|(½)|(¼)|(¾))\s+(.*)$/
 // bare fractions beyond the German word list ("2/3 cup milk")
 const FRAC = /^(\d+)\/(\d+)\s+(.*)$/
+// canned-goods weight in parens: "1 (28 ounce) can crushed tomatoes" → 794 g
+const CANNED = /^(\d+(?:[.,]\d+)?)\s*\((\d+(?:[.,]\d+)?)\s*-?\s*(ounce|ounces|oz|pound|pounds|lb|g|gramm|ml|l)\.?\)\s*(?:can|cans|dose|dosen|glas|packung|package|jar|tin)?s?\s*(.*)$/i
+const CAN_FACTORS: Record<string, number> = {
+  ounce: 28.35, ounces: 28.35, oz: 28.35, pound: 453.6, pounds: 453.6, lb: 453.6,
+  g: 1, gramm: 1, ml: 1, l: 1000,
+}
 const LEADING = new RegExp(`^${NUM}\\s*([a-zà-ÿ]+)?\\s*(.*)$`, 'i')
 const TRAILING = new RegExp(`^(.*?)\\s+${NUM}\\s*([a-zà-ÿ]+)?\\s*$`, 'i')
 
@@ -122,6 +128,11 @@ const FRACTIONS: [RegExp, number][] = [
 ]
 
 export function parseLine(raw: string): ParsedLine {
+  const canned = CANNED.exec(raw.trim())
+  if (canned && canned[4]!.trim()) {
+    const total = num(canned[1]!) * num(canned[2]!) * CAN_FACTORS[canned[3]!.toLowerCase()]!
+    return { raw, qty: Math.round(total * 10) / 10, unit: 'g', name: canned[4]!.trim() }
+  }
   let chunk = stripParens(raw.trim())
 
   const range = RANGE.exec(chunk)
