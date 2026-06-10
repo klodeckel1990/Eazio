@@ -35,6 +35,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Tellerwert nutzt die Kamera, um Barcodes von Lebensmitteln zu scannen.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Tellerwert liest Schritte, Aktivitätskalorien und Gewicht aus Apple Health, um dein Tagesbudget und Profil aktuell zu halten.</string>
 	<key>NSHealthUpdateUsageDescription</key>

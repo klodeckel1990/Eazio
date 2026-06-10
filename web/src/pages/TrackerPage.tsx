@@ -7,6 +7,7 @@ import { round } from '../lib/nutrition'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
 import { addDays, dayLabel, todayStr } from '../lib/dates'
 import { initHealthSync, pushDayToHealth } from '../lib/health'
+import { pushLiveActivity } from '../lib/live-activity'
 import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { CalendarSheet } from '../components/CalendarSheet'
@@ -46,6 +47,7 @@ export function TrackerPage() {
     api.diary.day(dateRef.current)
       .then((d) => {
         setDay(d)
+        pushLiveActivity(d) // Tagesbilanz auf Lock Screen / Dynamic Island
         // Mahlzeiten & Wasser zurück nach Apple Health (Tages-Abgleich)
         pushDayToHealth({
           date: d.date,

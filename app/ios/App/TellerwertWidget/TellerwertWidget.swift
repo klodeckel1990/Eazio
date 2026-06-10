@@ -413,6 +413,164 @@ struct TellerwertWaterWidget: Widget {
     }
 }
 
+// MARK: - Live Activity (Tagesbilanz auf Lock Screen + Dynamic Island)
+
+struct MiniKcalRing: View {
+    let state: TellerwertActivityAttributes.ContentState
+    var lineWidth: CGFloat = 5
+
+    private var progress: Double {
+        guard state.kcalTarget > 0 else { return 0 }
+        return min(1.0, Double(state.kcalConsumed) / Double(state.kcalTarget))
+    }
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(TW.track, lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(state.kcalConsumed > state.kcalTarget ? TW.coral : TW.green,
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+    }
+}
+
+struct LockScreenActivityView: View {
+    let state: TellerwertActivityAttributes.ContentState
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                MiniKcalRing(state: state, lineWidth: 6)
+                VStack(spacing: 0) {
+                    Text("\(max(0, state.kcalRemaining))")
+                        .font(.system(.headline, design: .serif).weight(.semibold))
+                        .foregroundStyle(TW.ink)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                    Text("übrig")
+                        .font(.system(size: 9))
+                        .foregroundStyle(TW.ink2)
+                }
+            }
+            .frame(width: 64, height: 64)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text("Tellerwert")
+                        .font(.system(.subheadline, design: .serif).weight(.semibold))
+                        .foregroundStyle(TW.green)
+                    Spacer()
+                    StepsBadge(steps: state.steps)
+                    StreakBadge(streak: state.streak)
+                }
+                HStack(spacing: 10) {
+                    macro("KH", state.carbs, TW.amber)
+                    macro("P", state.protein, TW.green)
+                    macro("F", state.fat, TW.teal)
+                }
+                HStack(spacing: 5) {
+                    Image(systemName: "drop.fill").font(.caption2).foregroundStyle(TW.teal)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(TW.track)
+                            Capsule().fill(TW.teal).frame(
+                                width: max(4, geo.size.width * min(1.0, state.waterTargetMl > 0
+                                    ? Double(state.waterMl) / Double(state.waterTargetMl) : 0)))
+                        }
+                    }
+                    .frame(height: 5)
+                    Text("\(state.waterMl) ml")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(TW.ink2)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(14)
+    }
+
+    private func macro(_ label: String, _ value: Double, _ color: Color) -> some View {
+        HStack(spacing: 3) {
+            Circle().fill(color).frame(width: 5, height: 5)
+            Text("\(Int(value.rounded())) g")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(TW.ink)
+                .monospacedDigit()
+            Text(label).font(.caption2).foregroundStyle(TW.ink2)
+        }
+    }
+}
+
+struct TellerwertLiveActivity: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: TellerwertActivityAttributes.self) { context in
+            LockScreenActivityView(state: context.state)
+                .activityBackgroundTint(TW.paper)
+                .activitySystemActionForegroundColor(TW.green)
+        } dynamicIsland: { context in
+            DynamicIsland {
+                DynamicIslandExpandedRegion(.leading) {
+                    ZStack {
+                        MiniKcalRing(state: context.state)
+                        Text("\(max(0, context.state.kcalRemaining))")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.white)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .frame(width: 44, height: 44)
+                }
+                DynamicIslandExpandedRegion(.trailing) {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        StreakBadge(streak: context.state.streak)
+                        StepsBadge(steps: context.state.steps)
+                    }
+                }
+                DynamicIslandExpandedRegion(.center) {
+                    VStack(spacing: 1) {
+                        Text("\(max(0, context.state.kcalRemaining)) kcal übrig")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                        Text("von \(context.state.kcalTarget)")
+                            .font(.caption2)
+                            .foregroundStyle(.gray)
+                    }
+                }
+                DynamicIslandExpandedRegion(.bottom) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "drop.fill").font(.caption2).foregroundStyle(TW.teal)
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color.gray.opacity(0.35))
+                                Capsule().fill(TW.teal).frame(
+                                    width: max(4, geo.size.width * min(1.0, context.state.waterTargetMl > 0
+                                        ? Double(context.state.waterMl) / Double(context.state.waterTargetMl) : 0)))
+                            }
+                        }
+                        .frame(height: 5)
+                        Text("\(context.state.waterMl) ml")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.gray)
+                            .monospacedDigit()
+                    }
+                }
+            } compactLeading: {
+                MiniKcalRing(state: context.state, lineWidth: 3)
+                    .frame(width: 18, height: 18)
+            } compactTrailing: {
+                Text("\(max(0, context.state.kcalRemaining))")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(context.state.kcalConsumed > context.state.kcalTarget ? TW.coral : TW.green)
+                    .monospacedDigit()
+            } minimal: {
+                MiniKcalRing(state: context.state, lineWidth: 3)
+                    .frame(width: 18, height: 18)
+            }
+        }
+    }
+}
+
 // MARK: - Deklaration
 
 struct TellerwertWidget: Widget {
@@ -431,5 +589,6 @@ struct TellerwertWidgetBundle: WidgetBundle {
     var body: some Widget {
         TellerwertWidget()
         TellerwertWaterWidget()
+        TellerwertLiveActivity()
     }
 }

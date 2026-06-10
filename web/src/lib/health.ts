@@ -18,11 +18,7 @@ interface HealthPayload {
   error?: string
 }
 
-declare global {
-  interface Window {
-    webkit?: { messageHandlers?: { eazioHealth?: { postMessage: (msg: unknown) => void } } }
-  }
-}
+// window.webkit-Deklaration lebt zentral in lib/live-activity.ts
 
 const OPT_IN_KEY = 'eazio.healthOptIn'
 

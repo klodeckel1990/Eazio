@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { healthAvailable, healthOptedIn, setHealthOptIn } from '../lib/health'
+import { liveActivityAvailable, liveActivityEnabled, setLiveActivityEnabled } from '../lib/live-activity'
 import { api, ApiError } from '../api/client'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
 import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck, IconCart } from '../components/icons'
@@ -25,6 +26,7 @@ export function AccountsPage() {
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<string | null>(null)
   const [healthOn, setHealthOn] = useState(healthOptedIn())
+  const [liveActivityOn, setLiveActivityOn] = useState(liveActivityEnabled())
   const [activityBudget, setActivityBudget] = useState<boolean | null>(null)
 
   const loadAccounts = () => {
@@ -55,6 +57,12 @@ export function AccountsPage() {
     const next = !healthOn
     setHealthOn(next)
     setHealthOptIn(next) // on: triggert sofort Permission-Sheet + ersten Sync
+  }
+
+  const toggleLiveActivity = () => {
+    const next = !liveActivityOn
+    setLiveActivityOn(next)
+    setLiveActivityEnabled(next)
   }
 
   const toggleActivityBudget = () => {
@@ -298,6 +306,25 @@ export function AccountsPage() {
             </div>
           )}
         </>
+      )}
+
+      {liveActivityAvailable() && (
+        <div className="card water-card">
+          <div>
+            <strong>Live Activity</strong>
+            <p className="muted" style={{ margin: 0 }}>
+              Tagesbilanz auf Sperrbildschirm und Dynamic Island, aktualisiert bei jedem Log.
+            </p>
+          </div>
+          <button
+            type="button"
+            className={liveActivityOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+            aria-pressed={liveActivityOn}
+            onClick={toggleLiveActivity}
+          >
+            {liveActivityOn ? 'An' : 'Aus'}
+          </button>
+        </div>
       )}
 
       {accounts !== null && accounts.length > 0 && mirror !== null && (

@@ -9,11 +9,13 @@ import WidgetKit
 ///    tellerwert:// URL scheme) → WebView navigation to the import page
 class MainViewController: CAPBridgeViewController {
     private let healthSync = HealthSync()
+    private let liveActivity = LiveActivityController()
 
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(SharedAuthPlugin())
         if let webView = bridge?.webView {
             healthSync.attach(to: webView) // JS: webkit.messageHandlers.eazioHealth
+            liveActivity.attach(to: webView) // JS: webkit.messageHandlers.eazioActivity
         }
     }
 
