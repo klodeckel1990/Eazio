@@ -6,8 +6,6 @@ export type ShoppingListFormat = 'plain' | 'checklist' | 'bring'
 const SHOPPING_FORMATS: ShoppingListFormat[] = ['plain', 'checklist', 'bring']
 
 export interface UserSettings {
-  /** Hide the iOS share-shortcut hint on the recipes page. */
-  iosShortcutHintDismissed: boolean
   /** Preferred format when copying a recipe's ingredients as a shopping list. */
   shoppingListFormat: ShoppingListFormat
   /** The first-login onboarding wizard has been completed or skipped. */
@@ -20,7 +18,6 @@ export interface UserSettings {
 }
 
 const DEFAULTS: UserSettings = {
-  iosShortcutHintDismissed: false,
   shoppingListFormat: 'plain',
   onboardingDone: false,
   mirrorToYazio: true,
@@ -44,7 +41,6 @@ function parseSettings(raw: string | null): UserSettings {
     const o = JSON.parse(raw) as Record<string, unknown>
     const fmt = o.shoppingListFormat
     return {
-      iosShortcutHintDismissed: o.iosShortcutHintDismissed === true,
       shoppingListFormat: SHOPPING_FORMATS.includes(fmt as ShoppingListFormat)
         ? (fmt as ShoppingListFormat)
         : 'plain',

@@ -630,8 +630,6 @@ select {
 .d-title svg { width: 19px; height: 19px; color: var(--primary); }
 .d-toggle { color: var(--ink-3); font-size: 1.4rem; line-height: 1; }
 
-.hint-check { display: flex; align-items: center; gap: 0.55rem; font-size: 0.88rem; color: var(--ink-2); cursor: pointer; }
-.hint-check input { width: auto; margin: 0; accent-color: var(--primary); }
 
 /* macro pills */
 .macros { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }

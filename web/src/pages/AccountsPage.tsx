@@ -4,7 +4,7 @@ import { liveActivityAvailable, liveActivityEnabled, setLiveActivityEnabled } fr
 import { setThemePref, themePref, type ThemePref } from '../lib/theme'
 import { api, ApiError } from '../api/client'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
-import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconShare, IconCheck, IconCart } from '../components/icons'
+import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconCheck, IconCart } from '../components/icons'
 
 const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }[] = [
   { value: 'plain', title: 'Klartext', desc: 'Einfache Liste – ideal für WhatsApp & Notizen.' },
@@ -19,7 +19,6 @@ export function AccountsPage() {
   const [password, setPassword] = useState('')
   const [linkError, setLinkError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [hintReenabled, setHintReenabled] = useState(false)
   const [format, setFormat] = useState<ShoppingListFormat | null>(null)
   const [goals, setGoals] = useState<Goals | null>(null)
   const [goalsSaved, setGoalsSaved] = useState(false)
@@ -149,15 +148,6 @@ export function AccountsPage() {
   const handleRemove = async (id: string) => {
     await api.accounts.remove(id)
     loadAccounts()
-  }
-
-  const reenableHint = async () => {
-    try {
-      await api.settings.update({ iosShortcutHintDismissed: false })
-      setHintReenabled(true)
-    } catch (e) {
-      if (!(e instanceof ApiError)) throw e
-    }
   }
 
   return (
@@ -471,28 +461,6 @@ export function AccountsPage() {
             </button>
           ))}
         </div>
-      </div>
-
-      <div className="card stack">
-        <strong>Teilen &amp; Import</strong>
-        <p className="muted">
-          Blende die Anleitung zum Teilen aus Instagram (iPhone-Kurzbefehl) auf der Rezepte-Seite wieder ein.
-        </p>
-        {hintReenabled ? (
-          <p className="banner success">
-            <IconCheck />
-            <span className="banner-text">Wird auf der Rezepte-Seite (am iPhone) wieder angezeigt.</span>
-          </p>
-        ) : (
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ alignSelf: 'flex-start' }}
-            onClick={() => { void reenableHint() }}
-          >
-            <IconShare /> Teilen-Anleitung erneut anzeigen
-          </button>
-        )}
       </div>
     </div>
   )

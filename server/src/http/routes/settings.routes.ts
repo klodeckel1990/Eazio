@@ -5,7 +5,6 @@ import { requireAuth } from '../auth-guard.js'
 import { getSettings, updateSettings } from '../../modules/settings/settings.repo.js'
 
 const PatchSchema = z.object({
-  iosShortcutHintDismissed: z.boolean().optional(),
   shoppingListFormat: z.enum(['plain', 'checklist', 'bring']).optional(),
   onboardingDone: z.boolean().optional(),
   activityBudget: z.boolean().optional(),

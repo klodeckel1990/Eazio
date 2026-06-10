@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
-import type { ImportedRecipe, RecipeIngredient, UserSettings } from '../api/types'
-import { IconWand, IconCheck, IconClose, IconAlert, IconShare } from '../components/icons'
+import type { ImportedRecipe, RecipeIngredient } from '../api/types'
+import { IconWand, IconCheck, IconClose, IconAlert } from '../components/icons'
 
-const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/e9161889953d4685b6e2a9fd181cf41d'
 const DIFFICULTIES = ['einfach', 'mittel', 'schwer'] as const
-const IS_IOS =
-  typeof navigator !== 'undefined' &&
-  (/ip(hone|ad|od)/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
-
 function importErrorMessage(code: string): string {
   switch (code) {
     case 'import_unavailable':
@@ -49,13 +43,6 @@ export function ImportPage() {
   const [steps, setSteps] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
 
-  const [settings, setSettings] = useState<UserSettings | null>(null)
-  const showHint = IS_IOS && settings != null && !settings.iosShortcutHintDismissed
-  const dismissHint = () => {
-    setSettings((s) => (s ? { ...s, iosShortcutHintDismissed: true } : s))
-    api.settings.update({ iosShortcutHintDismissed: true }).catch(() => {})
-  }
-
   const runImport = async (payload: { url?: string; text?: string }) => {
     setImportError(null)
     setImporting(true)
@@ -80,12 +67,6 @@ export function ImportPage() {
     if (!input.trim() || importing) return
     void runImport(mode === 'link' ? { url: input.trim() } : { text: input })
   }
-
-  useEffect(() => {
-    api.settings.get().then(setSettings).catch(() =>
-      setSettings({ iosShortcutHintDismissed: false, shoppingListFormat: 'plain', onboardingDone: true, mirrorToYazio: true }),
-    )
-  }, [])
 
   useEffect(() => {
     const url = searchParams.get('import')
@@ -147,23 +128,6 @@ export function ImportPage() {
         </p>
       )}
       {importError && <p className="banner error"><IconAlert /><span className="banner-text">{importError}</span></p>}
-
-      {showHint && (
-        <div className="card stack">
-          <span className="d-title"><IconShare /> Vom iPhone teilen</span>
-          <p className="muted">
-            Teile Rezepte direkt aus Instagram: Kurzbefehl einmal hinzufügen, dann erscheint
-            „Rezept zu Tellerwert" in Instagrams Teilen-Menü.
-          </p>
-          <a className="btn btn-primary btn-sm" href={SHORTCUT_URL} target="_blank" rel="noreferrer" style={{ alignSelf: 'flex-start' }}>
-            <IconShare /> Kurzbefehl hinzufügen
-          </a>
-          <label className="hint-check">
-            <input type="checkbox" onChange={(e) => { if (e.target.checked) dismissHint() }} />
-            Eingerichtet – diesen Hinweis ausblenden
-          </label>
-        </div>
-      )}
 
       <div className="card pad-lg stack">
         <div className="seg" role="group" aria-label="Importquelle">

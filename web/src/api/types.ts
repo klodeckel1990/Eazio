@@ -65,7 +65,6 @@ export interface RecipeDetail extends RecipeSummary {
 
 export type ShoppingListFormat = 'plain' | 'checklist' | 'bring'
 export interface UserSettings {
-  iosShortcutHintDismissed: boolean
   shoppingListFormat: ShoppingListFormat
   onboardingDone: boolean
   mirrorToYazio: boolean
