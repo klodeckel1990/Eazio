@@ -4,8 +4,9 @@ import { api, ApiError } from '../api/client'
 import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine } from '../api/types'
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
 import { round } from '../lib/nutrition'
+import { isNativeApp, scanBarcode } from '../lib/barcode'
 import { FoodRow } from '../components/FoodRow'
-import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose } from '../components/icons'
+import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan } from '../components/icons'
 
 interface RowState {
   foodId: string
@@ -60,6 +61,45 @@ export function TrackerPage() {
       else throw e
     } finally {
       setMatching(false)
+    }
+  }
+
+  const handleScan = async () => {
+    const code = await scanBarcode()
+    if (!code) return
+    setError(null)
+    if (!/^\d{8}$|^\d{13}$/.test(code)) {
+      setError('Kein Lebensmittel-Barcode erkannt.')
+      return
+    }
+    try {
+      const food = await api.foods.barcode(code)
+      const suggested = food.servings[0]?.grams ?? 100
+      const line: FoodMatchLine = {
+        raw: food.brand ? `${food.name} – ${food.brand}` : food.name,
+        name: food.name,
+        qty: null,
+        unit: 'serving',
+        amountGrams: null,
+        suggestedAmountG: suggested,
+        candidates: [food],
+        selectedFoodId: food.id,
+      }
+      setLines((prev) => [...prev, line])
+      setKeys((prev) => [...prev, nextKey()])
+      setRows((prev) => [...prev, { foodId: food.id, grams: suggested }])
+    } catch (e) {
+      if (e instanceof ApiError) {
+        setError(
+          e.status === 404
+            ? 'Produkt nicht in der Datenbank – tippe den Namen ein oder leg es als eigenes Lebensmittel an.'
+            : e.status === 503
+              ? 'Produktdatenbank gerade nicht erreichbar – später nochmal versuchen.'
+              : e.message,
+        )
+      } else {
+        setError('Scan fehlgeschlagen.')
+      }
     }
   }
 
@@ -272,15 +312,30 @@ export function TrackerPage() {
           />
         </div>
 
-        <button
-          type="button"
-          className="btn btn-primary btn-lg btn-block"
-          onClick={() => { void handleMatch() }}
-          disabled={matching || !text.trim()}
-        >
-          <IconWand />
-          {matching ? 'Matchen…' : 'Matchen'}
-        </button>
+        <div className="btn-row">
+          <button
+            type="button"
+            className="btn btn-primary btn-lg"
+            style={{ flex: 1 }}
+            onClick={() => { void handleMatch() }}
+            disabled={matching || !text.trim()}
+          >
+            <IconWand />
+            {matching ? 'Matchen…' : 'Matchen'}
+          </button>
+          {isNativeApp() && (
+            <button
+              type="button"
+              className="btn btn-soft btn-lg"
+              onClick={() => { void handleScan() }}
+              aria-label="Barcode scannen"
+              title="Barcode scannen"
+            >
+              <IconScan />
+              Scannen
+            </button>
+          )}
+        </div>
       </div>
 
       {lines.length > 0 && (

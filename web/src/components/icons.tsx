@@ -268,3 +268,13 @@ export function IconDrop(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+/** Barcode — scan frame with bars. */
+export function IconScan(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M3.5 8V5.5A2 2 0 0 1 5.5 3.5H8M16 3.5h2.5a2 2 0 0 1 2 2V8M20.5 16v2.5a2 2 0 0 1-2 2H16M8 20.5H5.5a2 2 0 0 1-2-2V16" />
+      <path d="M7.5 9.5v5M10.5 9.5v5M13.5 9.5v5M16.5 9.5v5" />
+    </Svg>
+  )
+}
