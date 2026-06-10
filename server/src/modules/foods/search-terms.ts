@@ -46,7 +46,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /\bmandeldrink/, terms: 'mandelmilch' },
   { match: /speisequark/, terms: 'quark magerquark' },
   { match: /moehre|karotte/, terms: 'moehre möhre karotte wurzel' },
-  { match: /gemuesepaprika/, terms: 'spitzpaprika paprika' },
+  { match: /gemuesepaprika/, terms: 'spitzpaprika paprika paprikaschote paprikaschoten schote' },
   { match: /^tomate roh$/, terms: 'kirschtomate cherrytomate cocktailtomate cherry romatomate' },
   { match: /^rind hackfleisch/, terms: 'rinderhack rinderhackfleisch hackfleisch hack' },
   { match: /^speisezwiebel/, terms: 'zwiebel zwiebeln' },
