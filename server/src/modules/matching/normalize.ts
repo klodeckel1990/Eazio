@@ -42,12 +42,17 @@ const QUALIFIERS = new Set([
  * term remains (e.g. "kleine reife Banane" → "Banane", "gemischte Beeren der
  * Saison" → "Beeren"). Falls back to the trimmed original if all words strip out.
  */
+/** Drops purpose clauses — they are not part of the product name:
+ *  "Öl zum Braten" → "Öl". Without this, FTS matches dishes/spreads whose
+ *  NAME contains "zum Braten", and cache keys never repeat. */
+export function stripPurpose(name: string): string {
+  const stripped = name.replace(/\s+(?:zum|zur|für|fuer)\s+.+$/i, '').trim()
+  return stripped.length > 0 ? stripped : name
+}
+
 export function buildSearchQuery(name: string): string {
   const firstAlternative = name.split(/\s+(?:oder|bzw\.?|alternativ)\s+/i)[0] ?? name
-  // purpose clauses are not part of the product name: "Öl zum Braten" → "Öl"
-  // (otherwise FTS matches dishes/spreads whose NAME contains "zum Braten")
-  const withoutPurpose = firstAlternative.replace(/\s+(?:zum|zur|für|fuer)\s+.+$/i, '')
-  const kept = withoutPurpose
+  const kept = stripPurpose(firstAlternative)
     .split(/\s+/)
     .map((tok) => tok.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ''))
     .filter((tok) => tok.length > 0 && !QUALIFIERS.has(normalizeName(tok)))

@@ -54,6 +54,13 @@ const STAPLE_MATCHES: Record<string, string> = {
   doppelrahmfrischkase: 'Frischkäsezubereitung Natur, mind. 60 % Fett i. Tr.',
   chili: 'Pfefferschote rot, roh',
   chilischote: 'Pfefferschote rot, roh',
+  // "Öl" allein trifft im BLS nur Gerichte mit Öl im Namen
+  ol: 'Rapsöl/Rüböl',
+  oel: 'Rapsöl/Rüböl',
+  speiseol: 'Rapsöl/Rüböl',
+  speiseoel: 'Rapsöl/Rüböl',
+  pflanzenol: 'Rapsöl/Rüböl',
+  pflanzenoel: 'Rapsöl/Rüböl',
 }
 
 export interface BlsSeed {

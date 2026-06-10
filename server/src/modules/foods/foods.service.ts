@@ -14,7 +14,7 @@ import { fetchOffProduct, searchOffProducts, type FetchOffProduct, type SearchOf
 import { mapOffProduct } from './off.mapper.js'
 import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
-import { buildSearchQuery, isPrepNote, isSeasoning, normalizeName } from '../matching/normalize.js'
+import { buildSearchQuery, isPrepNote, isSeasoning, normalizeName, stripPurpose } from '../matching/normalize.js'
 import { getFoodAlias } from './food-aliases.repo.js'
 import { compoundHeadFallback, foldGerman } from './search-terms.js'
 
@@ -211,6 +211,9 @@ export async function matchFoodText(
   const pending: Pending[] = []
   for (const line of parseIngredients(text)) {
     if (isSeasoning(line.name) || isPrepNote(line.name)) continue
+    // purpose clauses stay out of the cache key and the AI prompt too:
+    // "Öl zum Braten" must hit the same cache entry / staple seed as "Öl"
+    line.name = stripPurpose(line.name)
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
     const query = buildSearchQuery(line.name)
     // LOCAL results (BLS/custom) first — including the fallbacks. OFF branded
@@ -395,8 +398,9 @@ export async function matchFoodText(
     const perPiece =
       aliasDefaultG ?? p.pieceGrams ?? pickServingGrams(candidates[0]?.servings ?? [], line.unit)
     // unquantified frying fat ("Öl zum Braten") ≈ 1 EL, not the 100 g default
+    // (line.name is purpose-stripped by now — check the raw input)
     const fryingFat =
-      line.qty === null && /zum (an|aus)?braten|zum frittieren|zum ausbacken/.test(normalizeName(line.name))
+      line.qty === null && /zum (an|aus)?braten|zum frittieren|zum ausbacken/.test(normalizeName(line.raw))
     const suggestedAmountG =
       amountGrams ?? (perPiece !== null ? Math.round(perPiece * qtyFactor) : fryingFat ? 15 : 100)
 
