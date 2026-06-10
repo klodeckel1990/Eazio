@@ -24,6 +24,9 @@ const canonicalUnit = (u: string): string => UNIT_ALIASES[u] ?? u
 // NOTE: simple fractions ("1/2 Apfel") are not parsed — the "/2" stays in the
 // name and the user corrects it in the review UI. Decimal qty ("0,5") works.
 const NUM = String.raw`(\d+(?:[.,]\d+)?)`
+// quantity ranges ("2-3 EL Öl") → midpoint; without this the "-3" leaks into
+// the ingredient name and poisons search queries and cache keys
+const RANGE = new RegExp(`^${NUM}\\s*[-–—]\\s*${NUM}\\s+(.*)$`)
 const LEADING = new RegExp(`^${NUM}\\s*([a-zà-ÿ]+)?\\s*(.*)$`, 'i')
 const TRAILING = new RegExp(`^(.*?)\\s+${NUM}\\s*([a-zà-ÿ]+)?\\s*$`, 'i')
 
@@ -101,7 +104,13 @@ const FRACTIONS: [RegExp, number][] = [
 ]
 
 export function parseLine(raw: string): ParsedLine {
-  const chunk = stripParens(raw.trim())
+  let chunk = stripParens(raw.trim())
+
+  const range = RANGE.exec(chunk)
+  if (range) {
+    const mid = (num(range[1]!) + num(range[2]!)) / 2
+    chunk = `${String(mid).replace('.', ',')} ${range[3]!}`
+  }
 
   for (const [pattern, qty] of FRACTIONS) {
     const match = pattern.exec(chunk)
@@ -127,8 +136,9 @@ export function parseLine(raw: string): ParsedLine {
     }
     if (word && KNOWN_UNITS.has(word)) {
       // A quantity+unit with no ingredient name (e.g. "200ml") leaves an empty
-      // name; parseIngredients() drops such chunks.
-      return { raw, qty: num(n), unit: canonicalUnit(word), name: rest }
+      // name; parseIngredients() drops such chunks. Abbreviated units leave
+      // their period behind ("1 Pck. Vanillezucker") — strip it off the name.
+      return { raw, qty: num(n), unit: canonicalUnit(word), name: rest.replace(/^[.:]\s*/, '') }
     }
     return { raw, qty: num(n), unit: null, name: `${lead[2] ?? ''} ${rest}`.trim() }
   }

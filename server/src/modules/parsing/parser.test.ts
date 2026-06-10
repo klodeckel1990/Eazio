@@ -11,6 +11,12 @@ describe('ingredient parser', () => {
     ['1,5 kg Mehl', { qty: 1.5, unit: 'kg', name: 'Mehl' }],
     ['Milch', { qty: null, unit: null, name: 'Milch' }],
     ['2 Eier', { qty: 2, unit: null, name: 'Eier' }],
+    // quantity ranges → midpoint, the "-3" must not leak into the name
+    ['2-3 EL Sonnenblumenöl', { qty: 2.5, unit: 'el', name: 'Sonnenblumenöl' }],
+    ['2 - 3 Schalotten', { qty: 2.5, unit: null, name: 'Schalotten' }],
+    // recipe-site unit abbreviations are canonicalized
+    ['1 Pck. Vanillezucker', { qty: 1, unit: 'packung', name: 'Vanillezucker' }],
+    ['1 Bd Radieschen', { qty: 1, unit: 'bund', name: 'Radieschen' }],
   ])('parses %s', (input, expected) => {
     const p = parseLine(input)
     expect({ qty: p.qty, unit: p.unit, name: p.name }).toEqual(expected)
