@@ -12,6 +12,16 @@ export function RecipesPage() {
   const [recipes, setRecipes] = useState<RecipeSummary[] | null>(null)
   const [query, setQuery] = useState('')
   const [favOnly, setFavOnly] = useState(false)
+  // Masonry-Spalten: 2 mobil, 3 ab Desktop-Breite (synchron zum CSS-Breakpoint)
+  const [cols, setCols] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 720px)').matches ? 3 : 2)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 720px)')
+    const update = () => setCols(mq.matches ? 3 : 2)
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
     // A shared/shortcut link lands on /recipes?import=… → forward to the Import tab.
@@ -88,7 +98,9 @@ export function RecipesPage() {
         <p className="muted">Keine Treffer.</p>
       ) : (
         <div className="recipe-grid">
-          {visible.map((r) => (
+          {Array.from({ length: cols }, (_, c) => visible.filter((_, i) => i % cols === c)).map((column, ci) => (
+            <div className="recipe-col" key={ci}>
+          {column.map((r) => (
             <div
               key={r.id}
               className="recipe-card"
@@ -120,6 +132,8 @@ export function RecipesPage() {
                   <span className="rc-time"><IconClock /> {r.totalMinutes} Min.</span>
                 )}
               </div>
+            </div>
+          ))}
             </div>
           ))}
         </div>
