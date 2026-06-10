@@ -61,9 +61,17 @@
 
 html { -webkit-text-size-adjust: 100%; }
 
+/* App-shell scrolling: the document itself never scrolls — only .main does.
+   Kills the iOS rubber-band drag on the chrome (appbar/tabbar stay rock solid). */
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  min-height: 100dvh;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.55;
@@ -112,7 +120,8 @@ button { font: inherit; color: inherit; }
 .app {
   position: relative;
   z-index: 1;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -206,6 +215,13 @@ button { font: inherit; color: inherit; }
 /* main scroll region */
 .main {
   flex: 1;
+  min-height: 0; /* allow the flex child to actually shrink and scroll */
+  width: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.main > * {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
@@ -667,7 +683,9 @@ select {
 .auth {
   position: relative;
   z-index: 1;
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow-y: auto; /* body no longer scrolls — auth pages scroll themselves */
+  overscroll-behavior-y: contain;
   display: grid;
   place-items: center;
   padding: 1.5rem;
