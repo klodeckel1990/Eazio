@@ -4,6 +4,7 @@ import type { DB } from '../../db/client.js'
 import { requireAuth } from '../auth-guard.js'
 import { linkAccount } from '../../modules/accounts/accounts.service.js'
 import { listAccounts, setDefaultAccount, removeAccount } from '../../modules/accounts/accounts.repo.js'
+import { importYazioHistory, NoAccountError } from '../../modules/diary/yazio-import.service.js'
 
 const LinkSchema = z.object({
   label: z.string().min(1).max(64),
@@ -39,4 +40,24 @@ export function registerAccountRoutes(app: FastifyInstance, db: DB): void {
     if (!removeAccount(db, req.user!.id, id)) return reply.status(404).send({ error: 'not_found' })
     return reply.status(204).send()
   })
+
+  // One-off Yazio history import into the own diary. Day-idempotent, so a
+  // second run only fills days that were not imported yet.
+  app.post(
+    '/api/accounts/:id/import-history',
+    { preHandler: requireAuth, config: { rateLimit: { max: 3, timeWindow: '10 minutes' } } },
+    async (req, reply) => {
+      const { id } = IdParams.parse(req.params)
+      const { days } = z
+        .object({ days: z.coerce.number().int().min(7).max(365).default(90) })
+        .parse(req.body ?? {})
+      try {
+        const result = await importYazioHistory(db, req.user!.id, { accountId: id, days })
+        return reply.send(result)
+      } catch (err) {
+        if (err instanceof NoAccountError) return reply.status(404).send({ error: 'not_found' })
+        throw err
+      }
+    },
+  )
 }

@@ -21,6 +21,8 @@ export function AccountsPage() {
   const [goals, setGoals] = useState<Goals | null>(null)
   const [goalsSaved, setGoalsSaved] = useState(false)
   const [mirror, setMirror] = useState<boolean | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<string | null>(null)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -44,6 +46,31 @@ export function AccountsPage() {
     const next = !mirror
     setMirror(next)
     api.settings.update({ mirrorToYazio: next }).catch(() => {})
+  }
+
+  const importHistory = async () => {
+    const account = accounts?.find((a) => a.isDefault) ?? accounts?.[0]
+    if (!account || importing) return
+    setImporting(true)
+    setImportResult(null)
+    try {
+      const res = await api.accounts.importHistory(account.id, 90)
+      setImportResult(
+        res.entriesImported > 0
+          ? `${res.entriesImported} Einträge aus ${res.daysScanned} Tagen importiert.`
+          : res.daysSkipped > 0
+            ? 'Alles schon da — keine neuen Einträge.'
+            : 'Keine Yazio-Einträge im Zeitraum gefunden.',
+      )
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setImportResult(err.status === 429 ? 'Zu viele Versuche — kurz warten.' : 'Import fehlgeschlagen.')
+      } else {
+        throw err
+      }
+    } finally {
+      setImporting(false)
+    }
   }
 
   const saveGoals = async (e: React.FormEvent) => {
@@ -225,6 +252,29 @@ export function AccountsPage() {
             onClick={toggleMirror}
           >
             {mirror ? 'An' : 'Aus'}
+          </button>
+        </div>
+      )}
+
+      {accounts !== null && accounts.length > 0 && (
+        <div className="card stack">
+          <div>
+            <strong>Yazio-Verlauf importieren</strong>
+            <p className="muted" style={{ margin: 0 }}>
+              Holt die letzten 90 Tage aus deinem Yazio-Konto ins Tagebuch — bereits importierte Tage
+              werden übersprungen. Kann eine Minute dauern.
+            </p>
+          </div>
+          {importResult && (
+            <p className="banner success"><IconCheck /><span className="banner-text">{importResult}</span></p>
+          )}
+          <button
+            type="button"
+            className="btn btn-soft"
+            onClick={() => { void importHistory() }}
+            disabled={importing}
+          >
+            {importing ? <><span className="spinner" /> Importiere…</> : 'Verlauf importieren'}
           </button>
         </div>
       )}

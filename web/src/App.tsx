@@ -11,6 +11,7 @@ import { PresetsPage } from './pages/PresetsPage'
 import { RecipesPage } from './pages/RecipesPage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
 import { ImportPage } from './pages/ImportPage'
+import { StatsPage } from './pages/StatsPage'
 
 function Shell() {
   return (
@@ -35,6 +36,7 @@ export function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Shell />}>
               <Route path="/" element={<TrackerPage />} />
+              <Route path="/stats" element={<StatsPage />} />
               <Route path="/recipes" element={<RecipesPage />} />
               <Route path="/recipes/:id" element={<RecipeDetailPage />} />
               <Route path="/import" element={<ImportPage />} />

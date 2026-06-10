@@ -162,3 +162,27 @@ export interface DiaryLogResult {
   streak: Streak
   mirrorQueued: boolean
 }
+
+export interface StatsDay {
+  date: string
+  kcal: number
+  protein: number
+  fat: number
+  carbs: number
+  waterMl: number
+  entryCount: number
+}
+
+export interface StatsResult {
+  days: StatsDay[]
+  goals: Goals
+  streak: Streak
+  avg: { kcal: number; protein: number; fat: number; carbs: number; waterMl: number }
+  daysLogged: number
+}
+
+export interface ImportHistoryResult {
+  daysScanned: number
+  daysSkipped: number
+  entriesImported: number
+}

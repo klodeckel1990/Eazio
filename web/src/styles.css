@@ -730,6 +730,163 @@ select {
 .diary-item:first-child { border-top: none; }
 .diary-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .diary-meta { color: var(--ink-2); font-size: 0.85rem; white-space: nowrap; }
+
+/* day totals with slim kcal progress (sits on the green gradient card) */
+.totals-day { flex-direction: column; align-items: stretch; gap: 0; }
+.totals-row { display: flex; align-items: center; gap: 1rem; }
+.kcal-progress {
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+  margin-top: 0.7rem;
+}
+.kcal-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), #fff);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.kcal-progress > span.over { background: linear-gradient(90deg, #ffb38a, #ff8a5c); }
+
+/* ---- Verlauf (stats) ------------------------------------------------------ */
+@keyframes stats-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.stats-seg { align-self: flex-start; }
+.stats-page .card { animation: stats-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.stats-page .card:nth-of-type(2) { animation-delay: 0.06s; }
+.stats-page .card:nth-of-type(3) { animation-delay: 0.12s; }
+.stats-page .card:nth-of-type(4) { animation-delay: 0.18s; }
+
+.stats-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  background:
+    radial-gradient(130% 160% at 100% 0%, var(--primary-050) 0%, transparent 55%),
+    var(--surface);
+  overflow: hidden;
+  position: relative;
+}
+.stats-hero::after {
+  /* oversized ghost glyph — quiet editorial flourish */
+  content: 'Ø';
+  position: absolute;
+  right: -0.15em;
+  bottom: -0.42em;
+  font-family: var(--font-display);
+  font-size: 7.5rem;
+  font-weight: 600;
+  color: var(--primary);
+  opacity: 0.07;
+  pointer-events: none;
+}
+.stats-hero-main { display: flex; flex-direction: column; }
+.stats-hero-n {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 144;
+  font-weight: 600;
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.stats-hero-l { font-weight: 600; color: var(--ink-2); margin-top: 0.15rem; }
+.stats-hero-sub { color: var(--ink-3); font-size: 0.85rem; margin-top: 0.1rem; }
+
+.streak-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--r-lg);
+  background: linear-gradient(160deg, var(--coral-100), var(--amber-100));
+  color: var(--coral);
+  box-shadow: var(--sh-1);
+}
+.streak-chip svg { width: 26px; height: 26px; }
+.streak-chip .n {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+.streak-chip .l { font-size: 0.68rem; line-height: 1.15; color: color-mix(in srgb, var(--coral) 75%, var(--ink-2)); }
+
+.stats-card { padding: 1rem 1.1rem 0.9rem; }
+.stats-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+.stats-card-head h2 {
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.stats-card-head h2 svg { width: 18px; height: 18px; color: var(--teal); }
+.stats-sel { color: var(--ink-3); font-size: 0.85rem; }
+.stats-sel strong { color: var(--ink); }
+
+.chart { width: 100%; height: auto; display: block; }
+.chart-bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: bar-grow 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.chart-bar.ok { fill: var(--primary); opacity: 0.78; }
+.chart-bar.over { fill: var(--coral); opacity: 0.85; }
+.chart-bar.empty { fill: var(--line-2); }
+.chart-bar.selected { opacity: 1; stroke: var(--ink); stroke-width: 1.2; }
+.chart-bar.water { fill: var(--teal); opacity: 0.75; }
+.chart-bar.water.empty { fill: var(--line-2); }
+.chart-goal { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 4 4; }
+.chart-goal-label { fill: var(--ink-3); font-size: 10px; font-family: var(--font-body); }
+.chart-x { fill: var(--ink-3); font-size: 10px; font-family: var(--font-body); }
+.stats-sel-macros { margin-top: 0.5rem; }
+
+.energy-bar {
+  display: flex;
+  height: 14px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.energy-bar > span { transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.energy-bar .seg-prot { background: var(--primary); }
+.energy-bar .seg-carb { background: var(--amber); }
+.energy-bar .seg-fat { background: var(--teal); }
+
+.energy-legend { list-style: none; margin: 0.7rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.energy-legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+.energy-legend strong { margin-left: auto; color: var(--ink); font-variant-numeric: tabular-nums; }
+.energy-legend em { font-style: normal; color: var(--ink-3); width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
+.energy-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; align-self: center; }
+.energy-legend .dot.prot { background: var(--primary); }
+.energy-legend .dot.carb { background: var(--amber); }
+.energy-legend .dot.fat { background: var(--teal); }
+.energy-legend .goal-hit { color: var(--primary); font-size: 0.8rem; }
+.energy-legend .goal-miss { color: var(--ink-3); font-size: 0.8rem; }
+
+.chart-water { margin-top: 0.2rem; }
 .auth-brand h1 {
   font-variation-settings: 'opsz' 144;
   font-size: 2.2rem;

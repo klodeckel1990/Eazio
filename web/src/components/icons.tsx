@@ -237,3 +237,34 @@ export function IconCart(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+/** Verlauf — rising bars. */
+export function IconChart(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M4 20h16" />
+      <rect x="5.5" y="12" width="3.4" height="5.5" rx="1" />
+      <rect x="10.3" y="8" width="3.4" height="9.5" rx="1" />
+      <rect x="15.1" y="4.5" width="3.4" height="13" rx="1" />
+    </Svg>
+  )
+}
+
+/** Streak — flame. */
+export function IconFlame(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M12 21c3.9 0 6.5-2.5 6.5-6 0-2.6-1.4-4.4-2.8-6.1-.4 1-.9 1.7-1.8 2.3.2-2.9-1-5.8-3.9-7.2.3 2.3-.5 3.8-1.8 5.2C6.8 10.7 5.5 12.4 5.5 15c0 3.5 2.6 6 6.5 6Z" />
+      <path d="M12 21c-1.8 0-3-1.2-3-2.9 0-1.5 1-2.3 1.9-3.4.7.7 1.1 1 2 1.3 0-.9 0-1.8-.4-2.7 2 1 4.5 3 2.6 5.9-.7 1.1-1.8 1.8-3.1 1.8Z" />
+    </Svg>
+  )
+}
+
+/** Wasser — droplet. */
+export function IconDrop(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3.5c3.2 4 6 7 6 10.3A6 6 0 0 1 6 13.8C6 10.5 8.8 7.5 12 3.5Z" />
+    </Svg>
+  )
+}

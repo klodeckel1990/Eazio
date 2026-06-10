@@ -224,15 +224,23 @@ export function TrackerPage() {
       )}
 
       {day && (
-        <div className="totals">
-          <div className="kcal-big">
-            <span className="n">{Math.max(0, day.remainingKcal)}</span>
-            <span className="l">kcal übrig von {day.goals.kcalTarget}</span>
+        <div className="totals totals-day">
+          <div className="totals-row">
+            <div className="kcal-big">
+              <span className="n">{Math.max(0, day.remainingKcal)}</span>
+              <span className="l">kcal übrig von {day.goals.kcalTarget}</span>
+            </div>
+            <div className="macro-mini">
+              <div><span className="mn">{round(day.totals.carbs)}</span><span className="ml">KH</span></div>
+              <div><span className="mn">{round(day.totals.protein)}</span><span className="ml">Protein</span></div>
+              <div><span className="mn">{round(day.totals.fat)}</span><span className="ml">Fett</span></div>
+            </div>
           </div>
-          <div className="macro-mini">
-            <div><span className="mn">{round(day.totals.carbs)}</span><span className="ml">KH</span></div>
-            <div><span className="mn">{round(day.totals.protein)}</span><span className="ml">Protein</span></div>
-            <div><span className="mn">{round(day.totals.fat)}</span><span className="ml">Fett</span></div>
+          <div className="kcal-progress" aria-hidden="true">
+            <span
+              className={day.totals.kcal > day.goals.kcalTarget ? 'over' : undefined}
+              style={{ width: `${Math.min(100, (day.totals.kcal / day.goals.kcalTarget) * 100)}%` }}
+            />
           </div>
         </div>
       )}

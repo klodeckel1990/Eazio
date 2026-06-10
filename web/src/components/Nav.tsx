@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import type { ComponentType, SVGProps } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { IconBowl, IconBook, IconWand, IconBookmark, IconSettings, IconLogout } from './icons'
+import { IconBowl, IconBook, IconChart, IconWand, IconBookmark, IconSettings, IconLogout } from './icons'
 
 interface NavItem {
   to: string
@@ -10,7 +10,8 @@ interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Tracker', Icon: IconBowl },
+  { to: '/', label: 'Tagebuch', Icon: IconBowl },
+  { to: '/stats', label: 'Verlauf', Icon: IconChart },
   { to: '/recipes', label: 'Rezepte', Icon: IconBook },
   { to: '/import', label: 'Import', Icon: IconWand },
   { to: '/presets', label: 'Presets', Icon: IconBookmark },

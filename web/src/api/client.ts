@@ -2,6 +2,7 @@ import type {
   Account, AuthResponse, Candidate, LogLine, LogResult, MatchResponse, Preset, PresetWithItems, User, Daytime,
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
+  ImportHistoryResult, StatsResult,
 } from './types'
 
 export class ApiError extends Error {
@@ -74,6 +75,8 @@ export const api = {
       req<Account>('POST', '/accounts', { label, username, password }),
     setDefault: (id: string) => req<void>('PATCH', `/accounts/${id}/default`),
     remove: (id: string) => req<void>('DELETE', `/accounts/${id}`),
+    importHistory: (id: string, days = 90) =>
+      req<ImportHistoryResult>('POST', `/accounts/${id}/import-history`, { days }),
   },
   match: (text: string, accountId?: string) => req<MatchResponse>('POST', '/match', { text, accountId }),
   search: (query: string, accountId?: string) =>
@@ -133,5 +136,8 @@ export const api = {
   goals: {
     get: () => req<Goals>('GET', '/goals'),
     update: (patch: Partial<Goals>) => req<Goals>('PUT', '/goals', patch),
+  },
+  stats: {
+    get: (days: number) => req<StatsResult>('GET', `/stats?days=${days}`),
   },
 }
