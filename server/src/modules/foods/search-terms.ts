@@ -50,6 +50,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^tomate roh$/, terms: 'kirschtomate cherrytomate cocktailtomate cherry romatomate' },
   { match: /^rind hackfleisch/, terms: 'rinderhack rinderhackfleisch hackfleisch hack' },
   { match: /^speisezwiebel/, terms: 'zwiebel zwiebeln' },
+  { match: /^huehnerei/, terms: 'ei eier' },
+  { match: /^eier gekocht/, terms: 'ei' },
   { match: /zuckermais/, terms: 'mais' },
   { match: /paprikaschote/, terms: 'paprika' },
 ]

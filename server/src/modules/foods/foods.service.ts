@@ -209,18 +209,18 @@ export async function matchFoodText(
     if (isSeasoning(line.name)) continue
     const { normalizedUnit, amountGrams } = resolveAmount(line.qty, line.unit)
     const query = buildSearchQuery(line.name)
-    let candidates = await searchSmart(db, userId, query, 10, fetchSearch)
+    let candidates = await searchSmart(db, userId, query, 12, fetchSearch)
     if (candidates.length === 0) {
       // unknown compound ("Romatomaten") — search its head ("tomate") and let
       // the AI rerank pick the fitting base product
       const head = compoundHeadFallback(line.name)
-      if (head) candidates = await searchSmart(db, userId, head, 10, fetchSearch)
+      if (head) candidates = await searchSmart(db, userId, head, 12, fetchSearch)
     }
     if (candidates.length === 0) {
       // multi-word zero hit ("Cherry-Tomaten"): try the tokens individually
       for (const token of query.split(/\s+/).slice(0, 3)) {
         if (token.length < 3) continue
-        candidates = await searchSmart(db, userId, token, 10, fetchSearch)
+        candidates = await searchSmart(db, userId, token, 12, fetchSearch)
         if (candidates.length > 0) break
       }
     }
@@ -230,30 +230,34 @@ export async function matchFoodText(
     let aliasDefaultG: number | null = null
     let resolved = false
 
-    // 1) the user's own learned mapping always wins
-    const alias = getFoodAlias(db, userId, normalizedName)
-    if (alias) {
-      const idx = candidates.findIndex((c) => c.id === alias.foodId)
+    // moves a known-good food to the front — fetched by id when the FTS
+    // candidate set does not contain it (typical for AI-requeried matches)
+    const promote = (foodId: string): boolean => {
+      const idx = candidates.findIndex((c) => c.id === foodId)
       if (idx >= 0) {
         const [pick] = candidates.splice(idx, 1)
         candidates.unshift(pick!)
-        selectedFoodId = pick!.id
-        aliasDefaultG = alias.defaultAmountG
-        resolved = true
+      } else {
+        const row = getFoodById(db, foodId, userId)
+        if (!row) return false
+        candidates.unshift(toSummary(row, userId))
       }
+      selectedFoodId = foodId
+      return true
+    }
+
+    // 1) the user's own learned mapping always wins
+    const alias = getFoodAlias(db, userId, normalizedName)
+    if (alias && promote(alias.foodId)) {
+      aliasDefaultG = alias.defaultAmountG
+      resolved = true
     }
 
     // 2) global LLM match memory (one AI call per unique name, ever)
     if (!resolved) {
       const cached = getCachedMatch(db, normalizedName)
-      if (cached) {
-        const idx = candidates.findIndex((c) => c.id === cached)
-        if (idx >= 0) {
-          const [pick] = candidates.splice(idx, 1)
-          candidates.unshift(pick!)
-          selectedFoodId = pick!.id
-          resolved = true
-        }
+      if (cached && promote(cached)) {
+        resolved = true
       }
     }
 
@@ -270,33 +274,56 @@ export async function matchFoodText(
     })
   }
 
-  // 3) one batched AI pass for everything the caches did not resolve
+  const toRerankLine = (p: Pending) => ({
+    name: p.line.name,
+    candidates: p.candidates.map((c) => ({
+      id: c.id,
+      label: c.brand ? `${c.name} – ${c.brand}` : c.name,
+    })),
+  })
+  const applyPick = (p: Pending, pickId: string) => {
+    const idx = p.candidates.findIndex((c) => c.id === pickId)
+    if (idx < 0) return
+    if (idx > 0) {
+      const [pick] = p.candidates.splice(idx, 1)
+      p.candidates.unshift(pick!)
+    }
+    p.selectedFoodId = pickId
+    // cache confirmations too — otherwise every repeat pays the AI call
+    if (p.candidates[0]!.source !== 'custom') {
+      upsertCachedMatch(db, p.normalizedName, pickId)
+    }
+  }
+
+  // 3) one batched AI pass for everything the caches did not resolve; lines
+  //    the model rejects come with a better database-style search term and
+  //    get exactly one re-search + re-rank round ("Ei" → "Hühnerei")
   const aiLines = pending.filter((p) => p.needsAi)
   if (aiLines.length > 0) {
-    const picks = await rerank(
-      aiLines.map((p) => ({
-        name: p.line.name,
-        candidates: p.candidates.map((c) => ({
-          id: c.id,
-          label: c.brand ? `${c.name} – ${c.brand}` : c.name,
-        })),
-      })),
-    )
+    const picks = await rerank(aiLines.map(toRerankLine))
+    const retries: { p: Pending; query: string }[] = []
     aiLines.forEach((p, i) => {
-      const pickId = picks[i]
-      if (!pickId) return
-      const idx = p.candidates.findIndex((c) => c.id === pickId)
-      if (idx < 0) return
-      if (idx > 0) {
-        const [pick] = p.candidates.splice(idx, 1)
-        p.candidates.unshift(pick!)
-      }
-      p.selectedFoodId = pickId
-      // cache confirmations too — otherwise every repeat pays the AI call
-      if (p.candidates[0]!.source !== 'custom') {
-        upsertCachedMatch(db, p.normalizedName, pickId)
-      }
+      const pick = picks[i]
+      if (!pick) return
+      if (pick.id) applyPick(p, pick.id)
+      else if (pick.retryQuery) retries.push({ p, query: pick.retryQuery })
     })
+
+    if (retries.length > 0) {
+      for (const { p, query } of retries) {
+        const extra = await searchSmart(db, userId, query, 12, fetchSearch)
+        if (extra.length > 0) {
+          const seen = new Set(extra.map((c) => c.id))
+          p.candidates = [...extra, ...p.candidates.filter((c) => !seen.has(c.id))].slice(0, 12)
+          p.selectedFoodId = p.candidates[0]!.id
+        }
+      }
+      const secondPicks = await rerank(retries.map(({ p }) => toRerankLine(p)))
+      retries.forEach(({ p }, i) => {
+        const pick = secondPicks[i]
+        if (pick?.id) applyPick(p, pick.id)
+      })
+    }
   }
 
   const out: FoodMatchLine[] = []
