@@ -28,15 +28,14 @@
 				<string>tellerwert</string>
 			</array>
 		</dict>
-		<!-- Google Sign-In Callback: umgekehrte iOS-Client-ID aus der Google
-		     Cloud Console eintragen (siehe docs/OAUTH_SETUP.md). Ohne echte ID
-		     bleibt der Eintrag wirkungslos. -->
+		<!-- Google Sign-In Callback: umgekehrte iOS-Client-ID (Google Cloud
+		     Console, Projekt "Tellerwert"). -->
 		<dict>
 			<key>CFBundleURLName</key>
 			<string>google-signin</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.REPLACE-WITH-IOS-CLIENT-ID</string>
+				<string>com.googleusercontent.apps.472197460342-b69kd8t8o4o3vf6p1rhoc2tan0ov8oov</string>
 			</array>
 		</dict>
 	</array>
