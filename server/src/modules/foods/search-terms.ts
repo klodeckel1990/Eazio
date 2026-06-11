@@ -91,7 +91,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^walnuss/, terms: 'walnut walnuts walnuesse' },
   { match: /^banane roh/, terms: 'banana bananas' },
   { match: /^buttermilch/, terms: 'buttermilk' },
-  { match: /^pfefferschote/, terms: 'chile chiles peppers green ancho chipotle serrano habanero poblano' },
+  { match: /^pfefferschote/, terms: 'chile chiles peppers green ancho chipotle serrano habanero poblano chillischote chillischoten' },
   { match: /^speisezwiebel/, terms: 'rot rote gelbe weisse onion onions yellow white' },
   { match: /^milch (fettarm|entrahmt)/, terms: 'milk' },
   { match: /^butter (mild|gesalzen)/, terms: 'unsalted salted' },
