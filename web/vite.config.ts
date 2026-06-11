@@ -11,10 +11,27 @@ export default defineConfig({
       manifest: false,
       workbox: {
         globPatterns: ['**/*.{js,css,html,webmanifest}', 'icon-192.png', 'favicon.png', 'apple-touch-icon.png'],
-        navigateFallback: '/index.html',
-        // API and public recipe pages are server-rendered, never the SPA shell
-        navigateFallbackDenylist: [/^\/api\//, /^\/r\//],
+        // Navigationen NICHT aus dem Precache bedienen: der Browser erzwingt
+        // die Security-Header (CSP/COOP) der gecachten Antwort — ein
+        // precachtes index.html friert Server-Header-Änderungen ein (so
+        // blockierte ein veraltetes COOP das Google-OAuth-Popup). Stattdessen
+        // NetworkFirst; offline fällt es auf das precachte Shell zurück.
+        navigateFallback: null,
         runtimeCaching: [
+          {
+            // SPA-Navigationen (API und öffentliche /r/-Rezeptseiten sind
+            // server-gerendert und ausgenommen)
+            urlPattern: ({ request, url }) =>
+              request.mode === 'navigate' &&
+              !url.pathname.startsWith('/api/') &&
+              !url.pathname.startsWith('/r/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'app-shell',
+              networkTimeoutSeconds: 3,
+              precacheFallback: { fallbackURL: '/index.html' },
+            },
+          },
           {
             // day data: fresh when online, last known state when offline
             urlPattern: /\/api\/(diary|goals|widget)/,
