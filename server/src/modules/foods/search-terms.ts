@@ -80,6 +80,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^kidneybohne/, terms: 'kidney beans kidneybohnen' },
   { match: /^kichererbse/, terms: 'chickpeas chickpea kichererbsen' },
   { match: /^wurzelpetersilie/, terms: 'petersilienwurzel petersiliewurzel' },
+  { match: /^sojabohnensprossen/, terms: 'bean sprouts beansprouts sprossen' },
+  { match: /^erdnussoel|^erdnussol/, terms: 'peanut oil' },
   // englische Staples (Allrecipes/Serious Eats/Cookpad — KI-Retry trifft sonst nur OFF)
   { match: /^huehnerei/, terms: 'ei eier egg eggs' },
   { match: /^weizen mehl/, terms: 'flour allpurpose' },
