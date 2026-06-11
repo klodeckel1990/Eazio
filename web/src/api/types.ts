@@ -106,6 +106,38 @@ export interface FoodMatchLine {
   selectedFoodId: string | null
 }
 
+/** Eingabe für POST /api/foods — Nährwerte pro 100 g/ml. */
+export interface CustomFoodInput {
+  name: string
+  brand?: string | null
+  barcode?: string | null
+  baseUnit?: 'g' | 'ml'
+  kcal: number
+  protein?: number | null
+  fat?: number | null
+  saturatedFat?: number | null
+  carbs?: number | null
+  sugar?: number | null
+  fiber?: number | null
+  salt?: number | null
+  servings?: ServingDef[]
+}
+
+/** Ergebnis des Nährwerttabellen-Fotoscans (alle Felder best-effort). */
+export interface LabelScanResult {
+  name: string | null
+  brand: string | null
+  kcal: number | null
+  protein: number | null
+  fat: number | null
+  saturatedFat: number | null
+  carbs: number | null
+  sugar: number | null
+  fiber: number | null
+  salt: number | null
+  servingG: number | null
+}
+
 export interface DiaryEntry {
   id: string
   date: string

@@ -362,6 +362,16 @@ export function IconChevronRight(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+/** Kamera — Nährwerttabelle fotografieren. */
+export function IconCamera(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M8.2 6.5 9.4 4.6c.2-.35.57-.6 1-.6h3.2c.43 0 .8.25 1 .6l1.2 1.9H19a2.5 2.5 0 0 1 2.5 2.5v8A2.5 2.5 0 0 1 19 19.5H5A2.5 2.5 0 0 1 2.5 17V9A2.5 2.5 0 0 1 5 6.5h3.2z" />
+      <circle cx="12" cy="12.5" r="3.4" />
+    </Svg>
+  )
+}
+
 /** Kaffeetasse mit Dampf — Frühstück. */
 export function IconCoffee(props: SVGProps<SVGSVGElement>) {
   return (

@@ -62,6 +62,28 @@ describe('foods routes', () => {
     }
   })
 
+  it('label-scan: 503 ohne API-Key, 400 bei kaputtem Body', async () => {
+    const app = buildApp(createTestDb())
+    const auth = await login(app, 'labelscan')
+    // kein ANTHROPIC_API_KEY in der Test-Umgebung → ai_unavailable
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/foods/label-scan',
+      headers: auth,
+      payload: { image: 'x'.repeat(200), mediaType: 'image/jpeg' },
+    })
+    expect(res.statusCode).toBe(503)
+    expect((res.json() as { error: string }).error).toBe('ai_unavailable')
+
+    const bad = await app.inject({
+      method: 'POST',
+      url: '/api/foods/label-scan',
+      headers: auth,
+      payload: { image: 'zu-kurz', mediaType: 'image/gif' },
+    })
+    expect(bad.statusCode).toBe(400)
+  })
+
   it('searches seeded foods', async () => {
     const db = createTestDb()
     seedBls(db)

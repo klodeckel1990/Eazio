@@ -1804,6 +1804,30 @@ input[type='search']:focus {
 .add-option-chev { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
 .composer-sheet textarea { resize: none; }
 .composer-sheet .banner { margin: 0; }
+
+/* Eigenes Produkt anlegen — Formular-Sheet (scrollt, falls Tastatur offen) */
+.cf-sheet {
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  gap: 0.7rem;
+}
+.cf-sheet .banner { margin: 0; }
+.cf-barcode { color: var(--ink-2); font-size: 0.85rem; margin-top: -0.35rem; }
+.cf-section {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.2rem;
+}
+.cf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+.cf-grid .field label { font-size: 0.78rem; }
 .cal-head {
   display: flex;
   justify-content: space-between;

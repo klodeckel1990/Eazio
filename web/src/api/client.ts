@@ -3,6 +3,7 @@ import type {
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
   ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan, DiaryMonth,
+  CustomFoodInput, LabelScanResult,
 } from './types'
 
 export class ApiError extends Error {
@@ -132,6 +133,9 @@ export const api = {
       req<{ results: FoodSummary[] }>('GET', `/foods/search?q=${encodeURIComponent(q)}&limit=${limit}`),
     match: (text: string) => req<{ lines: FoodMatchLine[] }>('POST', '/foods/match', { text }),
     barcode: (ean: string) => req<FoodSummary>('GET', `/foods/barcode/${ean}`),
+    create: (body: CustomFoodInput) => req<FoodSummary>('POST', '/foods', body),
+    labelScan: (image: string, mediaType: string) =>
+      req<LabelScanResult>('POST', '/foods/label-scan', { image, mediaType }),
   },
   diary: {
     day: (date?: string) => req<DiaryDay>('GET', date ? `/diary?date=${date}` : '/diary'),

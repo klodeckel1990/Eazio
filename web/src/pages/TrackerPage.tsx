@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
-import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine } from '../api/types'
+import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine, FoodSummary } from '../api/types'
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
 import { round } from '../lib/nutrition'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
@@ -12,6 +12,7 @@ import { pushLiveActivity } from '../lib/live-activity'
 import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { CalendarSheet } from '../components/CalendarSheet'
+import { CustomFoodSheet } from '../components/CustomFoodSheet'
 import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconFlame, IconSteps, IconDrop, IconCalendar, IconChevronLeft, IconChevronRight, IconPlus, IconBook, IconCoffee, IconPlate, IconMoon, IconApple } from '../components/icons'
 
 interface RowState {
@@ -62,6 +63,7 @@ export function TrackerPage() {
   const [presetSaved, setPresetSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [composerOpen, setComposerOpen] = useState(false)
+  const [createBarcode, setCreateBarcode] = useState<string | null>(null)
   const [addMenuFor, setAddMenuFor] = useState<Daytime | null>(null)
   const [expanded, setExpanded] = useState<Daytime | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
@@ -159,6 +161,25 @@ export function TrackerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /** Produkt (Scan oder frisch angelegt) in die Staging-Liste übernehmen. */
+  const stageFood = (food: FoodSummary) => {
+    const suggested = food.servings[0]?.grams ?? 100
+    const line: FoodMatchLine = {
+      raw: food.brand ? `${food.name} – ${food.brand}` : food.name,
+      name: food.name,
+      qty: null,
+      unit: 'serving',
+      amountGrams: null,
+      suggestedAmountG: suggested,
+      candidates: [food],
+      selectedFoodId: food.id,
+    }
+    setLines((prev) => [...prev, line])
+    setKeys((prev) => [...prev, nextKey()])
+    setRows((prev) => [...prev, { foodId: food.id, grams: suggested }])
+    setComposerOpen(false) // Sheet zu, das Produkt steht in der Liste
+  }
+
   const handleScan = async () => {
     const code = await scanBarcode()
     if (!code) return
@@ -168,31 +189,20 @@ export function TrackerPage() {
       return
     }
     try {
-      const food = await api.foods.barcode(code)
-      const suggested = food.servings[0]?.grams ?? 100
-      const line: FoodMatchLine = {
-        raw: food.brand ? `${food.name} – ${food.brand}` : food.name,
-        name: food.name,
-        qty: null,
-        unit: 'serving',
-        amountGrams: null,
-        suggestedAmountG: suggested,
-        candidates: [food],
-        selectedFoodId: food.id,
-      }
-      setLines((prev) => [...prev, line])
-      setKeys((prev) => [...prev, nextKey()])
-      setRows((prev) => [...prev, { foodId: food.id, grams: suggested }])
-      setComposerOpen(false) // Sheet zu, das gescannte Produkt steht in der Liste
+      stageFood(await api.foods.barcode(code))
     } catch (e) {
       if (e instanceof ApiError) {
-        setError(
-          e.status === 404
-            ? 'Produkt nicht in der Datenbank – tippe den Namen ein oder leg es als eigenes Lebensmittel an.'
-            : e.status === 503
+        if (e.status === 404) {
+          // unbekanntes Produkt → direkt als eigenes Lebensmittel anlegen
+          setComposerOpen(false)
+          setCreateBarcode(code)
+        } else {
+          setError(
+            e.status === 503
               ? 'Produktdatenbank gerade nicht erreichbar – später nochmal versuchen.'
               : e.message,
-        )
+          )
+        }
       } else {
         setError('Scan fehlgeschlagen.')
       }
@@ -741,6 +751,13 @@ export function TrackerPage() {
           </div>
         </div>,
         document.body,
+      )}
+      {createBarcode && (
+        <CustomFoodSheet
+          barcode={createBarcode}
+          onCreated={(food) => { setCreateBarcode(null); stageFood(food) }}
+          onClose={() => setCreateBarcode(null)}
+        />
       )}
       {calOpen && (
         <CalendarSheet

@@ -10,6 +10,7 @@ import {
 } from '../../modules/foods/foods.repo.js'
 import { toDetail } from '../../modules/foods/foods.service.js'
 import { OffUnavailableError } from '../../modules/foods/off.client.js'
+import { scanNutritionLabel } from '../../modules/foods/label-scan.js'
 
 const SearchSchema = z.object({
   q: z.string().trim().min(1).max(120),
@@ -75,6 +76,28 @@ export function registerFoodRoutes(app: FastifyInstance, db: DB): void {
     if (!food) return reply.status(404).send({ error: 'not_found' })
     return reply.send(food)
   })
+
+  // Foto der Nährwerttabelle → Vorbefüllung fürs Custom-Food-Formular.
+  // bodyLimit großzügig: das Web skaliert auf ≤1400px JPEG, base64 ≲ 1 MB.
+  app.post(
+    '/api/foods/label-scan',
+    {
+      preHandler: requireAuth,
+      bodyLimit: 8 * 1024 * 1024,
+      config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+    },
+    async (req, reply) => {
+      const { image, mediaType } = z
+        .object({
+          image: z.string().min(100).max(7_000_000),
+          mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+        })
+        .parse(req.body)
+      const result = await scanNutritionLabel(image, mediaType)
+      if (!result) return reply.status(503).send({ error: 'ai_unavailable' })
+      return reply.send(result)
+    },
+  )
 
   app.post('/api/foods', { preHandler: requireAuth }, async (req, reply) => {
     const body = CustomFoodSchema.parse(req.body)
