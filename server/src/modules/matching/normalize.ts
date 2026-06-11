@@ -120,7 +120,7 @@ const SEASONINGS = new Set([
   'kamillenblute', 'kamillenbluten', 'rosmarinnadeln', 'selleriesalz', 'knoblauchgranulat',
   'zitronenmelisse', 'melisse', 'zitronenschale', 'orangenschale', 'zitronenabrieb',
   'orangenabrieb', 'rauchsalz', 'gurkenwasser', 'spargelschalen', 'shisokresse',
-  'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
+  'currykraut', 'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
   'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
   'anisstern', 'gewurznelke', 'gewurznelken', 'vanillemark',
   'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung', 'brotgewurz',

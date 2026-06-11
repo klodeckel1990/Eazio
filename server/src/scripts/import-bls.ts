@@ -145,6 +145,8 @@ const STAPLE_MATCHES: Record<string, string> = {
   'half-and-half': 'Kaffeesahne mind. 10 % Fett',
   'half and half': 'Kaffeesahne mind. 10 % Fett',
   clams: 'Venusmuschel roh',
+  marzipan: 'Marzipan Rohmasse',
+  marzipanmohren: 'Marzipan Rohmasse',
   olivenol: 'Olivenöl',
   kichererbsen: 'Kichererbse reif, Konserve, abgetropft',
   chickpeas: 'Kichererbse reif, Konserve, abgetropft',

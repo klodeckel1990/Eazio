@@ -12,7 +12,7 @@ const COMPOUND_HEADS = [
   'aufstrich', 'auflauf', 'beere', 'bohne', 'braten', 'brot', 'broetchen',
   'butter', 'creme', 'eis', 'erbse', 'essig', 'filet', 'flocken', 'fleisch',
   'gelee', 'gemuese', 'joghurt', 'kaese', 'kartoffel', 'keule', 'kohl', 'kuchen',
-  'kuerbis', 'lende', 'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudel',
+  'kuerbis', 'lende', 'likoer', 'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudel',
   'nudeln', 'nuss', 'oel', 'paprika', 'pilz', 'pulver', 'quark', 'reis',
   'konfituere', 'kotelett', 'kuvertuere', 'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse',
   'speck', 'spinat', 'suppe', 'tomate', 'traube', 'wurst', 'zucker', 'zwiebel',
@@ -85,6 +85,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^biskuit/, terms: 'biskuitbroesel loeffelbiskuit' },
   { match: /^venusmuschel/, terms: 'clams clam muscheln vongole' },
   { match: /^kaffeesahne/, terms: 'half-and-half half and half kondensmilch' },
+  { match: /^marzipan rohmasse/, terms: 'marzipan marzipanmoehren marzipanrohmasse marzipankartoffeln' },
   // englische Staples (Allrecipes/Serious Eats/Cookpad — KI-Retry trifft sonst nur OFF)
   { match: /^huehnerei/, terms: 'ei eier egg eggs' },
   { match: /^weizen mehl/, terms: 'flour allpurpose' },
