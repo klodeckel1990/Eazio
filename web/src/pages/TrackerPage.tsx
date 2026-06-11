@@ -131,6 +131,7 @@ export function TrackerPage() {
         })),
       ])
       setText('') // matched — das Feld ist frei für weitere Zutaten
+      setComposerOpen(false) // Sheet zu, damit die gematchte Liste sichtbar wird
     } catch (e) {
       if (e instanceof ApiError) {
         setError(e.message)
@@ -182,6 +183,7 @@ export function TrackerPage() {
       setLines((prev) => [...prev, line])
       setKeys((prev) => [...prev, nextKey()])
       setRows((prev) => [...prev, { foodId: food.id, grams: suggested }])
+      setComposerOpen(false) // Sheet zu, das gescannte Produkt steht in der Liste
     } catch (e) {
       if (e instanceof ApiError) {
         setError(
@@ -544,55 +546,58 @@ export function TrackerPage() {
         </div>
       )}
 
-      {composerOpen && (
-        <div className="card pad-lg stack">
-          <div className="field">
-            <div className="composer-head">
-              <label htmlFor="tracker-text">Zutaten für {MEAL_TITLES[daytime]}</label>
+      {composerOpen && createPortal(
+        <div className="cal-overlay" onClick={() => setComposerOpen(false)} role="presentation">
+          <div className="add-sheet composer-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Zutaten tracken">
+            <div className="add-sheet-head">
+              <h3>Zutaten für {MEAL_TITLES[daytime]}</h3>
               <button
                 type="button"
                 className="btn btn-icon btn-ghost btn-sm"
-                onClick={() => { setComposerOpen(false); setText('') }}
-                aria-label="Eingabe schließen"
+                onClick={() => setComposerOpen(false)}
+                aria-label="Schließen"
               >
                 <IconClose />
               </button>
             </div>
+            {error && (
+              <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>
+            )}
             <textarea
               id="tracker-text"
               ref={composerRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              rows={5}
+              rows={4}
               placeholder={'z. B.\n80g Haferflocken\n200ml Milch\n1 Banane'}
             />
-          </div>
-
-          <div className="btn-row">
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              style={{ flex: 1 }}
-              onClick={() => { void handleMatch() }}
-              disabled={matching || !text.trim()}
-            >
-              <IconWand />
-              {matching ? 'Matchen…' : 'Matchen'}
-            </button>
-            {isNativeApp() && (
+            <div className="btn-row">
               <button
                 type="button"
-                className="btn btn-soft btn-lg"
-                onClick={() => { void handleScan() }}
-                aria-label="Barcode scannen"
-                title="Barcode scannen"
+                className="btn btn-primary btn-lg"
+                style={{ flex: 1 }}
+                onClick={() => { void handleMatch() }}
+                disabled={matching || !text.trim()}
               >
-                <IconScan />
-                Scannen
+                <IconWand />
+                {matching ? 'Matchen…' : 'Matchen'}
               </button>
-            )}
+              {isNativeApp() && (
+                <button
+                  type="button"
+                  className="btn btn-soft btn-lg"
+                  onClick={() => { void handleScan() }}
+                  aria-label="Barcode scannen"
+                  title="Barcode scannen"
+                >
+                  <IconScan />
+                  Scannen
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {lines.length > 0 && (

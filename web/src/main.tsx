@@ -3,8 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './styles.css'
 import { App } from './App'
 import { initTheme } from './lib/theme'
+import { initKeyboard } from './lib/keyboard'
 
 initTheme() // Erscheinungsbild vor dem ersten Paint auflösen
+initKeyboard() // WebView-Resize + Tabbar ausblenden, solange die Tastatur offen ist
 
 // Auto-updating service worker (precached shell + offline read caches).
 // Only on http(s): inside the Capacitor shell (capacitor:// scheme) service

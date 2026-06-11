@@ -939,7 +939,11 @@ select {
   border-top: 1px solid var(--line);
 }
 .meal-matching { display: flex; align-items: center; gap: 0.5rem; color: var(--ink-2); }
-.composer-head { display: flex; align-items: center; justify-content: space-between; }
+
+/* Tastatur offen (native App, WebView-Resize): Tabbar weg, damit das
+   Zutaten-Sheet direkt über der Tastatur sitzt. */
+:root.kb-open .tabbar { display: none; }
+:root.kb-open .main { padding-bottom: 1rem; }
 
 /* day totals with slim kcal progress (sits on the green gradient card) */
 .totals-day { flex-direction: column; align-items: stretch; gap: 0; }
@@ -1796,6 +1800,8 @@ input[type='search']:focus {
 .add-option-text strong { font-size: 0.98rem; }
 .add-option-text span { color: var(--ink-2); font-size: 0.8rem; }
 .add-option-chev { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
+.composer-sheet textarea { resize: none; }
+.composer-sheet .banner { margin: 0; }
 .cal-head {
   display: flex;
   justify-content: space-between;
