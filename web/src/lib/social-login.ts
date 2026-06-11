@@ -17,6 +17,22 @@ export function getPlatform(): 'web' | 'ios' | 'android' {
   return p === 'ios' || p === 'android' ? p : 'web'
 }
 
+// Rückweg des Web-Popup-Flows: Google leitet das Popup auf /login zurück
+// (#id_token in der URL). Die Token-Übergabe ans Opener-Fenster macht der
+// Plugin-Konstruktor — der läuft aber erst beim ersten Methodenaufruf.
+// Deshalb hier anstoßen, sobald laut Plugin-State ein Flow aussteht.
+if (getPlatform() === 'web') {
+  try {
+    if (localStorage.getItem('social_login_oauth_pending')) {
+      void import('@capgo/capacitor-social-login').then(({ SocialLogin }) =>
+        SocialLogin.initialize({}),
+      )
+    }
+  } catch {
+    // localStorage gesperrt (Private Mode) — dann gibt es auch keinen Flow
+  }
+}
+
 let configPromise: Promise<OAuthConfig | null> | null = null
 
 function loadConfig(): Promise<OAuthConfig | null> {
@@ -65,6 +81,12 @@ export async function socialLogin(
         webClientId: cfg.google.webClientId ?? undefined,
         iOSClientId: cfg.google.iosClientId ?? undefined,
         mode: 'online',
+        // Feste, in der Google Console registrierte Redirect-URI für den
+        // Popup-Flow im Browser — sonst hinge sie von der aktuellen Seite ab
+        // (redirect_uri_mismatch auf /register).
+        ...(platform === 'web'
+          ? { redirectUrl: `${window.location.origin}/login` }
+          : {}),
       }
     }
     if (platform === 'web') {
