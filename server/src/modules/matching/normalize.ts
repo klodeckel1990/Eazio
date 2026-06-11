@@ -119,7 +119,8 @@ const SEASONINGS = new Set([
   'anisstern', 'gewurznelke', 'gewurznelken', 'vanillemark',
   'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung', 'brotgewurz',
   'rosenbluten', 'rosenblutenblatter', 'koriandergrun', 'kapuzinerkresse',
-  'fenchelsaat', 'fenchelsamen',
+  'fenchelsaat', 'fenchelsamen', 'liebstockel', 'liebstoeckel', 'maggikraut',
+  'holunderbluten', 'holunderblutendolden', 'markknochen', 'suppengrun',
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
   'basil', 'thyme', 'rosemary', 'sage', 'marjoram', 'nutmeg', 'cinnamon',

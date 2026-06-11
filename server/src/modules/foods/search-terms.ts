@@ -11,7 +11,7 @@ const UMLAUT_MAP: Record<string, string> = { ä: 'ae', ö: 'oe', ü: 'ue', ß: '
 const COMPOUND_HEADS = [
   'aufstrich', 'auflauf', 'beere', 'bohne', 'braten', 'brot', 'broetchen',
   'butter', 'creme', 'eis', 'erbse', 'essig', 'filet', 'flocken', 'fleisch',
-  'gemuese', 'joghurt', 'kaese', 'kartoffel', 'keule', 'kohl', 'kuchen',
+  'gelee', 'gemuese', 'joghurt', 'kaese', 'kartoffel', 'keule', 'kohl', 'kuchen',
   'kuerbis', 'lende', 'marmelade', 'mehl', 'melone', 'milch', 'mus', 'nudel',
   'nudeln', 'nuss', 'oel', 'paprika', 'pilz', 'pulver', 'quark', 'reis',
   'konfituere', 'kotelett', 'kuvertuere', 'saft', 'salat', 'sauce', 'schinken', 'schnitzel', 'sosse',
@@ -66,7 +66,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^frischkaesezubereitung/, terms: 'frischkaese doppelrahmfrischkaese' },
   { match: /kuvertuere/, terms: 'kuvertuere zartbitterkuvertuere vollmilchkuvertuere schokoglasur' },
   { match: /^backhefe/, terms: 'hefe trockenhefe frischhefe' },
-  { match: /^champignon roh/, terms: 'pilz pilze champignons' },
+  { match: /^champignon roh/, terms: 'pilz pilze champignons rosechampignons braune' },
   { match: /^kuerbis hokkaido/, terms: 'hokkaidokuerbis hokkaido' },
   { match: /^kuerbis butternut/, terms: 'butternutkuerbis butternusskuerbis butternut' },
   // Audit v2 (Top-10-Rezeptseiten): farbliche Varianten + fehlende Begriffe
@@ -156,6 +156,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^mungbohnensprossen/, terms: 'mungobohnensprossen mungosprossen' },
   { match: /^gurke roh/, terms: 'salatgurke schlangengurke cucumber' },
   { match: /^edelkrebs/, terms: 'flusskrebs flusskrebsschwaenze krebsfleisch crayfish' },
+  { match: /^weizentortilla$/, terms: 'tortilla tortillas tortillafladen wraps wrap fladen' },
+  { match: /^weizenfladenbrot/, terms: 'fladenbrot pita pitabrot' },
 ]
 
 export function foldGerman(text: string): string {
