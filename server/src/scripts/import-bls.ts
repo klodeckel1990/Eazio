@@ -160,6 +160,12 @@ const STAPLE_MATCHES: Record<string, string> = {
   bratwurstbrat: 'Bratwurst-Grundbrät',
   goudakase: 'Gouda 48 % Fett i. Tr.',
   gouda: 'Gouda 48 % Fett i. Tr.',
+  // Reibe-/Gratinkäse existiert im BLS nicht pur → Käse-Generika
+  gratinkase: 'Hartkäse mind. 45 % Fett i. Tr.',
+  'gratinkase light': 'Schnittkäse mind. 30 % Fett i. Tr.',
+  reibekase: 'Hartkäse mind. 45 % Fett i. Tr.',
+  streukase: 'Hartkäse mind. 45 % Fett i. Tr.',
+  pizzakase: 'Hartkäse mind. 45 % Fett i. Tr.',
   kokosraspel: 'Kokos Fruchtfleisch, geraspelt, getrocknet',
   kokosraspeln: 'Kokos Fruchtfleisch, geraspelt, getrocknet',
   kokosflocken: 'Kokos Fruchtfleisch, geraspelt, getrocknet',

@@ -64,6 +64,9 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^schwein hackfleisch/, terms: 'schweinehack schweinehackfleisch hackfleisch' },
   { match: /hackfleisch gemischt/, terms: 'hackfleisch gemischtes hack' },
   { match: /^frischkaesezubereitung/, terms: 'frischkaese doppelrahmfrischkaese' },
+  // Reibe-/Gratinkäse gibt es im BLS nicht pur — auf die Generika zeigen
+  { match: /^hartkaese mind 45/, terms: 'gratinkaese gratinkäse reibekaese reibekäse streukaese streukäse kaese käse' },
+  { match: /^schnittkaese mind 30/, terms: 'gratinkaese gratinkäse reibekaese reibekäse kaese käse light' },
   { match: /kuvertuere/, terms: 'kuvertuere zartbitterkuvertuere vollmilchkuvertuere schokoglasur' },
   { match: /^backhefe/, terms: 'hefe trockenhefe frischhefe' },
   { match: /^champignon roh/, terms: 'pilz pilze champignons rosechampignons braune' },
