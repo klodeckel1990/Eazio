@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { createPortal } from 'react-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine } from '../api/types'
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
@@ -11,7 +12,7 @@ import { pushLiveActivity } from '../lib/live-activity'
 import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { CalendarSheet } from '../components/CalendarSheet'
-import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconFlame, IconSteps, IconDrop, IconCalendar, IconChevronLeft, IconChevronRight } from '../components/icons'
+import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconFlame, IconSteps, IconDrop, IconCalendar, IconChevronLeft, IconChevronRight, IconPlus, IconBook, IconCoffee, IconPlate, IconMoon, IconApple } from '../components/icons'
 
 interface RowState {
   foodId: string
@@ -23,15 +24,33 @@ const nextKey = (): string => `row-${_rowSeq++}`
 
 const DAYTIME_ORDER: Daytime[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
+/** Volle Mahlzeiten-Namen für die Tagebuch-Liste (die kurzen Labels bleiben im Seg-Control). */
+const MEAL_TITLES: Record<Daytime, string> = {
+  breakfast: 'Frühstück', lunch: 'Mittagessen', dinner: 'Abendessen', snack: 'Snacks',
+}
+
+/** Richtwert-Anteil am Tagesbudget pro Mahlzeit (Yazio-üblich: 25/35/30/10). */
+const MEAL_SHARE: Record<Daytime, number> = {
+  breakfast: 0.25, lunch: 0.35, dinner: 0.3, snack: 0.1,
+}
+
+const MEAL_ICONS: Record<Daytime, typeof IconCoffee> = {
+  breakfast: IconCoffee, lunch: IconPlate, dinner: IconMoon, snack: IconApple,
+}
+
+/** Gewählte Mahlzeit übersteht den Umweg über Rezept-/Preset-Seite. */
+const PENDING_DAYTIME_KEY = 'eazio.pendingDaytime'
+
 export function TrackerPage() {
   const seeded = (useLocation().state as { presetText?: string } | null)?.presetText ?? ''
+  const navigate = useNavigate()
   const [day, setDay] = useState<DiaryDay | null>(null)
   const [date, setDate] = useState(todayStr())
   const [calOpen, setCalOpen] = useState(false)
   const dateRef = useRef(date)
   dateRef.current = date
   const touchStart = useRef<{ x: number; y: number } | null>(null)
-  const [text, setText] = useState(seeded)
+  const [text, setText] = useState('')
   const [matching, setMatching] = useState(false)
   const [lines, setLines] = useState<FoodMatchLine[]>([])
   const [rows, setRows] = useState<RowState[]>([])
@@ -42,6 +61,11 @@ export function TrackerPage() {
   const [undone, setUndone] = useState(false)
   const [presetSaved, setPresetSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [composerOpen, setComposerOpen] = useState(false)
+  const [addMenuFor, setAddMenuFor] = useState<Daytime | null>(null)
+  const [expanded, setExpanded] = useState<Daytime | null>(null)
+  const composerRef = useRef<HTMLTextAreaElement | null>(null)
+  const autoMatched = useRef(false)
 
   const refreshDay = () => {
     api.diary.day(dateRef.current)
@@ -86,15 +110,15 @@ export function TrackerPage() {
     setDate((d) => addDays(d, dx < 0 ? 1 : -1))
   }
 
-  const handleMatch = async () => {
-    if (!text.trim()) return
+  const matchText = async (input: string) => {
+    if (!input.trim()) return
     setError(null)
     setLogResult(null)
     setUndone(false)
     setPresetSaved(false)
     setMatching(true)
     try {
-      const res = await api.foods.match(text)
+      const res = await api.foods.match(input)
       // append to whatever is already staged (e.g. gescannte Produkte) —
       // the list only empties on Loggen, manuelles Entfernen oder Leeren
       setLines((prev) => [...prev, ...res.lines])
@@ -108,12 +132,31 @@ export function TrackerPage() {
       ])
       setText('') // matched — das Feld ist frei für weitere Zutaten
     } catch (e) {
-      if (e instanceof ApiError) setError(e.message)
-      else throw e
+      if (e instanceof ApiError) {
+        setError(e.message)
+        // Auto-Match fehlgeschlagen — Text in den Editor retten statt verwerfen
+        setText(input)
+        setComposerOpen(true)
+      } else {
+        throw e
+      }
     } finally {
       setMatching(false)
     }
   }
+
+  const handleMatch = () => matchText(text)
+
+  // Rezept/Preset „In den Tracker“ → direkt matchen, kein extra Matchen-Klick
+  useEffect(() => {
+    if (!seeded.trim() || autoMatched.current) return
+    autoMatched.current = true
+    const pending = sessionStorage.getItem(PENDING_DAYTIME_KEY) as Daytime | null
+    sessionStorage.removeItem(PENDING_DAYTIME_KEY)
+    if (pending && DAYTIME_ORDER.includes(pending)) setDaytime(pending)
+    void matchText(seeded)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleScan = async () => {
     const code = await scanBarcode()
@@ -210,6 +253,7 @@ export function TrackerPage() {
       setRows([])
       setKeys([])
       setText('')
+      setComposerOpen(false)
       refreshDay()
     } catch (e) {
       if (e instanceof ApiError) setError(e.message)
@@ -285,6 +329,23 @@ export function TrackerPage() {
     }
   }
 
+  // Plus-Modal: Zutaten öffnet den Editor hier, Rezept/Preset merken sich die
+  // Mahlzeit über sessionStorage und kommen mit presetText zurück.
+  const chooseIngredients = (dt: Daytime) => {
+    setDaytime(dt)
+    setAddMenuFor(null)
+    setComposerOpen(true)
+    requestAnimationFrame(() => composerRef.current?.focus())
+  }
+  const chooseRecipe = (dt: Daytime) => {
+    sessionStorage.setItem(PENDING_DAYTIME_KEY, dt)
+    void navigate('/recipes')
+  }
+  const choosePreset = (dt: Daytime) => {
+    sessionStorage.setItem(PENDING_DAYTIME_KEY, dt)
+    void navigate('/presets')
+  }
+
   // Review totals across matched rows (per-100g values × grams).
   const reviewTotals = loggableRows.reduce(
     (acc, r) => {
@@ -301,10 +362,15 @@ export function TrackerPage() {
     { kcal: 0, carb: 0, protein: 0, fat: 0 },
   )
 
-  const grouped = DAYTIME_ORDER.map((dt) => ({
-    daytime: dt,
-    entries: (day?.entries ?? []).filter((e) => e.daytime === dt),
-  })).filter((g) => g.entries.length > 0)
+  const meals = DAYTIME_ORDER.map((dt) => {
+    const entries = (day?.entries ?? []).filter((e) => e.daytime === dt)
+    return {
+      daytime: dt,
+      entries,
+      kcal: Math.round(entries.reduce((s, e) => s + e.kcal, 0)),
+      budget: day ? Math.round(day.goals.kcalTarget * MEAL_SHARE[dt]) : null,
+    }
+  })
 
   return (
     <div className="page" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
@@ -406,43 +472,128 @@ export function TrackerPage() {
         </div>
       )}
 
-      <div className="card pad-lg stack">
-        <div className="field">
-          <label htmlFor="tracker-text">Zutaten</label>
-          <textarea
-            id="tracker-text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={5}
-            placeholder={'z. B.\n80g Haferflocken\n200ml Milch\n1 Banane'}
-          />
-        </div>
+      <h2 className="section-title">Mahlzeiten</h2>
+      <div className="stack">
+        {meals.map((m) => {
+          const MealIcon = MEAL_ICONS[m.daytime]
+          const open = expanded === m.daytime
+          return (
+            <div key={m.daytime} className="card meal-row">
+              <div className="meal-head">
+                <button
+                  type="button"
+                  className="meal-main"
+                  onClick={() => setExpanded(open ? null : m.daytime)}
+                  disabled={m.entries.length === 0}
+                  aria-expanded={open}
+                >
+                  <span className={`meal-ico ${m.daytime}`}><MealIcon /></span>
+                  <span className="meal-text">
+                    <span className="meal-title">
+                      {MEAL_TITLES[m.daytime]}
+                      <span className="meal-kcal">
+                        {m.kcal}{m.budget !== null ? ` / ${m.budget}` : ''} kcal
+                      </span>
+                    </span>
+                    <span className="meal-sub">
+                      {m.entries.length > 0
+                        ? m.entries.map((e) => e.nameSnapshot).join(', ')
+                        : 'Noch nichts getrackt'}
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="meal-add"
+                  onClick={() => setAddMenuFor(m.daytime)}
+                  aria-label={`Zu ${MEAL_TITLES[m.daytime]} hinzufügen`}
+                >
+                  <IconPlus />
+                </button>
+              </div>
+              {open && m.entries.length > 0 && (
+                <ul className="diary-list meal-entries">
+                  {m.entries.map((entry: DiaryEntry) => (
+                    <li key={entry.id} className="diary-item">
+                      <span className="diary-name">{entry.nameSnapshot}</span>
+                      <span className="diary-meta">
+                        {entry.amountG > 1 ? `${round(entry.amountG)} g · ` : ''}{Math.round(entry.kcal)} kcal
+                        {entry.mirrorStatus === 'failed' ? ' · ⚠︎ Yazio' : ''}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-icon btn-ghost btn-sm"
+                        onClick={() => { void handleDeleteEntry(entry.id) }}
+                        aria-label="Eintrag löschen"
+                        title="Löschen"
+                      >
+                        <IconClose />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )
+        })}
+      </div>
 
-        <div className="btn-row">
-          <button
-            type="button"
-            className="btn btn-primary btn-lg"
-            style={{ flex: 1 }}
-            onClick={() => { void handleMatch() }}
-            disabled={matching || !text.trim()}
-          >
-            <IconWand />
-            {matching ? 'Matchen…' : 'Matchen'}
-          </button>
-          {isNativeApp() && (
+      {matching && lines.length === 0 && !composerOpen && (
+        <div className="card pad-lg meal-matching">
+          <IconWand className="inline-ico" /> Zutaten werden gematcht…
+        </div>
+      )}
+
+      {composerOpen && (
+        <div className="card pad-lg stack">
+          <div className="field">
+            <div className="composer-head">
+              <label htmlFor="tracker-text">Zutaten für {MEAL_TITLES[daytime]}</label>
+              <button
+                type="button"
+                className="btn btn-icon btn-ghost btn-sm"
+                onClick={() => { setComposerOpen(false); setText('') }}
+                aria-label="Eingabe schließen"
+              >
+                <IconClose />
+              </button>
+            </div>
+            <textarea
+              id="tracker-text"
+              ref={composerRef}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={5}
+              placeholder={'z. B.\n80g Haferflocken\n200ml Milch\n1 Banane'}
+            />
+          </div>
+
+          <div className="btn-row">
             <button
               type="button"
-              className="btn btn-soft btn-lg"
-              onClick={() => { void handleScan() }}
-              aria-label="Barcode scannen"
-              title="Barcode scannen"
+              className="btn btn-primary btn-lg"
+              style={{ flex: 1 }}
+              onClick={() => { void handleMatch() }}
+              disabled={matching || !text.trim()}
             >
-              <IconScan />
-              Scannen
+              <IconWand />
+              {matching ? 'Matchen…' : 'Matchen'}
             </button>
-          )}
+            {isNativeApp() && (
+              <button
+                type="button"
+                className="btn btn-soft btn-lg"
+                onClick={() => { void handleScan() }}
+                aria-label="Barcode scannen"
+                title="Barcode scannen"
+              >
+                <IconScan />
+                Scannen
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {lines.length > 0 && (
         <>
@@ -544,40 +695,47 @@ export function TrackerPage() {
         <p className="banner success"><IconCheck /><span className="banner-text">Preset gespeichert.</span></p>
       )}
 
-      {grouped.length > 0 && (
-        <>
-          <h2 className="section-title">{dayLabel(date)}</h2>
-          <div className="stack">
-            {grouped.map((g) => (
-              <div key={g.daytime} className="card diary-group">
-                <div className="diary-group-head">
-                  <h3>{DAYTIME_LABELS[g.daytime]}</h3>
-                  <span className="muted">{Math.round(g.entries.reduce((s, e) => s + e.kcal, 0))} kcal</span>
-                </div>
-                <ul className="diary-list">
-                  {g.entries.map((entry: DiaryEntry) => (
-                    <li key={entry.id} className="diary-item">
-                      <span className="diary-name">{entry.nameSnapshot}</span>
-                      <span className="diary-meta">
-                        {entry.amountG > 1 ? `${round(entry.amountG)} g · ` : ''}{Math.round(entry.kcal)} kcal
-                        {entry.mirrorStatus === 'failed' ? ' · ⚠︎ Yazio' : ''}
-                      </span>
-                      <button
-                        type="button"
-                        className="btn btn-icon btn-ghost btn-sm"
-                        onClick={() => { void handleDeleteEntry(entry.id) }}
-                        aria-label="Eintrag löschen"
-                        title="Löschen"
-                      >
-                        <IconClose />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+      {addMenuFor && createPortal(
+        <div className="cal-overlay" onClick={() => setAddMenuFor(null)} role="presentation">
+          <div className="add-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={`${MEAL_TITLES[addMenuFor]} tracken`}>
+            <div className="add-sheet-head">
+              <h3>{MEAL_TITLES[addMenuFor]}</h3>
+              <button
+                type="button"
+                className="btn btn-icon btn-ghost btn-sm"
+                onClick={() => setAddMenuFor(null)}
+                aria-label="Schließen"
+              >
+                <IconClose />
+              </button>
+            </div>
+            <button type="button" className="add-option" onClick={() => chooseIngredients(addMenuFor)}>
+              <span className="add-option-ico ingredients"><IconWand /></span>
+              <span className="add-option-text">
+                <strong>Zutaten tracken</strong>
+                <span>Freitext eintippen oder Barcode scannen</span>
+              </span>
+              <IconChevronRight className="add-option-chev" />
+            </button>
+            <button type="button" className="add-option" onClick={() => chooseRecipe(addMenuFor)}>
+              <span className="add-option-ico recipe"><IconBook /></span>
+              <span className="add-option-text">
+                <strong>Rezept tracken</strong>
+                <span>Aus deinen gespeicherten Rezepten</span>
+              </span>
+              <IconChevronRight className="add-option-chev" />
+            </button>
+            <button type="button" className="add-option" onClick={() => choosePreset(addMenuFor)}>
+              <span className="add-option-ico preset"><IconBookmark /></span>
+              <span className="add-option-text">
+                <strong>Preset tracken</strong>
+                <span>Gespeicherte Kombination erneut loggen</span>
+              </span>
+              <IconChevronRight className="add-option-chev" />
+            </button>
           </div>
-        </>
+        </div>,
+        document.body,
       )}
       {calOpen && (
         <CalendarSheet

@@ -861,6 +861,86 @@ select {
 .diary-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .diary-meta { color: var(--ink-2); font-size: 0.85rem; white-space: nowrap; }
 
+/* Mahlzeiten-Liste (Yazio-artig): Icon, Name, kcal-Bilanz, Einträge, Plus */
+.meal-row { padding: 0; }
+.meal-head { display: flex; align-items: center; }
+.meal-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.4rem 0.75rem 0.85rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.meal-main:disabled { cursor: default; }
+.meal-ico {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--r-pill);
+  display: grid;
+  place-items: center;
+}
+.meal-ico svg { width: 24px; height: 24px; }
+.meal-ico.breakfast { background: var(--amber-100); color: var(--amber); }
+.meal-ico.lunch { background: var(--coral-100); color: var(--coral); }
+.meal-ico.dinner { background: var(--teal-100); color: var(--teal); }
+.meal-ico.snack { background: var(--primary-100); color: var(--primary-700); }
+.meal-text { min-width: 0; flex: 1; }
+.meal-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.meal-kcal {
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.meal-sub {
+  display: block;
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meal-add {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  margin-right: 0.65rem;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--primary-100);
+  color: var(--primary-700);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.meal-add svg { width: 20px; height: 20px; }
+.meal-add:active { transform: scale(0.92); }
+.meal-entries {
+  margin: 0 0.85rem 0.55rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid var(--line);
+}
+.meal-matching { display: flex; align-items: center; gap: 0.5rem; color: var(--ink-2); }
+.composer-head { display: flex; align-items: center; justify-content: space-between; }
+
 /* day totals with slim kcal progress (sits on the green gradient card) */
 .totals-day { flex-direction: column; align-items: stretch; gap: 0; }
 .totals-row { display: flex; align-items: center; gap: 1rem; }
@@ -1666,6 +1746,56 @@ input[type='search']:focus {
   from { transform: translateY(40px); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
+
+/* Plus-Modal der Mahlzeiten-Liste: Zutaten / Rezept / Preset tracken */
+.add-sheet {
+  width: 100%;
+  max-width: 520px;
+  background: var(--bg);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--sh-3);
+  padding: 0.9rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom));
+  animation: calUp 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  display: grid;
+  gap: 0.6rem;
+}
+.add-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.add-sheet-head h3 { font-size: 1.15rem; }
+.add-option {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.add-option:active { background: var(--surface-2); }
+.add-option-ico {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: var(--r-pill);
+  display: grid;
+  place-items: center;
+}
+.add-option-ico svg { width: 22px; height: 22px; }
+.add-option-ico.ingredients { background: var(--primary-100); color: var(--primary-700); }
+.add-option-ico.recipe { background: var(--amber-100); color: var(--amber); }
+.add-option-ico.preset { background: var(--teal-100); color: var(--teal); }
+.add-option-text { flex: 1; min-width: 0; display: grid; gap: 0.05rem; }
+.add-option-text strong { font-size: 0.98rem; }
+.add-option-text span { color: var(--ink-2); font-size: 0.8rem; }
+.add-option-chev { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
 .cal-head {
   display: flex;
   justify-content: space-between;

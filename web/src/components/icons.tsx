@@ -361,3 +361,43 @@ export function IconChevronRight(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+/** Kaffeetasse mit Dampf — Frühstück. */
+export function IconCoffee(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M4 9.5h11.5V15a4.5 4.5 0 0 1-4.5 4.5H8.5A4.5 4.5 0 0 1 4 15V9.5z" />
+      <path d="M15.5 10.5h1.7a2.55 2.55 0 0 1 0 5.1h-1.7" />
+      <path d="M7.5 6.5c0-1 .8-1.2.8-2.1M11.2 6.5c0-1 .8-1.2.8-2.1" />
+    </Svg>
+  )
+}
+
+/** Teller — Mittagessen. */
+export function IconPlate(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4" />
+    </Svg>
+  )
+}
+
+/** Mondsichel — Abendessen. */
+export function IconMoon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M20 14.2A8.3 8.3 0 1 1 9.8 4a6.6 6.6 0 0 0 10.2 10.2z" />
+    </Svg>
+  )
+}
+
+/** Apfel mit Blatt — Snacks. */
+export function IconApple(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M12 7.6c-1.1-.9-2.6-1.2-4-.6-2.2.9-3.2 3.6-2.3 6.6.9 3.1 2.9 5.6 4.7 5.4.6-.1 1.1-.4 1.6-.4s1 .3 1.6.4c1.8.2 3.8-2.3 4.7-5.4.9-3-.1-5.7-2.3-6.6-1.4-.6-2.9-.3-4 .6z" />
+      <path d="M12 7.6c0-2.2 1.3-3.8 3.4-4.1.2 2.2-1.2 3.9-3.4 4.1z" />
+    </Svg>
+  )
+}

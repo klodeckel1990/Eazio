@@ -119,7 +119,7 @@ export function ProfileOnboarding() {
     'activity', 'result']
   const idx = ORDER.indexOf(step)
   // numbered steps exclude intro & result ("Schritt 1 von 3/4")
-  const numbered = ORDER.filter((s) => s !== 'intro' && s !== 'result')
+  const numbered: StepId[] = ORDER.filter((s) => s !== 'intro' && s !== 'result')
   const stepNo = numbered.indexOf(step) + 1
   const progress = step === 'result' ? 100 : Math.round((Math.max(stepNo - 1, 0) / numbered.length) * 100 + (stepNo > 0 ? 100 / numbered.length / 2 : 0))
 
