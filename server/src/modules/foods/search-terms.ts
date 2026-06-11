@@ -91,8 +91,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^walnuss/, terms: 'walnut walnuts walnuesse' },
   { match: /^banane roh/, terms: 'banana bananas' },
   { match: /^buttermilch/, terms: 'buttermilk' },
-  { match: /^pfefferschote/, terms: 'chile chiles peppers green' },
-  { match: /^speisezwiebel/, terms: 'rot rote gelbe onion onions yellow' },
+  { match: /^pfefferschote/, terms: 'chile chiles peppers green ancho chipotle serrano habanero poblano' },
+  { match: /^speisezwiebel/, terms: 'rot rote gelbe weisse onion onions yellow white' },
   { match: /^milch (fettarm|entrahmt)/, terms: 'milk' },
   { match: /^butter (mild|gesalzen)/, terms: 'unsalted salted' },
   // Audit v2 Batch 2
@@ -156,8 +156,11 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^mungbohnensprossen/, terms: 'mungobohnensprossen mungosprossen' },
   { match: /^gurke roh/, terms: 'salatgurke schlangengurke cucumber' },
   { match: /^edelkrebs/, terms: 'flusskrebs flusskrebsschwaenze krebsfleisch crayfish' },
-  { match: /^weizentortilla$/, terms: 'tortilla tortillas tortillafladen wraps wrap fladen' },
+  { match: /^weizentortilla$/, terms: 'tortilla tortillas tortillafladen wraps wrap fladen corn mais' },
   { match: /^weizenfladenbrot/, terms: 'fladenbrot pita pitabrot' },
+  { match: /^apfel roh/, terms: 'apple apples granny smith boskoop elstar braeburn' },
+  { match: /^ananas roh/, terms: 'pineapple' },
+  { match: /^schwein dicker bug/, terms: 'schweineschulter pork shoulder schaeufele' },
 ]
 
 export function foldGerman(text: string): string {
