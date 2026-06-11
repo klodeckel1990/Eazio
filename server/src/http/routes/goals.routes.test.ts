@@ -21,7 +21,7 @@ async function login(app: ReturnType<typeof buildApp>, username: string) {
 describe('goals onboarding', () => {
   it('computes and persists the plan from the questionnaire', async () => {
     const db = createTestDb()
-    const app = buildApp(db, { bootstrapToken: BOOTSTRAP })
+    const app = buildApp(db)
     const headers = await login(app, 'onb1')
 
     const res = await app.inject({
@@ -56,7 +56,7 @@ describe('goals onboarding', () => {
 
   it('skip marks onboarding as seen without touching the plan', async () => {
     const db = createTestDb()
-    const app = buildApp(db, { bootstrapToken: BOOTSTRAP })
+    const app = buildApp(db)
     const headers = await login(app, 'onb2')
 
     const before = (await app.inject({ method: 'GET', url: '/api/goals', headers })).json() as {
@@ -77,7 +77,7 @@ describe('goals onboarding', () => {
 
   it('rejects nonsense input', async () => {
     const db = createTestDb()
-    const app = buildApp(db, { bootstrapToken: BOOTSTRAP })
+    const app = buildApp(db)
     const headers = await login(app, 'onb3')
     const res = await app.inject({
       method: 'POST',

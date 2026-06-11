@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { IconAlert } from '../components/icons'
+import { SocialLoginButtons } from '../components/SocialLoginButtons'
 
 export function LoginPage() {
   const { user, login, loading } = useAuth()
@@ -76,6 +77,8 @@ export function LoginPage() {
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={submitting}>
           {submitting ? 'Anmelden…' : 'Anmelden'}
         </button>
+
+        <SocialLoginButtons />
 
         <p className="auth-alt">
           Noch kein Konto? <Link to="/register">Registrieren</Link>

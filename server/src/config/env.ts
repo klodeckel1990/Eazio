@@ -40,6 +40,15 @@ const schema = z.object({
   // Without it, Instagram links fall back to "paste the caption".
   APIFY_TOKEN: z.string().optional(),
   APIFY_INSTAGRAM_ACTOR: z.string().default('apify/instagram-scraper'),
+  // Social Sign-In (Google/Apple). Die Client-IDs sind öffentlich (keine
+  // Secrets) und dienen serverseitig als erlaubte Token-Audiences. Google
+  // bleibt deaktiviert, bis mindestens eine ID gesetzt ist; natives
+  // "Sign in with Apple" braucht nur die Bundle-ID und läuft ohne Setup.
+  GOOGLE_WEB_CLIENT_ID: z.string().optional(),
+  GOOGLE_IOS_CLIENT_ID: z.string().optional(),
+  APPLE_APP_CLIENT_ID: z.string().default('de.tellerwert.app'),
+  // Apple Services ID — nur für "Sign in with Apple" im Web-Browser nötig.
+  APPLE_WEB_CLIENT_ID: z.string().optional(),
 })
 
 const parsed = schema.safeParse(process.env)

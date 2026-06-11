@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, ApiError, getToken, setToken } from '../api/client'
 import { pushTokenToWidgets } from '../lib/shared-auth'
-import type { User } from '../api/types'
+import { getPlatform, socialLogin } from '../lib/social-login'
+import type { SocialProvider, User } from '../api/types'
 
 interface AuthState {
   user: User | null
   loading: boolean
   login: (username: string, password: string) => Promise<void>
+  loginWithProvider: (provider: SocialProvider) => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
@@ -38,6 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({ id: res.id, username: res.username })
     void pushTokenToWidgets(res.token)
   }
+  const loginWithProvider = async (provider: SocialProvider) => {
+    const { idToken, name } = await socialLogin(provider)
+    const res = await api.auth.oauthLogin(provider, idToken, name, getPlatform())
+    setToken(res.token)
+    setUser({ id: res.id, username: res.username })
+    void pushTokenToWidgets(res.token)
+  }
   const register = async (username: string, email: string, password: string) => {
     const res = await api.auth.register(username, email, password)
     setToken(res.token)
@@ -60,7 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
   }
-  return <Ctx.Provider value={{ user, loading, login, register, logout }}>{children}</Ctx.Provider>
+  return (
+    <Ctx.Provider value={{ user, loading, login, loginWithProvider, register, logout }}>
+      {children}
+    </Ctx.Provider>
+  )
 }
 
 export function useAuth(): AuthState {

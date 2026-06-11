@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { randomUUID } from 'node:crypto'
+import { eq } from 'drizzle-orm'
 import { createTestDb } from '../../db/test-db.js'
+import { diaryEntries } from '../../db/schema.js'
 import { createUser } from '../auth/users.repo.js'
 import { insertEntries } from './diary.repo.js'
 import { getStreak, previousDay, recomputeStreak } from './streak.js'
@@ -89,7 +91,7 @@ describe('streak (recompute from diary dates)', () => {
     for (const d of ['2026-06-09', '2026-06-10']) logDay(db, user.id, d)
     expect(recomputeStreak(db, user.id).currentStreak).toBe(2)
     // longestStreak bleibt als Bestwert erhalten, current schrumpft
-    db.$client.prepare("DELETE FROM diary_entries WHERE date = '2026-06-09'").run()
+    db.delete(diaryEntries).where(eq(diaryEntries.date, '2026-06-09')).run()
     expect(recomputeStreak(db, user.id)).toMatchObject({ currentStreak: 1, longestStreak: 2 })
   })
 })

@@ -1,4 +1,15 @@
 PODS:
+  - Alamofire (5.10.2)
+  - AppAuth (2.0.0):
+    - AppAuth/Core (= 2.0.0)
+    - AppAuth/ExternalUserAgent (= 2.0.0)
+  - AppAuth/Core (2.0.0)
+  - AppAuth/ExternalUserAgent (2.0.0):
+    - AppAuth/Core
+  - AppCheckCore (11.2.0):
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - PromisesObjC (~> 2.4)
   - Capacitor (7.6.6):
     - CapacitorCordova
   - CapacitorApp (7.1.2):
@@ -15,7 +26,40 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (7.0.6):
     - Capacitor
+  - CapgoCapacitorSocialLogin (7.20.0):
+    - Alamofire (~> 5.10.2)
+    - Capacitor
+    - FBSDKCoreKit (= 18.0.0)
+    - FBSDKLoginKit (= 18.0.0)
+    - GoogleSignIn (~> 9.0.0)
+  - FBAEMKit (18.0.0):
+    - FBSDKCoreKit_Basics (= 18.0.0)
+  - FBSDKCoreKit (18.0.0):
+    - FBAEMKit (= 18.0.0)
+    - FBSDKCoreKit_Basics (= 18.0.0)
+  - FBSDKCoreKit_Basics (18.0.0)
+  - FBSDKLoginKit (18.0.0):
+    - FBSDKCoreKit (= 18.0.0)
+  - GoogleSignIn (9.0.0):
+    - AppAuth (~> 2.0)
+    - AppCheckCore (~> 11.0)
+    - GTMAppAuth (~> 5.0)
+    - GTMSessionFetcher/Core (~> 3.3)
+  - GoogleUtilities/Environment (8.1.0):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/UserDefaults (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMAppAuth (5.0.0):
+    - AppAuth/Core (~> 2.0)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3)
+  - GTMSessionFetcher/Core (3.5.0)
   - OSBarcodeLib (2.0.1)
+  - PromisesObjC (2.4.1)
 
 DEPENDENCIES:
   - "Capacitor (from `../../../node_modules/@capacitor/ios`)"
@@ -26,10 +70,23 @@ DEPENDENCIES:
   - "CapacitorKeyboard (from `../../../node_modules/@capacitor/keyboard`)"
   - "CapacitorShare (from `../../../node_modules/@capacitor/share`)"
   - "CapacitorStatusBar (from `../../../node_modules/@capacitor/status-bar`)"
+  - "CapgoCapacitorSocialLogin (from `../../../node_modules/@capgo/capacitor-social-login`)"
 
 SPEC REPOS:
   trunk:
+    - Alamofire
+    - AppAuth
+    - AppCheckCore
+    - FBAEMKit
+    - FBSDKCoreKit
+    - FBSDKCoreKit_Basics
+    - FBSDKLoginKit
+    - GoogleSignIn
+    - GoogleUtilities
+    - GTMAppAuth
+    - GTMSessionFetcher
     - OSBarcodeLib
+    - PromisesObjC
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -48,8 +105,13 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@capacitor/share"
   CapacitorStatusBar:
     :path: "../../../node_modules/@capacitor/status-bar"
+  CapgoCapacitorSocialLogin:
+    :path: "../../../node_modules/@capgo/capacitor-social-login"
 
 SPEC CHECKSUMS:
+  Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
+  AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
+  AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
   Capacitor: 961efd309ab0e390a8081b63c561186f61a6714d
   CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
   CapacitorBarcodeScanner: 2d699fe5b8731cdfa3db03a4062e68b9a75c5c72
@@ -58,8 +120,18 @@ SPEC CHECKSUMS:
   CapacitorKeyboard: a2e0869edd229490ce36aed2549c0d6b95e27ee8
   CapacitorShare: 25f7fc5dd0e4edbde5d6801c6de5d14a8b450a41
   CapacitorStatusBar: 416e9e53fd6397e668d4a181cd2131617d949bd6
+  CapgoCapacitorSocialLogin: a6084e910ce61d78173fa215460c00523a6c4536
+  FBAEMKit: e34530df538b8eb8aeb53c35867715ba6c63ef0c
+  FBSDKCoreKit: d3f479a69127acebb1c6aad91c1a33907bcf6c2f
+  FBSDKCoreKit_Basics: 017b6dc2a1862024815a8229e75661e627ac1e29
+  FBSDKLoginKit: 5875762d1fe09ddcb05d03365d4f5dc34413843d
+  GoogleSignIn: c7f09cfbc85a1abf69187be091997c317cc33b77
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   OSBarcodeLib: 57987d2eb1f916f701f4554e20e349b3cb83f023
+  PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
 
-PODFILE CHECKSUM: 44fb8ca5ace0dac2e3410c8554c9a87c389d049e
+PODFILE CHECKSUM: 4bd4f3e7f115214302da7804472493d8fef612c8
 
 COCOAPODS: 1.16.2

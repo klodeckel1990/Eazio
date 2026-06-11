@@ -3,7 +3,7 @@ import type {
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
   ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan, DiaryMonth,
-  CustomFoodInput, LabelScanResult,
+  CustomFoodInput, LabelScanResult, OAuthConfig, SocialProvider,
 } from './types'
 
 export class ApiError extends Error {
@@ -79,6 +79,13 @@ export const api = {
       req<AuthResponse>('POST', '/auth/login', { username, password, platform: 'web' }),
     register: (username: string, email: string, password: string) =>
       req<AuthResponse>('POST', '/auth/register', { username, email, password, platform: 'web' }),
+    oauthConfig: () => req<OAuthConfig>('GET', '/auth/oauth/config'),
+    oauthLogin: (
+      provider: SocialProvider,
+      idToken: string,
+      name: string | undefined,
+      platform: 'web' | 'ios' | 'android',
+    ) => req<AuthResponse>('POST', `/auth/oauth/${provider}`, { idToken, name, platform }),
     logout: () => req<void>('POST', '/auth/logout'),
   },
   accounts: {

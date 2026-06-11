@@ -15,6 +15,7 @@ describe('db client + migrations', () => {
       [
         'activity_days',
         'aliases',
+        'auth_identities',
         'diary_entries',
         'food_aliases',
         'foods',

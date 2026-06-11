@@ -13,6 +13,12 @@ import {
   listUserSessions,
   SESSION_COOKIE,
 } from '../../modules/auth/sessions.js'
+import {
+  OAuthNotConfiguredError,
+  verifyOAuthIdToken,
+  type OAuthVerifier,
+} from '../../modules/auth/oauth.js'
+import { resolveOAuthUser } from '../../modules/auth/oauth-account.js'
 import { requireAuth } from '../auth-guard.js'
 
 const BootstrapSchema = z.object({
@@ -46,6 +52,13 @@ const LoginSchema = DeviceSchema.extend({
   password: z.string().min(1),
 })
 
+const OAuthSchema = DeviceSchema.extend({
+  idToken: z.string().min(10),
+  // Apple liefert den Anzeigenamen nur bei der allerersten Autorisierung und
+  // nur an den Client — er kommt deshalb separat mit (nie im ID-Token).
+  name: z.string().trim().min(1).max(120).optional(),
+})
+
 /** Length-checked, constant-time string comparison for secret tokens. */
 function timingSafeStringEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a)
@@ -53,7 +66,13 @@ function timingSafeStringEqual(a: string, b: string): boolean {
   return ab.length === bb.length && timingSafeEqual(ab, bb)
 }
 
-export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
+export function registerAuthRoutes(
+  app: FastifyInstance,
+  db: DB,
+  opts: { verifyOAuth?: OAuthVerifier } = {},
+): void {
+  const verifyOAuth = opts.verifyOAuth ?? verifyOAuthIdToken
+
   app.post(
     '/api/auth/bootstrap',
     { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } },
@@ -98,12 +117,56 @@ export function registerAuthRoutes(app: FastifyInstance, db: DB): void {
       const body = LoginSchema.parse(req.body)
       const user = findUserByUsername(db, body.username)
       // Always run argon2 (dummy hash when the user is unknown) to keep login
-      // timing constant and avoid username enumeration.
-      const hash = user?.passwordHash ?? (await dummyVerifyHash())
+      // timing constant and avoid username enumeration. '' = social-login-only
+      // account → same dummy path, password login always fails.
+      const hash = user?.passwordHash || (await dummyVerifyHash())
       const passwordOk = await verifyPassword(hash, body.password)
       if (!user || !passwordOk) {
         return reply.status(401).send({ error: 'invalid_credentials' })
       }
+      const { token, session } = createBearerSession(db, user.id, body)
+      reply.setCookie(SESSION_COOKIE, session.id, { ...SESSION_COOKIE_OPTS, secure: env.COOKIE_SECURE })
+      return reply.status(200).send({ id: user.id, username: user.username, token })
+    },
+  )
+
+  // Öffentlich: welche Social-Provider die Clients anbieten sollen, inkl.
+  // Client-IDs (öffentliche Werte, keine Secrets). Natives "Sign in with
+  // Apple" braucht keine ID — dort entscheidet der Client über die Plattform.
+  app.get('/api/auth/oauth/config', async (_req, reply) => {
+    return reply.send({
+      google:
+        env.GOOGLE_WEB_CLIENT_ID || env.GOOGLE_IOS_CLIENT_ID
+          ? {
+              webClientId: env.GOOGLE_WEB_CLIENT_ID ?? null,
+              iosClientId: env.GOOGLE_IOS_CLIENT_ID ?? null,
+            }
+          : null,
+      apple: { webClientId: env.APPLE_WEB_CLIENT_ID ?? null },
+    })
+  })
+
+  // Social Sign-In: Client liefert das ID-Token des Providers, der Server
+  // verifiziert es (JWKS/Issuer/Audience) und stellt die normale Session aus.
+  app.post(
+    '/api/auth/oauth/:provider',
+    { config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (req, reply) => {
+      const { provider } = z
+        .object({ provider: z.enum(['google', 'apple']) })
+        .parse(req.params)
+      const body = OAuthSchema.parse(req.body)
+      let claims
+      try {
+        claims = await verifyOAuth(provider, body.idToken)
+      } catch (err) {
+        if (err instanceof OAuthNotConfiguredError) {
+          return reply.status(503).send({ error: 'provider_not_configured' })
+        }
+        req.log.info({ err, provider }, 'oauth id token rejected')
+        return reply.status(401).send({ error: 'invalid_token' })
+      }
+      const user = resolveOAuthUser(db, provider, claims, body.name ?? null)
       const { token, session } = createBearerSession(db, user.id, body)
       reply.setCookie(SESSION_COOKIE, session.id, { ...SESSION_COOKIE_OPTS, secure: env.COOKIE_SECURE })
       return reply.status(200).send({ id: user.id, username: user.username, token })

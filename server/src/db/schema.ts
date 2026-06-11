@@ -5,10 +5,29 @@ export const users = sqliteTable('users', {
   username: text('username').notNull().unique(),
   // Nullable: pre-existing bootstrap users have no email. Stored lowercased.
   email: text('email').unique(),
+  // '' = Social-Login-Konto ohne Passwort (Login nur über Google/Apple).
   passwordHash: text('password_hash').notNull(),
   settings: text('settings'), // JSON-encoded per-user UI settings
   createdAt: integer('created_at').notNull(),
 })
+
+// Social-Login-Identitäten (Sign in with Google/Apple). (provider, subject)
+// identifiziert das Provider-Konto stabil — E-Mail kann sich dort ändern und
+// dient nur als Verknüpfungs-Snapshot. Ein User kann mehrere Provider haben.
+export const authIdentities = sqliteTable(
+  'auth_identities',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    provider: text('provider').notNull(), // google|apple
+    subject: text('subject').notNull(), // "sub"-Claim des ID-Tokens
+    email: text('email'),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [unique().on(t.provider, t.subject)],
+)
 
 export const yazioAccounts = sqliteTable('yazio_accounts', {
   id: text('id').primaryKey(),

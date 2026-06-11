@@ -21,7 +21,7 @@ async function login(app: ReturnType<typeof buildApp>, username: string) {
 describe('diary month overview', () => {
   it('returns kcal per logged day and the target', async () => {
     const db = createTestDb()
-    const app = buildApp(db, { bootstrapToken: BOOTSTRAP })
+    const app = buildApp(db)
     const headers = await login(app, 'cal1')
 
     await app.inject({
@@ -41,7 +41,7 @@ describe('diary month overview', () => {
 describe('activity sync', () => {
   it('upserts steps/active kcal and merges partial updates', async () => {
     const db = createTestDb()
-    const app = buildApp(db, { bootstrapToken: BOOTSTRAP })
+    const app = buildApp(db)
     const headers = await login(app, 'act1')
 
     const res = await app.inject({
@@ -77,7 +77,7 @@ describe('activity sync', () => {
 
   it('weight sync updates the profile and the budget setting counts active kcal', async () => {
     const db = createTestDb()
-    const app = buildApp(db, { bootstrapToken: BOOTSTRAP })
+    const app = buildApp(db)
     const headers = await login(app, 'act2')
 
     const res = await app.inject({

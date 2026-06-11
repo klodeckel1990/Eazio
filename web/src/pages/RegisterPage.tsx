@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { IconAlert } from '../components/icons'
+import { SocialLoginButtons } from '../components/SocialLoginButtons'
 
 function errorMessage(err: ApiError): string {
   if (err.status === 429) return 'Zu viele Versuche. Bitte später erneut probieren.'
@@ -103,6 +104,8 @@ export function RegisterPage() {
         <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={submitting}>
           {submitting ? 'Konto wird erstellt…' : 'Konto erstellen'}
         </button>
+
+        <SocialLoginButtons />
 
         <p className="auth-alt">
           Schon ein Konto? <Link to="/login">Anmelden</Link>

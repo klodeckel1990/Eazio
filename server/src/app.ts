@@ -10,6 +10,7 @@ import fastifyStatic from '@fastify/static'
 import { env } from './config/env.js'
 import type { DB } from './db/client.js'
 import { getSession, getSessionByToken, SESSION_COOKIE } from './modules/auth/sessions.js'
+import type { OAuthVerifier } from './modules/auth/oauth.js'
 import { registerErrorHandler } from './http/errors.js'
 import { registerHealthRoutes } from './http/routes/health.routes.js'
 import { registerAuthRoutes } from './http/routes/auth.routes.js'
@@ -32,7 +33,10 @@ declare module 'fastify' {
   }
 }
 
-export function buildApp(db: DB, opts: { webDir?: string } = {}): FastifyInstance {
+export function buildApp(
+  db: DB,
+  opts: { webDir?: string; verifyOAuth?: OAuthVerifier } = {},
+): FastifyInstance {
   const app = Fastify({ logger: env.NODE_ENV !== 'test' })
 
   app.register(cookie, { secret: env.SESSION_SECRET })
@@ -61,11 +65,14 @@ export function buildApp(db: DB, opts: { webDir?: string } = {}): FastifyInstanc
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
+        // accounts.google.com / appleid: Social Sign-In im Web-Browser (GIS
+        // bzw. Sign in with Apple JS). Im nativen Shell greift diese CSP nicht.
+        scriptSrc: ["'self'", 'https://accounts.google.com', 'https://appleid.cdn-apple.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'blob:'],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'", 'https://accounts.google.com'],
+        frameSrc: ["'self'", 'https://accounts.google.com', 'https://appleid.apple.com'],
       },
     },
     // Recipe images are embedded from the native app's origin later on.
@@ -95,7 +102,7 @@ export function buildApp(db: DB, opts: { webDir?: string } = {}): FastifyInstanc
 
   registerErrorHandler(app)
   registerHealthRoutes(app)
-  registerAuthRoutes(app, db)
+  registerAuthRoutes(app, db, { verifyOAuth: opts.verifyOAuth })
   registerAccountRoutes(app, db)
   registerMatchRoutes(app, db)
   registerPresetRoutes(app, db)

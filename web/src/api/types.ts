@@ -1,6 +1,13 @@
 export interface User { id: string; username: string }
 // Login/register response: user plus the bearer token (returned exactly once).
 export interface AuthResponse extends User { token: string }
+export type SocialProvider = 'google' | 'apple'
+// Public client ids (keine Secrets) — der Server entscheidet, welche
+// Social-Provider die Clients anbieten sollen.
+export interface OAuthConfig {
+  google: { webClientId: string | null; iosClientId: string | null } | null
+  apple: { webClientId: string | null }
+}
 export interface Account { id: string; label: string; yazioUsername: string; isDefault: boolean }
 export interface Nutrition { kcal: number; carb: number; protein: number; fat: number }
 export type Daytime = 'breakfast' | 'lunch' | 'dinner' | 'snack'
