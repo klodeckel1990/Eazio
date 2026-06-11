@@ -5,6 +5,7 @@
 
 /* ---- Tokens -------------------------------------------------------------- */
 :root {
+  color-scheme: light;
   /* surfaces & ink */
   --bg: #fbf6ee;
   --surface: #fffdf9;
@@ -58,6 +59,9 @@
 
 /* ---- Dunkelmodus (Waldgrün-Anthrazit) ------------------------------------ */
 :root[data-theme='dark'] {
+  /* native Controls (Select-Picker, Inputs, Scrollbars) mit-dunkeln —
+     sonst rendert WebKit sie hell und unsere helle Schrift wird unlesbar */
+  color-scheme: dark;
   --bg: #181d1a;
   --surface: #1f2622;
   --surface-2: #29322c;

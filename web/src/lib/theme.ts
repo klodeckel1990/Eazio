@@ -34,6 +34,11 @@ function apply(): void {
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute('content', dark ? '#181d1a' : '#fbf6ee')
+  // native Controls (Select-Picker, Tastatur, Scrollbars) folgen sonst dem
+  // SYSTEM-Schema statt der App-Einstellung → helle Picker, helle Schrift
+  document
+    .querySelector('meta[name="color-scheme"]')
+    ?.setAttribute('content', dark ? 'dark' : 'light')
 }
 
 let wired = false
