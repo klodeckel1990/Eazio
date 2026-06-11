@@ -14,7 +14,7 @@ import { buildYazioClient } from '../yazio/client.js'
 import { buildRecipeFetcher, type RecipeFetcher, type YazioRecipeDetails } from '../yazio/recipes.js'
 import { buildSimpleProductsFetcher, type SimpleProductsFetcher } from '../yazio/simple-products.js'
 import { dateInTz, type Daytime } from '../meals/daytime.js'
-import { previousDay } from './streak.js'
+import { previousDay, recomputeStreak } from './streak.js'
 import { insertEntries, type NewDiaryEntry } from './diary.repo.js'
 
 interface ConsumedProduct {
@@ -273,5 +273,7 @@ export async function importYazioHistory(
     insertEntries(db, rows)
     result.entriesImported += rows.length
   }
+  // importierte Tage zählen zur Serie — einmal am Ende neu berechnen
+  if (result.entriesImported > 0) recomputeStreak(db, userId)
   return result
 }

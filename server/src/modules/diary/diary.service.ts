@@ -9,7 +9,7 @@ import { getSettings } from '../settings/settings.repo.js'
 import { getDefaultAccount } from '../accounts/accounts.repo.js'
 import { getGoals, type Goals } from '../goals/goals.repo.js'
 import { getActivityDay } from '../activity/activity.repo.js'
-import { getStreak, updateStreakOnLog, type Streak } from './streak.js'
+import { getStreak, recomputeStreak, type Streak } from './streak.js'
 import { mirrorEntries, unmirrorEntry, type ClientFactory } from './mirror.service.js'
 import {
   dayTotals,
@@ -158,7 +158,7 @@ export function createEntries(
         }
       }
     }
-    streak = updateStreakOnLog(txDb, userId, date)
+    streak = recomputeStreak(txDb, userId)
   })
 
   const ids = rows.map((rw) => rw.id!)
@@ -203,6 +203,7 @@ export function updateEntry(
     set.fiber = entry.fiber === null ? null : r1(entry.fiber * ratio)
   }
   updateEntryRow(db, userId, id, set)
+  if (set.date) recomputeStreak(db, userId) // Tagwechsel kann die Serie ändern
   return getEntry(db, userId, id)
 }
 
@@ -215,6 +216,7 @@ export function deleteEntry(
   const entry = getEntry(db, userId, id)
   if (!entry) return false
   deleteEntryRow(db, userId, id)
+  recomputeStreak(db, userId) // der letzte Eintrag eines Tages kann die Serie brechen
   if (entry.mirrorStatus === 'mirrored') {
     setImmediate(() => {
       unmirrorEntry(db, userId, entry, clientFactory).catch(() => {})

@@ -151,6 +151,44 @@ struct KcalRing: View {
     }
 }
 
+/// Tellerwert-Keimling — derselbe Pfad wie das IconLeaf der App (24er-Raster).
+struct SproutShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let s = min(rect.width, rect.height) / 24
+        let ox = rect.midX - 12 * s
+        let oy = rect.midY - 12 * s
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: ox + x * s, y: oy + y * s) }
+        var path = Path()
+        // Stiel
+        path.move(to: p(12, 21))
+        path.addLine(to: p(12, 14))
+        // linkes Blatt
+        path.move(to: p(12, 14))
+        path.addCurve(to: p(6, 8), control1: p(12, 10.7), control2: p(9.3, 8))
+        path.addLine(to: p(4, 8))
+        path.addCurve(to: p(10, 14), control1: p(4, 11.3), control2: p(6.7, 14))
+        path.closeSubpath()
+        // rechtes Blatt
+        path.move(to: p(12, 12))
+        path.addCurve(to: p(19, 5), control1: p(12, 8.1), control2: p(15.1, 5))
+        path.addLine(to: p(20, 5))
+        path.addCurve(to: p(13, 12), control1: p(20, 8.9), control2: p(16.9, 12))
+        path.closeSubpath()
+        return path
+    }
+}
+
+struct BrandMark: View {
+    var size: CGFloat
+    var color: Color = TW.green
+    var body: some View {
+        SproutShape()
+            .stroke(color, style: StrokeStyle(
+                lineWidth: max(1.2, size / 24 * 1.9), lineCap: .round, lineJoin: .round))
+            .frame(width: size, height: size)
+    }
+}
+
 struct StreakBadge: View {
     let streak: Int
     var body: some View {
@@ -469,9 +507,12 @@ struct LockScreenActivityView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text("Tellerwert")
-                        .font(.system(.subheadline, design: .serif).weight(.semibold))
-                        .foregroundStyle(TW.green)
+                    HStack(spacing: 4) {
+                        BrandMark(size: 15)
+                        Text("Tellerwert")
+                            .font(.system(.subheadline, design: .serif).weight(.semibold))
+                            .foregroundStyle(TW.green)
+                    }
                     Spacer()
                     StepsBadge(steps: state.steps)
                     StreakBadge(streak: state.streak)
@@ -541,6 +582,12 @@ struct TellerwertLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 1) {
+                        HStack(spacing: 4) {
+                            BrandMark(size: 17)
+                            Text("Tellerwert")
+                                .font(.system(.caption, design: .serif).weight(.semibold))
+                                .foregroundStyle(TW.green)
+                        }
                         Text("\(max(0, context.state.kcalRemaining)) kcal übrig")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(TW.ink)
@@ -573,8 +620,7 @@ struct TellerwertLiveActivity: Widget {
                     .padding(.top, 4)
                 }
             } compactLeading: {
-                MiniKcalRing(state: context.state, lineWidth: 3)
-                    .frame(width: 18, height: 18)
+                BrandMark(size: 16)
             } compactTrailing: {
                 Text("\(max(0, context.state.kcalRemaining))")
                     .font(.caption2.weight(.bold))

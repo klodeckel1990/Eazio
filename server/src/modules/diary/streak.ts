@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
-import { userStats } from '../../db/schema.js'
+import { diaryEntries, userStats } from '../../db/schema.js'
 
 export interface Streak {
   currentStreak: number
@@ -23,20 +23,37 @@ export function getStreak(db: DB, userId: string): Streak {
 }
 
 /**
- * Incremental streak update on a diary insert for `date` — never scans
- * history. Same day: no-op; consecutive day: +1; gap: reset to 1. Backdated
- * entries (date < lastLoggedDate) leave the streak untouched.
+ * Recomputes the streak from the actual diary dates and caches it in
+ * user_stats. Unlike the old per-log increment this also counts days created
+ * by imports (Yazio history/mirror) and survives deletes and backfilled gaps.
+ * Bounded scan: the last 730 distinct days; longer historic runs survive via
+ * max() against the stored longestStreak.
  */
-export function updateStreakOnLog(db: DB, userId: string, date: string): Streak {
-  const s = getStreak(db, userId)
-  if (s.lastLoggedDate === date) return s
-  if (s.lastLoggedDate && date < s.lastLoggedDate) return s
+export function recomputeStreak(db: DB, userId: string): Streak {
+  const dates = db
+    .selectDistinct({ date: diaryEntries.date })
+    .from(diaryEntries)
+    .where(eq(diaryEntries.userId, userId))
+    .orderBy(desc(diaryEntries.date))
+    .limit(730)
+    .all()
+    .map((r) => r.date)
 
-  const currentStreak = s.lastLoggedDate === previousDay(date) ? s.currentStreak + 1 : 1
+  let current = dates.length > 0 ? 1 : 0
+  for (let i = 1; i < dates.length && dates[i] === previousDay(dates[i - 1]!); i++) current++
+
+  let longest = 0
+  let run = 0
+  for (let i = 0; i < dates.length; i++) {
+    run = i > 0 && dates[i] === previousDay(dates[i - 1]!) ? run + 1 : 1
+    if (run > longest) longest = run
+  }
+
+  const prev = getStreak(db, userId)
   const next: Streak = {
-    currentStreak,
-    longestStreak: Math.max(currentStreak, s.longestStreak),
-    lastLoggedDate: date,
+    currentStreak: current,
+    longestStreak: Math.max(longest, prev.longestStreak),
+    lastLoggedDate: dates[0] ?? null,
   }
   db.insert(userStats)
     .values({ userId, ...next, updatedAt: Date.now() })
