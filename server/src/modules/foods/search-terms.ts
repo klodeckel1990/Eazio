@@ -82,6 +82,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^wurzelpetersilie/, terms: 'petersilienwurzel petersiliewurzel' },
   { match: /^sojabohnensprossen/, terms: 'bean sprouts beansprouts sprossen' },
   { match: /^erdnussoel|^erdnussol/, terms: 'peanut oil' },
+  { match: /^biskuit/, terms: 'biskuitbroesel loeffelbiskuit' },
   // englische Staples (Allrecipes/Serious Eats/Cookpad — KI-Retry trifft sonst nur OFF)
   { match: /^huehnerei/, terms: 'ei eier egg eggs' },
   { match: /^weizen mehl/, terms: 'flour allpurpose' },

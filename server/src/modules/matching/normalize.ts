@@ -19,6 +19,7 @@ const QUALIFIERS = new Set([
   'getrocknet', 'getrocknete', 'tiefgekuhlt', 'tiefgekuhlte', 'gefroren', 'gefrorene',
   'gemischt', 'gemischte', 'gemischter', 'geschrotet', 'geschrotete',
   'gemahlen', 'gemahlene', 'gehackt', 'gehackte', 'gerieben', 'geriebene', 'geriebener',
+  'rosenscharf', 'rosenscharfes', 'edelsuess', 'edelsuesses',
   'geschaelt', 'geschaelte', 'geschaelter', 'gewaschen', 'gewaschene', 'entkernt',
   'entkernte', 'enthaeutet', 'ganz', 'ganze', 'ganzer', 'ganzes',
   'weich', 'weiche', 'weicher', 'weiches', 'zerlassen', 'zerlassene',
@@ -124,6 +125,9 @@ const SEASONINGS = new Set([
   'senfkorner', 'senfkoerner', 'blattpetersilie', 'brotgewurzmischung', 'brotgewurz',
   'rosenbluten', 'rosenblutenblatter', 'koriandergrun', 'kapuzinerkresse',
   'fenchelsaat', 'fenchelsamen', 'liebstockel', 'liebstoeckel', 'liebstockl', 'maggikraut',
+  // Küchen-Utensilien, die als 'Zutat' gelistet werden
+  'backpapier', 'alufolie', 'frischhaltefolie', 'zahnstocher', 'kuchengarn',
+  'holzspiesse', 'holzspiesschen', 'muffinformchen', 'pergamentpapier',
   'holunderbluten', 'holunderblutendolden', 'markknochen', 'suppengrun',
   // englisch — 'pepper' bewusst NICHT solo (bell pepper = Gemüsepaprika!)
   'salt', 'peppercorn', 'peppercorns', 'cumin', 'parsley', 'cilantro',
