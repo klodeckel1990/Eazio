@@ -53,6 +53,7 @@ const QUALIFIERS = new Set([
   'pitted', 'juiced', 'halved', 'quartered', 'seeded', 'deseeded', 'stemmed', 'separated',
   'cut', 'into', 'inch', 'inches', 'cubes', 'pieces', 'chunks', 'strips', 'wedges', 'halves', 'thirds',
   'seeds', 'removed', 'stems', 'discarded', 'deveined', 'uncooked', 'cooked',
+  'blanched', 'julienned', 'shaved', 'torn', 'smashed', 'pressed',
   'trimmed', 'cored', 'shredded', 'cubed', 'crumbled', 'zested', 'roughly',
   'finely', 'thinly', 'coarsely', 'lightly', 'firmly', 'loosely',
   'und', 'and', 'of', 'plus', 'extra', 'more', 'to', 'taste',

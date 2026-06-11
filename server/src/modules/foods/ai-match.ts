@@ -35,6 +35,7 @@ Du bekommst nummerierte Zutaten, jede mit nummerierten Kandidaten. Wähle pro Zu
 - Pure Grundbegriffe meinen die STANDARDVARIANTE: Milch → Trinkmilch/Kuhmilch (gibt es keine Vollmilch, ist "Milch fettarm, 1,5 %" richtig), Mehl → Weizenmehl Type 405, Ei → Hühnerei, Zucker → weißer Zucker, Reis → weißer Reis. Buttermilch, Maismehl, Wachtelei, Gerichte MIT Milch o. ä. sind dann FALSCH.
 - Für pur genannte Zutaten das Grundprodukt (roh/natur) bevorzugen — niemals Gerichte, Wurst, Gebäck, Suppen oder Saucen daraus. Eine Zwiebel ist keine Zwiebelwurst, ein Ei kein Ei-Einlauf.
 - Fettstufen/Prozentangaben und Zusätze wie "mager"/"light" ernst nehmen und die passende Variante wählen.
+- Garzustand beachten: "gekocht"/"cooked"/"gebraten" in der Zutat → die entsprechende Garvariante wählen, sonst roh.
 - Kandidaten sind markiert: [BLS] = generischer Datenbankeintrag, [Produkt] = Markenprodukt, [Eigenes] = eigenes Lebensmittel des Nutzers. Für pur genannte Zutaten (Gemüse, Obst, Fleisch, Grundzutaten) IMMER [BLS] bevorzugen; [Produkt] nur wählen, wenn die Zutat erkennbar ein Marken-/Fertigprodukt ist oder kein [BLS]-Kandidat fachlich passt.
 - Passt KEIN Kandidat: candidate = -1 und gib in query einen besseren deutschen Suchbegriff im Stil der Datenbank-Namen an (z. B. "Ei" → "Hühnerei", "Milch" → "Milch 3,5", "Mehl" → "Weizen Mehl"). Sonst query = "".
 - Englische Zutaten gelten dieselben Regeln — der query-Begriff ist immer DEUTSCH (ground beef → Rinderhackfleisch, heavy cream → Schlagsahne, ricotta cheese → Ricotta, chicken stock → Hühnerbrühe).

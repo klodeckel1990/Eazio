@@ -83,6 +83,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^sojabohnensprossen/, terms: 'bean sprouts beansprouts sprossen' },
   { match: /^erdnussoel|^erdnussol/, terms: 'peanut oil' },
   { match: /^biskuit/, terms: 'biskuitbroesel loeffelbiskuit' },
+  { match: /^venusmuschel/, terms: 'clams clam muscheln vongole' },
+  { match: /^kaffeesahne/, terms: 'half-and-half half and half kondensmilch' },
   // englische Staples (Allrecipes/Serious Eats/Cookpad — KI-Retry trifft sonst nur OFF)
   { match: /^huehnerei/, terms: 'ei eier egg eggs' },
   { match: /^weizen mehl/, terms: 'flour allpurpose' },
