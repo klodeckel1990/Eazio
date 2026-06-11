@@ -70,7 +70,7 @@ enum ShareApiError: Error {
 }
 
 enum ShareApi {
-    static let base = "https://eazio.de"
+    static let base = "https://tellerwert.de"
 
     private static func request(path: String, body: [String: Any], token: String) async throws -> (Data, Int) {
         var req = URLRequest(url: URL(string: base + path)!)

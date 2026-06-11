@@ -49,7 +49,7 @@ func sharedToken() -> String? {
 }
 
 struct SummaryProvider: TimelineProvider {
-    static let apiBase = "https://eazio.de"
+    static let apiBase = "https://tellerwert.de"
 
     func placeholder(in context: Context) -> SummaryEntry {
         SummaryEntry(date: .now, summary: .sample, loggedIn: true)
