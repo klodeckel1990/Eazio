@@ -940,10 +940,9 @@ select {
 }
 .meal-matching { display: flex; align-items: center; gap: 0.5rem; color: var(--ink-2); }
 
-/* Tastatur offen (native App, WebView-Resize): Tabbar weg, damit das
-   Zutaten-Sheet direkt über der Tastatur sitzt. */
-:root.kb-open .tabbar { display: none; }
-:root.kb-open .main { padding-bottom: 1rem; }
+/* Tastatur offen (native App): Sheets schieben sich um die gemeldete
+   Tastaturhöhe (--kb-h) hoch — die WebView selbst bleibt unverändert. */
+:root.kb-open .add-sheet { padding-bottom: 1.15rem; }
 
 /* day totals with slim kcal progress (sits on the green gradient card) */
 .totals-day { flex-direction: column; align-items: stretch; gap: 0; }
@@ -1733,6 +1732,9 @@ input[type='search']:focus {
   align-items: flex-end;
   justify-content: center;
   animation: fadeIn 0.2s ease;
+  /* hebt das Sheet über die iOS-Tastatur (Höhe via Keyboard-Plugin) */
+  padding-bottom: var(--kb-h, 0px);
+  transition: padding-bottom 0.25s cubic-bezier(0.38, 0.7, 0.125, 1);
 }
 .cal-sheet {
   width: 100%;
