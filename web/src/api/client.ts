@@ -15,7 +15,10 @@ export class ApiError extends Error {
 
 // Same-origin ('' = relative /api) on the web; the Capacitor build bakes in an
 // absolute URL via VITE_API_BASE.
-const API_BASE: string = import.meta.env.VITE_API_BASE ?? ''
+// Exported: Links, die NACH AUSSEN gehen (z. B. die öffentliche Rezept-URL für
+// Bring!), brauchen die Server-Origin — window.location.origin wäre in der
+// nativen App capacitor://localhost und von außen unerreichbar.
+export const API_BASE: string = import.meta.env.VITE_API_BASE ?? ''
 const TOKEN_KEY = 'eazio.token'
 
 // Storage access can throw (private mode) or be absent (tests) — degrade to

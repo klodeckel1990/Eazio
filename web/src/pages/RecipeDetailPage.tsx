@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api, ApiError } from '../api/client'
+import { api, ApiError, API_BASE } from '../api/client'
 import type { RecipeDetail, RecipeIngredient, ShoppingListFormat } from '../api/types'
 import { buildTrackerText } from '../lib/recipe'
 import { buildShoppingText, bringDeeplink, copyText, SHOPPING_FORMAT_LABEL } from '../lib/shoppingList'
@@ -40,8 +40,13 @@ export function RecipeDetailPage() {
   const copyShoppingList = async () => {
     if (!recipe) return
     if (format === 'bring') {
-      const publicUrl = `${window.location.origin}/r/${recipe.id}?t=${encodeURIComponent(recipe.shareToken)}`
-      window.location.href = bringDeeplink(publicUrl, recipe.servings)
+      // Server-Origin, nicht window.location.origin: in der nativen App wäre
+      // das capacitor://localhost — Bring! könnte das Rezept nie abrufen.
+      const base = API_BASE || window.location.origin
+      const publicUrl = `${base}/r/${recipe.id}?t=${encodeURIComponent(recipe.shareToken)}`
+      // window.open statt location.href: navigiert nicht die WebView weg,
+      // sondern öffnet extern (Universal Link → Bring!-App).
+      window.open(bringDeeplink(publicUrl, recipe.servings), '_blank', 'noopener')
       return
     }
     const ok = await copyText(buildShoppingText(recipe.title, recipe.ingredients))
