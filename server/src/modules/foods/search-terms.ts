@@ -154,6 +154,8 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^rucola roh/, terms: 'rauke arugula rocket' },
   { match: /^sojaschnetzel\/sojagranulat, texturiert, trocken/, terms: 'sojahack veggie-hack veganes hack sojageschnetzeltes' },
   { match: /^mungbohnensprossen/, terms: 'mungobohnensprossen mungosprossen' },
+  { match: /^gurke roh/, terms: 'salatgurke schlangengurke cucumber' },
+  { match: /^edelkrebs/, terms: 'flusskrebs flusskrebsschwaenze krebsfleisch crayfish' },
 ]
 
 export function foldGerman(text: string): string {

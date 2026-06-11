@@ -174,7 +174,7 @@ export function isSeasoning(name: string): boolean {
       if (SEASONINGS.has(tok)) return true
       // …gewürz/…pfeffer-Komposita sind immer Würzmittel (Brotgewürz,
       // Peperonigewürz, Zitronenpfeffer) — Gewürzgurke beginnt damit, endet nicht
-      if (tok.length > 7 && (tok.endsWith('gewurz') || tok.endsWith('pfeffer') || tok.endsWith('salz'))) return true
+      if (tok.length > 7 && (tok.endsWith('gewurz') || tok.endsWith('pfeffer') || tok.endsWith('salz') || tok.endsWith('abrieb'))) return true
       for (const form of SPICE_FORMS) {
         if (tok.length > form.length + 2 && tok.endsWith(form)) {
           const head = tok.slice(0, -form.length)
