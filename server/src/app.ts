@@ -71,12 +71,25 @@ export function buildApp(
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:', 'blob:'],
-        connectSrc: ["'self'", 'https://accounts.google.com'],
+        // fonts.*: der Service Worker cached Webfonts per fetch (Workbox
+        // runtime caching) — Worker-Fetches laufen unter connect-src.
+        connectSrc: [
+          "'self'",
+          'https://accounts.google.com',
+          'https://fonts.googleapis.com',
+          'https://fonts.gstatic.com',
+        ],
         frameSrc: ["'self'", 'https://accounts.google.com', 'https://appleid.apple.com'],
       },
     },
     // Recipe images are embedded from the native app's origin later on.
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    // Helmet-Default 'same-origin' kappt window.opener, sobald das
+    // Google-OAuth-Popup zu accounts.google.com und zurück navigiert — die
+    // postMessage mit dem ID-Token erreicht das Hauptfenster dann nie.
+    // ('same-origin-allow-popups' reicht nicht: der Rücksprung des Popups auf
+    // unsere Origin wechselt die Browsing-Context-Group trotzdem.)
+    crossOriginOpenerPolicy: false,
   })
 
   app.register(rateLimit, { max: 200, timeWindow: '1 minute' })
