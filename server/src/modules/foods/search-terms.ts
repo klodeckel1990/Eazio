@@ -79,6 +79,7 @@ const NAME_SYNONYMS: { match: RegExp; terms: string }[] = [
   { match: /^zartbitter-\/halbbitterschokolade$/, terms: 'zartbitterschokolade schokoraspel raspelschokolade dunkle schokolade dark chocolate chips' },
   { match: /^kidneybohne/, terms: 'kidney beans kidneybohnen' },
   { match: /^kichererbse/, terms: 'chickpeas chickpea kichererbsen' },
+  { match: /^petersilienwurzel/, terms: 'petersiliewurzel wurzelpetersilie' },
   // englische Staples (Allrecipes/Serious Eats/Cookpad — KI-Retry trifft sonst nur OFF)
   { match: /^huehnerei/, terms: 'ei eier egg eggs' },
   { match: /^weizen mehl/, terms: 'flour allpurpose' },
