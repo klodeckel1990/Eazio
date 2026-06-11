@@ -118,7 +118,8 @@ const SEASONINGS = new Set([
   // Audit-Funde: Aroma-/Gewürzformen ohne relevante Kalorien
   'vanilleschote', 'vanilleschoten', 'koriandersaat', 'kardamomkapsel', 'kardamomkapseln',
   'kamillenblute', 'kamillenbluten', 'rosmarinnadeln', 'selleriesalz', 'knoblauchgranulat',
-  'zitronenmelisse', 'melisse', 'zitronenschale', 'orangenschale', 'zitronenabrieb',
+  'zitronenmelisse', 'melisse', 'zitronenschale', 'orangenschale', 'limettenschale',
+  'beifuss', 'zitronenabrieb',
   'orangenabrieb', 'rauchsalz', 'gurkenwasser', 'spargelschalen', 'shisokresse',
   'currykraut', 'wacholderbeere', 'wacholderbeeren', 'safranfaden', 'safranfäden', 'matcha',
   'matchapulver', 'daikonkresse', 'spargelsud', 'knoblauchsalz',
