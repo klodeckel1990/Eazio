@@ -32,8 +32,8 @@ const STEPS: Step[] = [
   },
   {
     Icon: IconSettings,
-    title: 'Noch ein Schritt',
-    body: 'Damit getrackt werden kann, verknüpfe in den Einstellungen dein Yazio-Konto. Dort stellst du auch das Einkaufslisten-Format ein und richtest das Teilen vom iPhone ein.',
+    title: 'Alles bereit',
+    body: 'Du kannst sofort lostracken. Optional: Verknüpfe dein Yazio-Konto, um deine bisherige Historie zu importieren oder Einträge weiter nach Yazio zu spiegeln. In den Einstellungen findest du außerdem das Einkaufslisten-Format und das Teilen vom iPhone.',
   },
 ]
 
@@ -84,7 +84,7 @@ export function OnboardingWizard() {
 
         {isLast && (
           <button type="button" className="btn btn-soft btn-block" onClick={goAccounts}>
-            <IconSettings /> Yazio-Konto verknüpfen
+            <IconSettings /> Yazio verknüpfen (optional)
           </button>
         )}
 
