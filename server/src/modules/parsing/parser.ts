@@ -10,7 +10,8 @@ const KNOWN_UNITS = new Set([
   'stück', 'stk', 'stueck', 'portion', 'portionen', 'el', 'tl',
   'scheibe', 'scheiben', 'prise', 'prisen', 'becher', 'glas', 'dose', 'dosen', 'tasse', 'tassen',
   // bundle/count words common in recipes ("1 Bund Radieschen", "2 Zehen Knoblauch")
-  'bund', 'zehe', 'zehen', 'stange', 'stangen', 'kopf', 'zweig', 'zweige',
+  'bund', 'zehe', 'zehen', 'stange', 'stangen', 'stängel', 'staengel', 'stengel',
+  'kopf', 'zweig', 'zweige',
   'packung', 'päckchen', 'paeckchen', 'beutel', 'würfel', 'wuerfel',
   'handvoll', 'blatt', 'blätter', 'blaetter', 'kugel', 'kugeln',
   'pck', 'pkt', 'bd',
@@ -25,7 +26,7 @@ const KNOWN_UNITS = new Set([
 // knows ("1 Pck. Vanillezucker", "1 Bd Lauchzwiebeln").
 const UNIT_ALIASES: Record<string, string> = {
   pck: 'packung', pkt: 'packung', bd: 'bund', liter: 'l', gram: 'g', grams: 'g',
-  tassen: 'tasse', dosen: 'dose',
+  tassen: 'tasse', dosen: 'dose', 'stängel': 'stange', staengel: 'stange', stengel: 'stange',
   cups: 'cup', tsp: 'tl', teaspoon: 'tl', teaspoons: 'tl',
   tbsp: 'el', tablespoon: 'el', tablespoons: 'el',
   lbs: 'lb', pound: 'lb', pounds: 'lb', ounce: 'oz', ounces: 'oz',
