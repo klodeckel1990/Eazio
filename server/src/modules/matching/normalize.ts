@@ -51,7 +51,7 @@ const QUALIFIERS = new Set([
   'low', 'sodium',
   'pitted', 'juiced', 'halved', 'quartered', 'seeded', 'deseeded', 'stemmed', 'separated',
   'cut', 'into', 'inch', 'inches', 'cubes', 'pieces', 'chunks', 'strips', 'wedges', 'halves', 'thirds',
-  'seeds', 'removed', 'stems', 'discarded',
+  'seeds', 'removed', 'stems', 'discarded', 'deveined', 'uncooked', 'cooked',
   'trimmed', 'cored', 'shredded', 'cubed', 'crumbled', 'zested', 'roughly',
   'finely', 'thinly', 'coarsely', 'lightly', 'firmly', 'loosely',
   'und', 'and', 'of', 'plus', 'extra', 'more', 'to', 'taste',
@@ -76,7 +76,10 @@ export function isQualifierOnly(name: string): boolean {
  *  "Öl zum Braten" → "Öl". Without this, FTS matches dishes/spreads whose
  *  NAME contains "zum Braten", and cache keys never repeat. */
 export function stripPurpose(name: string): string {
-  const stripped = name.replace(/\s+(?:zum|zur|für|fuer)\s+.+$/i, '').trim()
+  const stripped = name
+    .replace(/\s+(?:zum|zur|für|fuer)\s+.+$/i, '')
+    .replace(/\s+for\s+(?:frying|serving|garnish(?:ing)?|greasing|dusting|drizzling|brushing|the\s+pan|cooking)\b.*$/i, '')
+    .trim()
   return stripped.length > 0 ? stripped : name
 }
 
