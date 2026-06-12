@@ -138,6 +138,11 @@ export const api = {
     get: () => req<UserSettings>('GET', '/settings'),
     update: (patch: Partial<UserSettings>) => req<UserSettings>('PATCH', '/settings', patch),
   },
+  push: {
+    register: (token: string, platform: 'ios' | 'android') =>
+      req<void>('POST', '/push/register', { token, platform }),
+    unregister: (token: string) => req<void>('POST', '/push/unregister', { token }),
+  },
   foods: {
     search: (q: string, limit = 10) =>
       req<{ results: FoodSummary[] }>('GET', `/foods/search?q=${encodeURIComponent(q)}&limit=${limit}`),

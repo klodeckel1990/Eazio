@@ -1,6 +1,7 @@
 import { env } from './config/env.js'
 import { createDb, runMigrations, ensureDbDir } from './db/client.js'
 import { buildApp } from './app.js'
+import { startReminderJob } from './modules/push/reminder-job.js'
 
 async function main(): Promise<void> {
   ensureDbDir(env.DATABASE_PATH)
@@ -8,6 +9,7 @@ async function main(): Promise<void> {
   runMigrations(db)
 
   const app = buildApp(db)
+  startReminderJob(db, app.log)
 
   const shutdown = async (): Promise<void> => {
     await app.close()

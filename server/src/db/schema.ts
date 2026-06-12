@@ -272,6 +272,29 @@ export const matchCache = sqliteTable('match_cache', {
   updatedAt: integer('updated_at').notNull(),
 })
 
+// APNs-Geräte-Token (Android/FCM später). apns_env merkt sich, ob das Token
+// gegen api.push.apple.com oder die Sandbox (Dev-Builds aus Xcode) zustellbar
+// war — erspart den Doppelversuch bei jedem Versand.
+export const pushTokens = sqliteTable('push_tokens', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  token: text('token').notNull().unique(),
+  platform: text('platform').notNull(), // ios|android
+  apnsEnv: text('apns_env'), // prod|sandbox, null bis zum ersten Erfolg
+  createdAt: integer('created_at').notNull(),
+  lastSeenAt: integer('last_seen_at').notNull(),
+})
+
+// Buchhaltung der Abend-Erinnerung: höchstens ein Push pro Nutzer und Tag.
+export const pushReminders = sqliteTable('push_reminders', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id),
+  lastSentDate: text('last_sent_date').notNull(), // YYYY-MM-DD
+})
+
 // Per-day activity from Apple Health / Health Connect: steps, active energy
 // and the day's (smart-scale) weight. Synced by the native app on foreground.
 export const activityDays = sqliteTable(

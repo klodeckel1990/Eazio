@@ -49,6 +49,12 @@ const schema = z.object({
   APPLE_APP_CLIENT_ID: z.string().default('de.tellerwert.app'),
   // Apple Services ID — nur für "Sign in with Apple" im Web-Browser nötig.
   APPLE_WEB_CLIENT_ID: z.string().optional(),
+  // Push (APNs). Ohne Key bleibt der Versand inert; die Routen registrieren
+  // Tokens trotzdem, damit nichts verloren geht, bis der Key da ist.
+  APNS_KEY_PATH: z.string().optional(), // .p8 aus dem Developer-Portal
+  APNS_KEY_ID: z.string().optional(),
+  APNS_TEAM_ID: z.string().default('34N9P46A9K'),
+  APNS_TOPIC: z.string().default('de.tellerwert.app'),
 })
 
 const parsed = schema.safeParse(process.env)

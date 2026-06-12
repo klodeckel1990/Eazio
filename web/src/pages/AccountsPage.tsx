@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { healthAvailable, healthOptedIn, setHealthOptIn } from '../lib/health'
 import { liveActivityAvailable, liveActivityEnabled, setLiveActivityEnabled } from '../lib/live-activity'
+import { disablePush, enablePush, pushAvailable } from '../lib/push'
 import { setThemePref, themePref, type ThemePref } from '../lib/theme'
 import { api, ApiError } from '../api/client'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
@@ -29,6 +30,9 @@ export function AccountsPage() {
   const [liveActivityOn, setLiveActivityOn] = useState(liveActivityEnabled())
   const [theme, setTheme] = useState<ThemePref>(themePref())
   const [activityBudget, setActivityBudget] = useState<boolean | null>(null)
+  const [reminderOn, setReminderOn] = useState<boolean | null>(null)
+  const [reminderTime, setReminderTime] = useState('19:30')
+  const [reminderError, setReminderError] = useState<string | null>(null)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -38,7 +42,13 @@ export function AccountsPage() {
 
   useEffect(() => {
     loadAccounts()
-    api.settings.get().then((s) => { setFormat(s.shoppingListFormat); setMirror(s.mirrorToYazio); setActivityBudget(s.activityBudget) }).catch(() => {})
+    api.settings.get().then((s) => {
+      setFormat(s.shoppingListFormat)
+      setMirror(s.mirrorToYazio)
+      setActivityBudget(s.activityBudget)
+      setReminderOn(s.reminderPush)
+      setReminderTime(s.reminderTime)
+    }).catch(() => {})
     api.goals.get().then(setGoals).catch(() => {})
   }, [])
 
@@ -69,6 +79,34 @@ export function AccountsPage() {
     const next = !liveActivityOn
     setLiveActivityOn(next)
     setLiveActivityEnabled(next)
+  }
+
+  const toggleReminder = async () => {
+    if (reminderOn === null) return
+    setReminderError(null)
+    if (reminderOn) {
+      setReminderOn(false)
+      await disablePush()
+      api.settings.update({ reminderPush: false }).catch(() => {})
+      return
+    }
+    try {
+      if (!(await enablePush())) {
+        setReminderError('Benachrichtigungen sind in den iOS-Einstellungen deaktiviert.')
+        return
+      }
+      setReminderOn(true)
+      api.settings.update({ reminderPush: true, reminderTime }).catch(() => {})
+    } catch {
+      setReminderError('Registrierung fehlgeschlagen. Bitte erneut versuchen.')
+    }
+  }
+
+  const changeReminderTime = (next: string) => {
+    setReminderTime(next)
+    if (/^([01]\d|2[0-3]):[0-5]\d$/.test(next)) {
+      api.settings.update({ reminderTime: next }).catch(() => {})
+    }
   }
 
   const toggleActivityBudget = () => {
@@ -234,9 +272,43 @@ export function AccountsPage() {
       </div>
 
       {/* ---- Gesundheit & Motivation (nur native App) ------------------- */}
-      {(healthAvailable() || liveActivityAvailable()) && (
+      {(healthAvailable() || liveActivityAvailable() || pushAvailable()) && (
         <>
           <h2 className="section-title">Gesundheit &amp; Motivation</h2>
+          {pushAvailable() && (
+            <div className="card stack">
+              <div className="water-card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+                <div>
+                  <strong>Tägliche Erinnerung</strong>
+                  <p className="muted" style={{ margin: 0 }}>
+                    Abend-Push, falls du an dem Tag noch nichts getrackt hast.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={reminderOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+                  aria-pressed={reminderOn ?? false}
+                  onClick={() => { void toggleReminder() }}
+                >
+                  {reminderOn ? 'An' : 'Aus'}
+                </button>
+              </div>
+              {reminderOn && (
+                <div className="field">
+                  <label htmlFor="reminder-time">Uhrzeit</label>
+                  <input
+                    id="reminder-time"
+                    type="time"
+                    value={reminderTime}
+                    onChange={(e) => changeReminderTime(e.target.value)}
+                  />
+                </div>
+              )}
+              {reminderError && (
+                <p className="banner error"><IconAlert /><span className="banner-text">{reminderError}</span></p>
+              )}
+            </div>
+          )}
           {healthAvailable() && (
             <div className="card water-card">
               <div>

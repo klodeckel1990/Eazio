@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, ApiError, getToken, setToken } from '../api/client'
 import { pushTokenToWidgets } from '../lib/shared-auth'
+import { disablePush, syncPushRegistration } from '../lib/push'
 import { getPlatform, socialLogin } from '../lib/social-login'
 import type { SocialProvider, User } from '../api/types'
 
@@ -26,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (alive) setUser(u)
         // existing session: make sure the widget has the current token too
         void pushTokenToWidgets(getToken())
+        // APNs-Tokens rotieren — Registrierung still auffrischen (no-op im Web)
+        void syncPushRegistration()
       })
       .catch(() => { if (alive) setUser(null) })
       .finally(() => { if (alive) setLoading(false) })
@@ -54,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void pushTokenToWidgets(res.token)
   }
   const logout = async () => {
+    // vor dem Session-Ende, solange der Bearer noch gilt
+    await disablePush().catch(() => {})
     await api.auth.logout().catch((e) => { if (!(e instanceof ApiError)) throw e })
     setToken(null)
     setUser(null)

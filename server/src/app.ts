@@ -26,6 +26,7 @@ import { registerGoalRoutes } from './http/routes/goals.routes.js'
 import { registerWidgetRoutes } from './http/routes/widget.routes.js'
 import { registerActivityRoutes } from './http/routes/activity.routes.js'
 import { registerStatsRoutes } from './http/routes/stats.routes.js'
+import { registerPushRoutes } from './http/routes/push.routes.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -128,6 +129,7 @@ export function buildApp(
   registerWidgetRoutes(app, db)
   registerActivityRoutes(app, db)
   registerStatsRoutes(app, db)
+  registerPushRoutes(app, db)
 
   const webDir =
     opts.webDir ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist')

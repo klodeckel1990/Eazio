@@ -8,6 +8,8 @@ const PatchSchema = z.object({
   shoppingListFormat: z.enum(['plain', 'checklist', 'bring']).optional(),
   onboardingDone: z.boolean().optional(),
   activityBudget: z.boolean().optional(),
+  reminderPush: z.boolean().optional(),
+  reminderTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
 })
 
 export function registerSettingsRoutes(app: FastifyInstance, db: DB): void {

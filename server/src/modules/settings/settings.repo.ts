@@ -5,6 +5,8 @@ import { users } from '../../db/schema.js'
 export type ShoppingListFormat = 'plain' | 'checklist' | 'bring'
 const SHOPPING_FORMATS: ShoppingListFormat[] = ['plain', 'checklist', 'bring']
 
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
+
 export interface UserSettings {
   /** Preferred format when copying a recipe's ingredients as a shopping list. */
   shoppingListFormat: ShoppingListFormat
@@ -15,6 +17,10 @@ export interface UserSettings {
   mirrorToYazio: boolean
   /** Add Apple-Health active calories on top of the daily kcal budget. */
   activityBudget: boolean
+  /** Abend-Push, wenn an dem Tag noch nichts getrackt wurde (Opt-in). */
+  reminderPush: boolean
+  /** Uhrzeit der Erinnerung, HH:MM in Europe/Berlin. */
+  reminderTime: string
 }
 
 const DEFAULTS: UserSettings = {
@@ -22,6 +28,8 @@ const DEFAULTS: UserSettings = {
   onboardingDone: false,
   mirrorToYazio: true,
   activityBudget: false,
+  reminderPush: false,
+  reminderTime: '19:30',
 }
 
 export function getSettings(db: DB, userId: string): UserSettings {
@@ -47,6 +55,8 @@ function parseSettings(raw: string | null): UserSettings {
       onboardingDone: o.onboardingDone === true,
       mirrorToYazio: o.mirrorToYazio !== false,
       activityBudget: o.activityBudget === true,
+      reminderPush: o.reminderPush === true,
+      reminderTime: TIME_RE.test(String(o.reminderTime)) ? (o.reminderTime as string) : '19:30',
     }
   } catch {
     return { ...DEFAULTS }

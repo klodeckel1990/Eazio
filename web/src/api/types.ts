@@ -76,6 +76,8 @@ export interface UserSettings {
   onboardingDone: boolean
   mirrorToYazio: boolean
   activityBudget: boolean
+  reminderPush: boolean
+  reminderTime: string // HH:MM
 }
 
 // --- own food database & diary (Phase 3) -----------------------------------
