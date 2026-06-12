@@ -55,6 +55,8 @@ const schema = z.object({
   APNS_KEY_ID: z.string().optional(),
   APNS_TEAM_ID: z.string().default('34N9P46A9K'),
   APNS_TOPIC: z.string().default('de.tellerwert.app'),
+  // Android-Push: Pfad zum Firebase-Service-Account-JSON (FCM HTTP v1).
+  FCM_SERVICE_ACCOUNT_PATH: z.string().optional(),
 })
 
 const parsed = schema.safeParse(process.env)

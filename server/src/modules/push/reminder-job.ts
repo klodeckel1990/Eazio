@@ -10,17 +10,13 @@ import { pushLog } from '../../db/schema.js'
 import { listDayEntries } from '../diary/diary.repo.js'
 import { getStreak } from '../diary/streak.js'
 import { getSettings } from '../settings/settings.repo.js'
-import { pushConfigured, sendWithFallback, type ApnsEnv, type PushMessage } from './apns.js'
-import {
-  lastReminderDate,
-  listUserIdsWithTokens,
-  listUserTokens,
-  markReminderSent,
-  removeTokenById,
-  setTokenEnv,
-} from './push.repo.js'
+import { sendWithFallback, type PushMessage } from './apns.js'
+import type { sendFcm } from './fcm.js'
+import { anyPushConfigured, deliverToUser } from './deliver.js'
+import { lastReminderDate, listUserIdsWithTokens, markReminderSent } from './push.repo.js'
 
 export type Sender = typeof sendWithFallback
+export type FcmSender = typeof sendFcm
 
 /** Datum + Uhrzeit in der Server-Zeitzone (TZ, Europe/Berlin). */
 export function localDayAndTime(now: Date, timeZone: string): { date: string; time: string } {
@@ -50,9 +46,14 @@ function reminderMessage(streak: number): PushMessage {
 
 export async function runReminderTick(
   db: DB,
-  opts: { now?: Date; timeZone?: string; send?: Sender; log?: FastifyBaseLogger } = {},
+  opts: {
+    now?: Date
+    timeZone?: string
+    send?: Sender
+    sendFcm?: FcmSender
+    log?: FastifyBaseLogger
+  } = {},
 ): Promise<number> {
-  const send = opts.send ?? sendWithFallback
   const { date, time } = localDayAndTime(opts.now ?? new Date(), opts.timeZone ?? 'Europe/Berlin')
   let sent = 0
   for (const userId of listUserIdsWithTokens(db)) {
@@ -71,24 +72,11 @@ export async function runReminderTick(
     if (nudgedToday.length > 0) continue
 
     const msg = reminderMessage(getStreak(db, userId).currentStreak)
-    let delivered = false
-    for (const t of listUserTokens(db, userId)) {
-      if (t.platform !== 'ios') continue // FCM/Android folgt später
-      try {
-        const res = await send(t.token, msg, t.apnsEnv as ApnsEnv | null)
-        if (res.ok) {
-          delivered = true
-          if (t.apnsEnv !== res.env) setTokenEnv(db, t.id, res.env)
-        } else if (res.status === 410 || res.reason === 'BadDeviceToken') {
-          // Gerät abgemeldet/App gelöscht — Token aufräumen
-          removeTokenById(db, t.id)
-        } else {
-          opts.log?.warn({ status: res.status, reason: res.reason }, 'apns delivery failed')
-        }
-      } catch (err) {
-        opts.log?.warn({ err }, 'apns send error')
-      }
-    }
+    const delivered = await deliverToUser(db, userId, msg, {
+      apns: opts.send,
+      fcm: opts.sendFcm,
+      log: opts.log,
+    })
     // Auch ohne Zustellung als erledigt markieren: tote Tokens sollen nicht
     // jede Minute neue Versuche auslösen; beim nächsten App-Start kommt ein
     // frisches Token.
@@ -99,8 +87,8 @@ export async function runReminderTick(
 }
 
 export function startReminderJob(db: DB, log: FastifyBaseLogger): void {
-  if (!pushConfigured()) {
-    log.info('push: APNS_KEY_PATH/APNS_KEY_ID nicht gesetzt — Erinnerungs-Job inaktiv')
+  if (!anyPushConfigured()) {
+    log.info('push: weder APNs noch FCM konfiguriert — Erinnerungs-Job inaktiv')
     return
   }
   setInterval(() => {

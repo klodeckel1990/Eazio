@@ -87,6 +87,30 @@ describe('runReminderTick', () => {
     expect(await runReminderTick(db, { now: EVENING, send: fakeSender(sent) })).toBe(0)
   })
 
+  it('delivers via FCM to android tokens', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'droid', 'pw-123456')
+    updateSettings(db, user.id, { reminderPush: true, reminderTime: '19:30' })
+    upsertToken(db, user.id, 'tok-android-1234', 'android')
+    const sent: string[] = []
+    const fcm = async (token: string) => {
+      sent.push(token)
+      return { ok: true, status: 200, reason: null }
+    }
+    expect(await runReminderTick(db, { now: EVENING, sendFcm: fcm })).toBe(1)
+    expect(sent).toEqual(['tok-android-1234'])
+  })
+
+  it('removes android tokens that FCM reports as unregistered', async () => {
+    const db = createTestDb()
+    const user = await createUser(db, 'droidgone', 'pw-123456')
+    updateSettings(db, user.id, { reminderPush: true, reminderTime: '19:30' })
+    upsertToken(db, user.id, 'tok-android-dead', 'android')
+    const fcm = async () => ({ ok: false, status: 404, reason: 'UNREGISTERED' })
+    await runReminderTick(db, { now: EVENING, sendFcm: fcm })
+    expect(listUserTokens(db, user.id)).toHaveLength(0)
+  })
+
   it('removes tokens that APNs reports as unregistered', async () => {
     const db = createTestDb()
     const user = await setupUser(db)

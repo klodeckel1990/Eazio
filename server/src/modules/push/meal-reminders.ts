@@ -12,9 +12,10 @@ import { pushLog } from '../../db/schema.js'
 import { listDayEntries } from '../diary/diary.repo.js'
 import { getStreak } from '../diary/streak.js'
 import { getSettings } from '../settings/settings.repo.js'
-import { sendWithFallback, type ApnsEnv, type PushMessage } from './apns.js'
-import { listUserIdsWithTokens, listUserTokens, removeTokenById, setTokenEnv } from './push.repo.js'
-import { localDayAndTime, type Sender } from './reminder-job.js'
+import type { PushMessage } from './apns.js'
+import { deliverToUser } from './deliver.js'
+import { listUserIdsWithTokens } from './push.repo.js'
+import { localDayAndTime, type FcmSender, type Sender } from './reminder-job.js'
 
 export const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'] as const
 export type MealSlot = (typeof MEAL_SLOTS)[number]
@@ -156,9 +157,14 @@ export function markSlotSent(db: DB, userId: string, date: string, slot: MealSlo
 
 export async function runMealReminderTick(
   db: DB,
-  opts: { now?: Date; timeZone?: string; send?: Sender; log?: FastifyBaseLogger } = {},
+  opts: {
+    now?: Date
+    timeZone?: string
+    send?: Sender
+    sendFcm?: FcmSender
+    log?: FastifyBaseLogger
+  } = {},
 ): Promise<number> {
-  const send = opts.send ?? sendWithFallback
   const now = opts.now ?? new Date()
   const timeZone = opts.timeZone ?? 'Europe/Berlin'
   const { date, time } = localDayAndTime(now, timeZone)
@@ -184,23 +190,11 @@ export async function runMealReminderTick(
       if (!target || time < target) continue
 
       const msg = mealMessage(slot, getStreak(db, userId).currentStreak, date)
-      let delivered = false
-      for (const t of listUserTokens(db, userId)) {
-        if (t.platform !== 'ios') continue
-        try {
-          const res = await send(t.token, msg, t.apnsEnv as ApnsEnv | null)
-          if (res.ok) {
-            delivered = true
-            if (t.apnsEnv !== res.env) setTokenEnv(db, t.id, res.env)
-          } else if (res.status === 410 || res.reason === 'BadDeviceToken') {
-            removeTokenById(db, t.id)
-          } else {
-            opts.log?.warn({ status: res.status, reason: res.reason }, 'apns meal delivery failed')
-          }
-        } catch (err) {
-          opts.log?.warn({ err }, 'apns meal send error')
-        }
-      }
+      const delivered = await deliverToUser(db, userId, msg, {
+        apns: opts.send,
+        fcm: opts.sendFcm,
+        log: opts.log,
+      })
       // wie bei der Abend-Erinnerung: auch Fehlversuche abhaken, kein Minuten-Spam
       markSlotSent(db, userId, date, slot)
       if (delivered) sent++
