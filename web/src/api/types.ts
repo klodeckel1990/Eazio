@@ -78,6 +78,7 @@ export interface UserSettings {
   activityBudget: boolean
   reminderPush: boolean
   reminderTime: string // HH:MM
+  mealReminders: boolean
 }
 
 // --- own food database & diary (Phase 3) -----------------------------------

@@ -295,6 +295,21 @@ export const pushReminders = sqliteTable('push_reminders', {
   lastSentDate: text('last_sent_date').notNull(), // YYYY-MM-DD
 })
 
+// Versandprotokoll der smarten Mahlzeiten-Erinnerungen: ein Push pro Nutzer,
+// Tag und Slot — zugleich die Basis fürs Tages-Limit.
+export const pushLog = sqliteTable(
+  'push_log',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    date: text('date').notNull(), // YYYY-MM-DD
+    kind: text('kind').notNull(), // breakfast|lunch|dinner
+    sentAt: integer('sent_at').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.date, t.kind] })],
+)
+
 // Per-day activity from Apple Health / Health Connect: steps, active energy
 // and the day's (smart-scale) weight. Synced by the native app on foreground.
 export const activityDays = sqliteTable(

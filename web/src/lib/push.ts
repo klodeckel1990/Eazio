@@ -72,7 +72,7 @@ export async function syncPushRegistration(): Promise<void> {
   if (!pushAvailable()) return
   try {
     const settings = await api.settings.get()
-    if (!settings.reminderPush) return
+    if (!settings.reminderPush && !settings.mealReminders) return
     const { PushNotifications } = await import('@capacitor/push-notifications')
     const perm = await PushNotifications.checkPermissions()
     if (perm.receive !== 'granted') return

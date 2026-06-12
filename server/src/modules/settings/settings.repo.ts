@@ -21,6 +21,8 @@ export interface UserSettings {
   reminderPush: boolean
   /** Uhrzeit der Erinnerung, HH:MM in Europe/Berlin. */
   reminderTime: string
+  /** Smarte Mahlzeiten-Erinnerungen — lernen aus den üblichen Track-Zeiten. */
+  mealReminders: boolean
 }
 
 const DEFAULTS: UserSettings = {
@@ -30,6 +32,7 @@ const DEFAULTS: UserSettings = {
   activityBudget: false,
   reminderPush: false,
   reminderTime: '19:30',
+  mealReminders: false,
 }
 
 export function getSettings(db: DB, userId: string): UserSettings {
@@ -57,6 +60,7 @@ function parseSettings(raw: string | null): UserSettings {
       activityBudget: o.activityBudget === true,
       reminderPush: o.reminderPush === true,
       reminderTime: TIME_RE.test(String(o.reminderTime)) ? (o.reminderTime as string) : '19:30',
+      mealReminders: o.mealReminders === true,
     }
   } catch {
     return { ...DEFAULTS }

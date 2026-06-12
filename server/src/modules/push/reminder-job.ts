@@ -3,8 +3,10 @@
 // einen Push — streak-bewusst formuliert. ">=" statt "==" macht den Job
 // robust gegen verpasste Minuten (Neustart, Last); push_reminders verhindert
 // Doppelversand.
+import { and, eq } from 'drizzle-orm'
 import type { FastifyBaseLogger } from 'fastify'
 import type { DB } from '../../db/client.js'
+import { pushLog } from '../../db/schema.js'
 import { listDayEntries } from '../diary/diary.repo.js'
 import { getStreak } from '../diary/streak.js'
 import { getSettings } from '../settings/settings.repo.js'
@@ -59,6 +61,14 @@ export async function runReminderTick(
     if (time < settings.reminderTime) continue
     if (lastReminderDate(db, userId) === date) continue
     if (listDayEntries(db, userId, date).length > 0) continue
+    // Heute schon per Mahlzeiten-Erinnerung gestupst? Dann wäre der
+    // Abend-Push derselbe Appell in grün — auslassen.
+    const nudgedToday = db
+      .select({ kind: pushLog.kind })
+      .from(pushLog)
+      .where(and(eq(pushLog.userId, userId), eq(pushLog.date, date)))
+      .all()
+    if (nudgedToday.length > 0) continue
 
     const msg = reminderMessage(getStreak(db, userId).currentStreak)
     let delivered = false
@@ -94,7 +104,13 @@ export function startReminderJob(db: DB, log: FastifyBaseLogger): void {
     return
   }
   setInterval(() => {
-    runReminderTick(db, { log }).catch((err) => log.error({ err }, 'reminder tick failed'))
+    void (async () => {
+      // Mahlzeiten zuerst — die Abend-Erinnerung sieht deren push_log und
+      // hält dann die Klappe.
+      const { runMealReminderTick } = await import('./meal-reminders.js')
+      await runMealReminderTick(db, { log })
+      await runReminderTick(db, { log })
+    })().catch((err) => log.error({ err }, 'reminder tick failed'))
   }, 60_000)
   log.info('push: Erinnerungs-Job läuft (Tick 60s)')
 }

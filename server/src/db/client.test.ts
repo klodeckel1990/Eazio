@@ -23,6 +23,7 @@ describe('db client + migrations', () => {
         'match_cache',
         'preset_items',
         'presets',
+        'push_log',
         'push_reminders',
         'push_tokens',
         'recipe_ingredients',

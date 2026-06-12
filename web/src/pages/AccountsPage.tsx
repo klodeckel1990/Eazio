@@ -33,6 +33,7 @@ export function AccountsPage() {
   const [reminderOn, setReminderOn] = useState<boolean | null>(null)
   const [reminderTime, setReminderTime] = useState('19:30')
   const [reminderError, setReminderError] = useState<string | null>(null)
+  const [mealRemindersOn, setMealRemindersOn] = useState<boolean | null>(null)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -48,6 +49,7 @@ export function AccountsPage() {
       setActivityBudget(s.activityBudget)
       setReminderOn(s.reminderPush)
       setReminderTime(s.reminderTime)
+      setMealRemindersOn(s.mealReminders)
     }).catch(() => {})
     api.goals.get().then(setGoals).catch(() => {})
   }, [])
@@ -97,6 +99,28 @@ export function AccountsPage() {
       }
       setReminderOn(true)
       api.settings.update({ reminderPush: true, reminderTime }).catch(() => {})
+    } catch {
+      setReminderError('Registrierung fehlgeschlagen. Bitte erneut versuchen.')
+    }
+  }
+
+  const toggleMealReminders = async () => {
+    if (mealRemindersOn === null) return
+    setReminderError(null)
+    if (mealRemindersOn) {
+      setMealRemindersOn(false)
+      api.settings.update({ mealReminders: false }).catch(() => {})
+      // Token bleibt registriert, falls die Abend-Erinnerung noch an ist
+      if (!reminderOn) await disablePush()
+      return
+    }
+    try {
+      if (!(await enablePush())) {
+        setReminderError('Benachrichtigungen sind in den iOS-Einstellungen deaktiviert.')
+        return
+      }
+      setMealRemindersOn(true)
+      api.settings.update({ mealReminders: true }).catch(() => {})
     } catch {
       setReminderError('Registrierung fehlgeschlagen. Bitte erneut versuchen.')
     }
@@ -304,6 +328,23 @@ export function AccountsPage() {
                   />
                 </div>
               )}
+              <div className="water-card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+                <div>
+                  <strong>Mahlzeiten-Erinnerungen</strong>
+                  <p className="muted" style={{ margin: 0 }}>
+                    Lernt, wann du üblicherweise trackst, und erinnert dich zur
+                    passenden Zeit an Frühstück, Mittag- und Abendessen.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={mealRemindersOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+                  aria-pressed={mealRemindersOn ?? false}
+                  onClick={() => { void toggleMealReminders() }}
+                >
+                  {mealRemindersOn ? 'An' : 'Aus'}
+                </button>
+              </div>
               {reminderError && (
                 <p className="banner error"><IconAlert /><span className="banner-text">{reminderError}</span></p>
               )}
