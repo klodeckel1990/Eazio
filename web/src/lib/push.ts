@@ -10,7 +10,9 @@ import { getPlatform } from './social-login'
 const TOKEN_KEY = 'tellerwert.pushToken'
 
 export function pushAvailable(): boolean {
-  return isNativeApp()
+  // Android braucht FCM (Firebase) — bis dahin gibt es die Erinnerungs-
+  // Schalter nur auf iOS.
+  return isNativeApp() && getPlatform() === 'ios'
 }
 
 function storedToken(): string | null {
