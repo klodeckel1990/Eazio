@@ -12,27 +12,67 @@ export interface LlmRecipe {
   totalMinutes: number | null
 }
 
-const SYSTEM = `Du extrahierst die Zutatenliste aus Rezept-Text (deutsch oder englisch, beliebiges Format: Blog-Artikel, Social-Media-Caption, eingefügter Text).
+// Human-readable language names (in German) for the few locales the app ships
+// in; unknown codes fall back to the raw code, which the model still resolves.
+const LANG_LABEL: Record<string, string> = {
+  de: 'Deutsch',
+  en: 'Englisch',
+  fr: 'Französisch',
+  es: 'Spanisch',
+  it: 'Italienisch',
+  nl: 'Niederländisch',
+  pt: 'Portugiesisch',
+}
+
+/** Normalizes a locale like "de-DE" to a bare lowercase language code ("de"). */
+export function normalizeLang(code: string | undefined | null): string {
+  const base = (code ?? '').trim().toLowerCase().split(/[-_]/)[0] ?? ''
+  return base || 'de'
+}
+
+const langLabel = (code: string): string => LANG_LABEL[code] ?? code
+
+/**
+ * Builds the extraction system prompt for a target language. The model both
+ * extracts the ingredient list AND translates user-facing text into `lang`,
+ * normalizing every amount to the metric system on the way.
+ */
+function buildSystem(lang: string): string {
+  const L = langLabel(lang)
+  return `Du extrahierst die Zutatenliste aus Rezept-Text (beliebige Sprache, beliebiges Format: Blog-Artikel, Social-Media-Caption, eingefügter Text) und gibst sie in der Zielsprache ${L} mit metrischen Einheiten zurück.
 
 Gib zurück:
-- title: der Rezept-Titel, oder "" wenn keiner erkennbar ist.
+- title: der Rezept-Titel, übersetzt nach ${L}; "" wenn keiner erkennbar ist.
 - servings: Anzahl der Portionen als ganze Zahl, oder 0 wenn nicht angegeben.
 - ingredients: ein Eintrag pro Zutat.
-- steps: die Zubereitungsschritte als kurze Strings in Reihenfolge; leeres Array, wenn keine erkennbar sind.
+- steps: die Zubereitungsschritte, übersetzt nach ${L}, als kurze Strings in Reihenfolge; leeres Array, wenn keine erkennbar sind.
 - difficulty: Schwierigkeit als „einfach", „mittel" oder „schwer" (schätze anhand Zutaten/Schritten); "" wenn unklar.
 - totalMinutes: geschätzte Gesamtzeit in Minuten als ganze Zahl (Vorbereitung + Garen/Backen); 0 wenn unklar.
 
 Pro Zutat:
-- raw: die ursprüngliche Zeile, so wie sie im Text steht.
-- quantity: die Menge als String, exakt wie geschrieben — Bereiche ("2-3") und Brüche ("1/2") beibehalten; "" wenn keine.
-- unit: die Einheit (g, ml, EL, TL, Stück, Prise, Dose, …) in Kleinbuchstaben; "" wenn keine.
-- name: nur der Kern-Name der Zutat, ohne Menge, Einheit oder Zubereitungs-Zusätze.
+- raw: die ursprüngliche Zeile, so wie sie im Quelltext steht — NICHT übersetzen, NICHT umrechnen.
+- quantity: die Menge als String, nach metrischer Umrechnung. Bereiche ("2-3") und Brüche ("1/2") beibehalten, wenn keine Umrechnung nötig ist; "" wenn keine.
+- unit: die metrische Einheit in Kleinbuchstaben (g, kg, ml, l, EL, TL, Prise, Stück, Dose, Bund, …); "" wenn keine.
+- name: nur der Kern-Name der Zutat, übersetzt nach ${L}, ohne Menge, Einheit oder Zubereitungs-Zusätze.
+
+Sprache & Übersetzung:
+- Übersetze title, jeden Zutaten-Namen (name) und jeden Schritt (steps) nach ${L}. Nur raw bleibt im Original.
+- Ist der Text bereits in ${L}, übernimm Titel, Namen und Schritte WÖRTLICH, ohne Umformulierung.
+
+Einheiten — immer ins metrische System umrechnen:
+- US-/imperiale Mengen umrechnen: cup/cups, oz, lb, fl oz, stick, °F.
+- Volumen → ml bzw. l: 1 cup ≈ 240 ml, 1 fl oz ≈ 30 ml. Ab 1000 ml in l.
+- Gewicht → g bzw. kg: 1 oz ≈ 28 g, 1 lb ≈ 454 g, 1 stick Butter ≈ 113 g. Ab 1000 g in kg.
+- Trockene "cup"-Mengen über die Dichte in Gramm: Mehl 1 cup ≈ 120 g, Zucker 1 cup ≈ 200 g, brauner Zucker ≈ 220 g, Butter ≈ 225 g, gehackte Nüsse ≈ 120 g, Kakao ≈ 100 g, Milch/Wasser ≈ 240 g, Honig ≈ 340 g. Unbekannte Zutat: plausibel schätzen.
+- Esslöffel/tablespoon → "EL", Teelöffel/teaspoon → "TL" (NICHT in ml umrechnen).
+- Ofentemperaturen in den Schritten von °F nach °C umrechnen (°C = (°F−32)×5/9, auf 5 °C runden), z. B. "350°F" → "175 °C".
+- Sinnvoll runden, keine krummen Zahlen ("118,3 g" → "120 g"). Dezimaltrennzeichen der Zielsprache verwenden (Deutsch: Komma, z. B. "1,5").
 
 Regeln:
 - Bei "X oder Y"-Alternativen nimm X als name, behalte den vollen Text in raw.
 - Zubereitungsschritte gehören in steps, NICHT in ingredients. Lass Überschriften, Einleitung, Hashtags, Links, Emojis und Nährwert-Angaben ganz weg.
-- Erfinde nichts. Extrahiere nur, was im Text steht.
-- Behalte die Originalsprache der Zutaten-Namen.`
+- Erfinde nichts. Extrahiere nur, was im Text steht.`
+}
 
 // schema.org-style JSON schema for structured outputs. No nullable types: title
 // is "" and servings is 0 when unknown (mapped to null after parsing).
@@ -66,11 +106,16 @@ const SCHEMA = {
   required: ['title', 'servings', 'ingredients', 'steps', 'difficulty', 'totalMinutes'],
 }
 
-/** Extracts a normalized ingredient list from arbitrary recipe text via Claude. */
-export async function extractWithLlm(text: string): Promise<LlmRecipe> {
+/**
+ * Extracts a normalized ingredient list from arbitrary recipe text via Claude,
+ * translating user-facing text into `targetLang` and converting amounts to
+ * metric units. `targetLang` is a locale or bare code ("de", "en-US").
+ */
+export async function extractWithLlm(text: string, targetLang = 'de'): Promise<LlmRecipe> {
   const apiKey = env.ANTHROPIC_API_KEY
   if (!apiKey) throw new RecipeImportError('import_unavailable', 503, 'ANTHROPIC_API_KEY not set')
   const client = new Anthropic({ apiKey })
+  const system = buildSystem(normalizeLang(targetLang))
 
   let lastError: unknown
   // Structured outputs constrain the shape but do not *guarantee* valid JSON,
@@ -80,7 +125,7 @@ export async function extractWithLlm(text: string): Promise<LlmRecipe> {
       const res = await client.messages.create({
         model: env.RECIPE_LLM_MODEL,
         max_tokens: 8192,
-        system: SYSTEM,
+        system,
         messages: [{ role: 'user', content: text.slice(0, 16000) }],
         output_config: { format: { type: 'json_schema', schema: SCHEMA } },
       })

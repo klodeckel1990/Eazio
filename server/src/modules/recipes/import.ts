@@ -8,6 +8,8 @@ import type { ImportedRecipe } from './types.js'
 export interface ImportInput {
   url?: string
   text?: string
+  /** Target language (locale or bare code) for translation; defaults to German. */
+  targetLang?: string
 }
 
 /**
@@ -42,7 +44,13 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
         jsonLdServings = extracted.servings
         jsonLdInstructions = extracted.instructions
         jsonLdMinutes = extracted.totalMinutes
-        llmInput = extracted.ingredients.join('\n')
+        // Feed title + steps through the LLM too so they get translated/normalized
+        // alongside the ingredients (JSON-LD carries them in the source language).
+        const parts: string[] = []
+        if (jsonLdTitle) parts.push(`Titel: ${jsonLdTitle}`)
+        parts.push(`Zutaten:\n${extracted.ingredients.join('\n')}`)
+        if (jsonLdInstructions.length > 0) parts.push(`Zubereitung:\n${jsonLdInstructions.join('\n')}`)
+        llmInput = parts.join('\n\n')
       } else {
         llmInput = extracted.text ?? ''
       }
@@ -58,13 +66,16 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
     throw new RecipeImportError('no_content', 422, 'no recipe content found at that link')
   }
 
-  const llm = await extractWithLlm(llmInput)
+  const llm = await extractWithLlm(llmInput, input.targetLang)
   if (llm.ingredients.length === 0) {
     throw new RecipeImportError('no_content', 422, 'no ingredients could be extracted')
   }
 
+  // The LLM now returns the *translated* title/steps (it was fed the JSON-LD
+  // ones), so prefer them; fall back to the raw JSON-LD values if it dropped any.
+  // servings/minutes are language-agnostic numbers — keep trusting JSON-LD there.
   return {
-    title: jsonLdTitle ?? llm.title,
+    title: llm.title ?? jsonLdTitle,
     servings: jsonLdServings ?? llm.servings,
     sourceUrl,
     source,
@@ -72,6 +83,6 @@ export async function importRecipe(input: ImportInput): Promise<ImportedRecipe> 
     difficulty: llm.difficulty,
     totalMinutes: jsonLdMinutes ?? llm.totalMinutes,
     ingredients: llm.ingredients,
-    steps: jsonLdInstructions.length > 0 ? jsonLdInstructions : llm.steps,
+    steps: llm.steps.length > 0 ? llm.steps : jsonLdInstructions,
   }
 }

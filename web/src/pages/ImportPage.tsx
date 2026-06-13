@@ -25,6 +25,9 @@ function importErrorMessage(code: string): string {
 const ingredientLine = (ing: RecipeIngredient): string =>
   [ing.quantity, ing.unit, ing.name].filter(Boolean).join(' ')
 
+/** Device/app language (e.g. "de") so imports come back translated + metric. */
+const systemLang = (): string => (navigator.language || 'de').split(/[-_]/)[0] || 'de'
+
 export function ImportPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -47,7 +50,7 @@ export function ImportPage() {
     setImportError(null)
     setImporting(true)
     try {
-      const r = await api.recipes.import(payload)
+      const r = await api.recipes.import({ ...payload, lang: systemLang() })
       setPreview(r)
       setTitle(r.title ?? '')
       setServings(r.servings ? String(r.servings) : '')

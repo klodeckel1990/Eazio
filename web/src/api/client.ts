@@ -111,7 +111,7 @@ export const api = {
     remove: (id: string) => req<void>('DELETE', `/presets/${id}`),
   },
   recipes: {
-    import: (input: { url?: string; text?: string }) =>
+    import: (input: { url?: string; text?: string; lang?: string }) =>
       req<ImportedRecipe>('POST', '/recipes/import', input),
     create: (recipe: {
       title: string | null

@@ -24,6 +24,9 @@ const ImportSchema = z
   .object({
     url: z.string().url().optional(),
     text: z.string().min(1).max(20000).optional(),
+    // Target language for translation + unit normalization (locale or bare code,
+    // e.g. "de", "en-US"). Defaults to German server-side when absent.
+    lang: z.string().min(2).max(8).optional(),
   })
   .refine((d) => Boolean(d.url) || Boolean(d.text), { message: 'url or text is required' })
 
@@ -91,7 +94,7 @@ export function registerRecipeRoutes(app: FastifyInstance, db: DB): void {
       if (!env.ANTHROPIC_API_KEY) return reply.status(503).send({ error: 'import_unavailable' })
       const body = ImportSchema.parse(req.body)
       try {
-        const recipe = await importRecipe({ url: body.url, text: body.text })
+        const recipe = await importRecipe({ url: body.url, text: body.text, targetLang: body.lang })
         return reply.status(200).send(recipe)
       } catch (e) {
         if (e instanceof RecipeImportError) return reply.status(e.status).send({ error: e.code })
