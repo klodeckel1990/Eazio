@@ -384,6 +384,11 @@ export function TrackerPage() {
     }
   })
 
+  // Opted-in active calories extend the day's budget — the "übrig" number already
+  // counts them (server: remainingKcal = kcalTarget + countedKcal - consumed), so the
+  // shown total and the progress bar must use the same extended budget to stay in sync.
+  const dayBudget = day ? day.goals.kcalTarget + (day.activity?.countedKcal ?? 0) : 0
+
   return (
     <div className="page" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <header className="page-head diary-head">
@@ -425,7 +430,7 @@ export function TrackerPage() {
           <div className="totals-row">
             <div className="kcal-big">
               <span className="n">{Math.max(0, day.remainingKcal)}</span>
-              <span className="l">kcal übrig von {day.goals.kcalTarget}</span>
+              <span className="l">kcal übrig von {dayBudget}</span>
             </div>
             <div className="macro-mini">
               <div><span className="mn">{round(day.totals.carbs)}</span><span className="ml">KH</span></div>
@@ -435,8 +440,8 @@ export function TrackerPage() {
           </div>
           <div className="kcal-progress" aria-hidden="true">
             <span
-              className={day.totals.kcal > day.goals.kcalTarget ? 'over' : undefined}
-              style={{ width: `${Math.min(100, (day.totals.kcal / day.goals.kcalTarget) * 100)}%` }}
+              className={day.totals.kcal > dayBudget ? 'over' : undefined}
+              style={{ width: `${Math.min(100, (day.totals.kcal / dayBudget) * 100)}%` }}
             />
           </div>
         </div>
