@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import { ProtectedRoute } from './auth/ProtectedRoute'
-import { AppBar, TabBar } from './components/Nav'
+import { TabBar } from './components/Nav'
 import { OnboardingWizard } from './components/OnboardingWizard'
 import { ProfileOnboarding } from './components/ProfileOnboarding'
 import { LoginPage } from './pages/LoginPage'
@@ -17,7 +17,6 @@ import { StatsPage } from './pages/StatsPage'
 function Shell() {
   return (
     <div className="app">
-      <AppBar />
       <main className="main">
         <Outlet />
       </main>

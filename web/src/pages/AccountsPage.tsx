@@ -8,7 +8,7 @@ import { useAuth } from '../auth/AuthContext'
 import { PaywallSheet } from '../components/PaywallSheet'
 import { getPlatform } from '../lib/social-login'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
-import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconCheck, IconCart, IconTarget, IconMoon, IconHeart, IconChevronLeft, IconChevronRight, IconSettings } from '../components/icons'
+import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconCheck, IconCart, IconTarget, IconMoon, IconHeart, IconChevronLeft, IconChevronRight, IconSettings, IconLogout } from '../components/icons'
 
 const LEGAL_BASE = 'https://tellerwert.de'
 
@@ -36,7 +36,7 @@ const MANAGE_SUB_URL: Record<string, string> = {
 }
 
 export function AccountsPage() {
-  const { deleteAccount, premium, user } = useAuth()
+  const { deleteAccount, logout, premium, user } = useAuth()
   const [paywall, setPaywall] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -713,6 +713,15 @@ export function AccountsPage() {
 
       {section === 'account' && (
         <>
+      <div className="card stack">
+        <div>
+          <strong>Angemeldet als {user?.username ?? '–'}</strong>
+        </div>
+        <button type="button" className="btn btn-soft btn-block" onClick={() => { void logout() }}>
+          <IconLogout /> Abmelden
+        </button>
+      </div>
+
       <div className="card stack">
         <a className="btn btn-soft btn-block" href={`${LEGAL_BASE}/datenschutz`} target="_blank" rel="noopener noreferrer">
           Datenschutzerklärung

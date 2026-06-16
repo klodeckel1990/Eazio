@@ -15,6 +15,7 @@ const goalsUpdate = vi.fn()
 vi.mock('../auth/AuthContext', () => ({
   useAuth: () => ({
     deleteAccount: vi.fn(),
+    logout: vi.fn(),
     refreshEntitlement: vi.fn(),
     premium: false,
     user: { id: 'u1', username: 'tester' },
