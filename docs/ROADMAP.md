@@ -42,3 +42,17 @@ Bundle-ID-Vorschlag für Phase 5: `de.tellerwert.app`.
   (Web bleibt same-origin). Widgets lesen den Bearer-Token aus Shared Keychain (iOS) bzw.
   EncryptedSharedPreferences (Android) und rufen das Backend direkt.
 - **Feature-Flags**: `users.featureFlags` (server-managed, read-only in `/api/auth/me`).
+
+## Monetarisierung (geplant, nach Public-Release)
+
+Free-mit-Werbung + werbefreie Plus-Stufe (IAP). Vor dem Einbau zu entscheiden:
+**personalisierte vs. kontextbezogene Ads** — bestimmt den Compliance-Aufwand.
+- **Personalisiert** (z. B. AdMob Standard): App-Datenschutz „Für Tracking = Ja" + IDFA
+  (Kennungen → Werbe-ID), **ATT-Dialog** (`NSUserTrackingUsageDescription`), EU-**CMP/Consent**
+  (DSGVO ≠ ATT — beides nötig; Googles UMP-SDK deckt beides ab).
+- **Kontextbezogen** (kein IDFA): meist kein ATT, „Tracking = Nein"; trotzdem Ad-SDK-Datentypen
+  deklarieren (Zweck „Werbung Dritter") + in der EU praktisch ein Consent-Banner.
+- In **beiden** Fällen: `PrivacyInfo.xcprivacy` (Privacy Manifest) erweitern, Datenschutzerklärung
+  (tellerwert.de/datenschutz) um Ad-Anbieter/Datenweitergabe ergänzen.
+- **Plus-Tier per IAP** → StoreKit + Datentyp „Käufe" in der App-Datenschutz-Deklaration.
+  Empfehlung: für minimalen Aufwand mit kontextbezogenen Ads starten. Kontolöschung bleibt unberührt.
