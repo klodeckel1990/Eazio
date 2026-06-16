@@ -12,6 +12,7 @@ import { toDetail } from '../../modules/foods/foods.service.js'
 import { OffUnavailableError } from '../../modules/foods/off.client.js'
 import { scanNutritionLabel } from '../../modules/foods/label-scan.js'
 import { analyzeMealPhoto, itemsToText } from '../../modules/foods/meal-photo.js'
+import { isPremium } from '../../modules/billing/entitlements.js'
 
 const SearchSchema = z.object({
   q: z.string().trim().min(1).max(120),
@@ -111,6 +112,7 @@ export function registerFoodRoutes(app: FastifyInstance, db: DB): void {
       config: { rateLimit: { max: 15, timeWindow: '1 minute' } },
     },
     async (req, reply) => {
+      if (!isPremium(db, req.user!.id)) return reply.status(403).send({ error: 'premium_required' })
       const { image, mediaType } = z
         .object({
           image: z.string().min(100).max(7_000_000),

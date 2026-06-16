@@ -28,6 +28,7 @@ import { registerActivityRoutes } from './http/routes/activity.routes.js'
 import { registerStatsRoutes } from './http/routes/stats.routes.js'
 import { registerPushRoutes } from './http/routes/push.routes.js'
 import { registerLegalRoutes } from './http/routes/legal.routes.js'
+import { registerBillingRoutes } from './http/routes/billing.routes.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -132,6 +133,7 @@ export function buildApp(
   registerStatsRoutes(app, db)
   registerPushRoutes(app, db)
   registerLegalRoutes(app)
+  registerBillingRoutes(app, db)
 
   const webDir =
     opts.webDir ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist')

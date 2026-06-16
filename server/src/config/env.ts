@@ -39,6 +39,9 @@ const schema = z.object({
   // Mahlzeiten-Foto-Analyse (Zutaten + Mengenschätzung) — stärkeres Vision-Modell
   // als der Rezept-Import, weil Portionsschätzung aus dem Bild anspruchsvoller ist.
   PHOTO_LLM_MODEL: z.string().default('claude-sonnet-4-6'),
+  // Shared Secret für den RevenueCat-Webhook (Authorization-Header). Ohne diesen
+  // Wert lehnt die Webhook-Route alle Aufrufe ab (kein Entitlement-Schreibweg).
+  REVENUECAT_WEBHOOK_SECRET: z.string().optional(),
   // Optional Apify token to resolve Instagram links (caption scraping) on import.
   // Without it, Instagram links fall back to "paste the caption".
   APIFY_TOKEN: z.string().optional(),

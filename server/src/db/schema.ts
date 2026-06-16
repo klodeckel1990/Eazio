@@ -355,3 +355,33 @@ export const recipeIngredients = sqliteTable('recipe_ingredients', {
   unit: text('unit').notNull(),
   name: text('name').notNull(),
 })
+
+// Premium-Entitlement — server-autoritativ, NUR vom verifizierten RevenueCat-
+// Webhook geschrieben (nie über client-erreichbare Routen). isPremium leitet
+// sich aus status + premiumUntil ab. Eine Zeile pro Nutzer.
+export const subscriptions = sqliteTable('subscriptions', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id),
+  status: text('status').notNull().default('none'), // active|expired|cancelled|none
+  premiumUntil: integer('premium_until'), // ms epoch; null = nie/kein Zugang
+  productId: text('product_id'),
+  store: text('store'), // app_store|play_store|stripe|promotional
+  rcAppUserId: text('rc_app_user_id'),
+  updatedAt: integer('updated_at').notNull(),
+})
+
+// Generisches Nutzungs-Log für Free-Limits (rollierende Fenster). Aktuell:
+// kind='recipe_import' für „5 Importe/Woche". Pro Aktion eine Zeile.
+export const usageEvents = sqliteTable(
+  'usage_events',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    kind: text('kind').notNull(),
+    createdAt: integer('created_at').notNull(),
+  },
+  (t) => [index('usage_user_kind_idx').on(t.userId, t.kind, t.createdAt)],
+)

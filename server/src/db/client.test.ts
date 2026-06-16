@@ -29,6 +29,8 @@ describe('db client + migrations', () => {
         'recipe_ingredients',
         'recipes',
         'sessions',
+        'subscriptions',
+        'usage_events',
         'user_goals',
         'user_stats',
         'users',

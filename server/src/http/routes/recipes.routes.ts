@@ -19,6 +19,8 @@ import {
 } from '../../modules/recipes/recipes.repo.js'
 import { cacheRecipeImage, readRecipeImage, deleteRecipeImage } from '../../modules/recipes/recipe-images.js'
 import { recipeShareToken, verifyShareToken } from '../../modules/recipes/share.js'
+import { isPremium } from '../../modules/billing/entitlements.js'
+import { countUsageSince, recordUsage, FREE_RECIPE_IMPORTS_PER_WEEK, WEEK_MS } from '../../modules/billing/usage.js'
 
 const ImportSchema = z
   .object({
@@ -91,10 +93,22 @@ export function registerRecipeRoutes(app: FastifyInstance, db: DB): void {
     '/api/recipes/import',
     { preHandler: requireAuth, config: { rateLimit: { max: 20, timeWindow: '5 minutes' } } },
     async (req, reply) => {
+      const userId = req.user!.id
+      // Free: 5 Importe / rollierende Woche. Premium: unbegrenzt. (Vor dem
+      // Verfügbarkeits-Check, damit das Limit unabhängig vom AI-Status greift.)
+      if (!isPremium(db, userId)) {
+        const used = countUsageSince(db, userId, 'recipe_import', Date.now() - WEEK_MS)
+        if (used >= FREE_RECIPE_IMPORTS_PER_WEEK) {
+          return reply
+            .status(403)
+            .send({ error: 'free_limit_reached', limit: FREE_RECIPE_IMPORTS_PER_WEEK, used })
+        }
+      }
       if (!env.ANTHROPIC_API_KEY) return reply.status(503).send({ error: 'import_unavailable' })
       const body = ImportSchema.parse(req.body)
       try {
         const recipe = await importRecipe({ url: body.url, text: body.text, targetLang: body.lang })
+        recordUsage(db, userId, 'recipe_import') // zählt den (kostenpflichtigen) AI-Import
         return reply.status(200).send(recipe)
       } catch (e) {
         if (e instanceof RecipeImportError) return reply.status(e.status).send({ error: e.code })

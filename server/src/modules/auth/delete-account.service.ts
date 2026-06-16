@@ -19,6 +19,8 @@ import {
   pushLog,
   activityDays,
   recipes,
+  subscriptions,
+  usageEvents,
 } from '../../db/schema.js'
 
 /**
@@ -56,6 +58,8 @@ export function deleteUserAccount(db: DB, userId: string): boolean {
     t.delete(pushTokens).where(eq(pushTokens.userId, userId)).run()
     t.delete(userGoals).where(eq(userGoals.userId, userId)).run()
     t.delete(userStats).where(eq(userStats.userId, userId)).run()
+    t.delete(subscriptions).where(eq(subscriptions.userId, userId)).run()
+    t.delete(usageEvents).where(eq(usageEvents.userId, userId)).run()
 
     // the user's own custom foods (shared bls/off rows stay)
     t.delete(foods).where(eq(foods.ownerUserId, userId)).run()

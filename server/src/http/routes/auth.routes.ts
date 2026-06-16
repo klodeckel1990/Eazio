@@ -20,6 +20,7 @@ import {
 } from '../../modules/auth/oauth.js'
 import { resolveOAuthUser } from '../../modules/auth/oauth-account.js'
 import { deleteUserAccount } from '../../modules/auth/delete-account.service.js'
+import { getEntitlement, isPremium } from '../../modules/billing/entitlements.js'
 import { requireAuth } from '../auth-guard.js'
 
 const BootstrapSchema = z.object({
@@ -212,7 +213,13 @@ export function registerAuthRoutes(
     if (!req.user) return reply.status(401).send({ error: 'unauthenticated' })
     const user = findUserById(db, req.user.id)
     if (!user) return reply.status(401).send({ error: 'unauthenticated' })
-    return reply.send({ id: user.id, username: user.username })
+    const ent = getEntitlement(db, user.id)
+    return reply.send({
+      id: user.id,
+      username: user.username,
+      premium: isPremium(db, user.id),
+      premiumUntil: ent.premiumUntil,
+    })
   })
 
   // Konto endgültig löschen (DSGVO / App-Store-Pflicht): entfernt den Nutzer und
