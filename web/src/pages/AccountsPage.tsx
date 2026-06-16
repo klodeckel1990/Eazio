@@ -4,8 +4,11 @@ import { liveActivityAvailable, liveActivityEnabled, setLiveActivityEnabled } fr
 import { disablePush, enablePush, pushAvailable } from '../lib/push'
 import { setThemePref, themePref, type ThemePref } from '../lib/theme'
 import { api, ApiError } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
 import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconCheck, IconCart } from '../components/icons'
+
+const LEGAL_BASE = 'https://tellerwert.de'
 
 const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }[] = [
   { value: 'plain', title: 'Klartext', desc: 'Einfache Liste – ideal für WhatsApp & Notizen.' },
@@ -14,6 +17,10 @@ const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }
 ]
 
 export function AccountsPage() {
+  const { deleteAccount } = useAuth()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [accounts, setAccounts] = useState<Account[] | null>(null)
   const [label, setLabel] = useState('')
   const [username, setUsername] = useState('')
@@ -210,6 +217,22 @@ export function AccountsPage() {
   const handleRemove = async (id: string) => {
     await api.accounts.remove(id)
     loadAccounts()
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      // Bei Erfolg setzt deleteAccount() user=null → die App springt zum Login.
+      await deleteAccount()
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setDeleteError('Löschen fehlgeschlagen. Bitte erneut versuchen.')
+        setDeleting(false)
+      } else {
+        throw err
+      }
+    }
   }
 
   return (
@@ -574,6 +597,62 @@ export function AccountsPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ---- Konto & Rechtliches --------------------------------------- */}
+      <h2 className="section-title">Konto &amp; Rechtliches</h2>
+
+      <div className="card stack">
+        <a className="btn btn-soft btn-block" href={`${LEGAL_BASE}/datenschutz`} target="_blank" rel="noopener noreferrer">
+          Datenschutzerklärung
+        </a>
+        <a className="btn btn-soft btn-block" href={`${LEGAL_BASE}/impressum`} target="_blank" rel="noopener noreferrer">
+          Impressum
+        </a>
+      </div>
+
+      <div className="card pad-lg stack">
+        <div>
+          <strong>Konto löschen</strong>
+          <p className="muted" style={{ margin: 0 }}>
+            Löscht dein Konto und alle Daten (Tagebuch, Ziele, Aktivität, Verknüpfungen)
+            unwiderruflich. Das lässt sich nicht rückgängig machen.
+          </p>
+        </div>
+        {deleteError && (
+          <p className="banner error"><IconAlert /><span className="banner-text">{deleteError}</span></p>
+        )}
+        {!confirmDelete ? (
+          <button
+            type="button"
+            className="btn btn-danger btn-block"
+            onClick={() => { setConfirmDelete(true); setDeleteError(null) }}
+          >
+            <IconTrash /> Konto löschen
+          </button>
+        ) : (
+          <div className="stack">
+            <p className="banner error" style={{ margin: 0 }}>
+              <IconAlert /><span className="banner-text">Wirklich löschen? Alle Daten werden sofort entfernt.</span>
+            </p>
+            <button
+              type="button"
+              className="btn btn-danger btn-block"
+              onClick={() => { void handleDeleteAccount() }}
+              disabled={deleting}
+            >
+              {deleting ? <><span className="spinner" /> Lösche…</> : 'Ja, endgültig löschen'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-block"
+              onClick={() => setConfirmDelete(false)}
+              disabled={deleting}
+            >
+              Abbrechen
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -12,6 +12,7 @@ interface AuthState {
   loginWithProvider: (provider: SocialProvider) => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  deleteAccount: () => Promise<void>
 }
 const Ctx = createContext<AuthState | null>(null)
 
@@ -56,10 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser({ id: res.id, username: res.username })
     void pushTokenToWidgets(res.token)
   }
-  const logout = async () => {
-    // vor dem Session-Ende, solange der Bearer noch gilt
-    await disablePush().catch(() => {})
-    await api.auth.logout().catch((e) => { if (!(e instanceof ApiError)) throw e })
+  // Lokalen Zustand kappen — gemeinsam für Logout und Konto-Löschung.
+  const clearLocalSession = async () => {
     setToken(null)
     setUser(null)
     void pushTokenToWidgets(null)
@@ -74,8 +73,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
   }
+  const logout = async () => {
+    // vor dem Session-Ende, solange der Bearer noch gilt
+    await disablePush().catch(() => {})
+    await api.auth.logout().catch((e) => { if (!(e instanceof ApiError)) throw e })
+    await clearLocalSession()
+  }
+  const deleteAccount = async () => {
+    // Push-Token serverseitig mitgelöscht; lokal trotzdem abmelden.
+    await disablePush().catch(() => {})
+    await api.auth.deleteAccount()
+    await clearLocalSession()
+  }
   return (
-    <Ctx.Provider value={{ user, loading, login, loginWithProvider, register, logout }}>
+    <Ctx.Provider value={{ user, loading, login, loginWithProvider, register, logout, deleteAccount }}>
       {children}
     </Ctx.Provider>
   )

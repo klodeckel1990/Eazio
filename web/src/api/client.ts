@@ -87,6 +87,7 @@ export const api = {
       platform: 'web' | 'ios' | 'android',
     ) => req<AuthResponse>('POST', `/auth/oauth/${provider}`, { idToken, name, platform }),
     logout: () => req<void>('POST', '/auth/logout'),
+    deleteAccount: () => req<void>('DELETE', '/auth/me'),
   },
   accounts: {
     list: () => req<Account[]>('GET', '/accounts'),

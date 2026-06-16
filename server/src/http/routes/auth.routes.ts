@@ -19,6 +19,7 @@ import {
   type OAuthVerifier,
 } from '../../modules/auth/oauth.js'
 import { resolveOAuthUser } from '../../modules/auth/oauth-account.js'
+import { deleteUserAccount } from '../../modules/auth/delete-account.service.js'
 import { requireAuth } from '../auth-guard.js'
 
 const BootstrapSchema = z.object({
@@ -212,5 +213,18 @@ export function registerAuthRoutes(
     const user = findUserById(db, req.user.id)
     if (!user) return reply.status(401).send({ error: 'unauthenticated' })
     return reply.send({ id: user.id, username: user.username })
+  })
+
+  // Konto endgültig löschen (DSGVO / App-Store-Pflicht): entfernt den Nutzer und
+  // alle zugehörigen Daten, beendet jede Session und löscht das Session-Cookie.
+  app.delete('/api/auth/me', { preHandler: requireAuth }, async (req, reply) => {
+    deleteUserAccount(db, req.user!.id)
+    reply.clearCookie(SESSION_COOKIE, {
+      path: '/',
+      httpOnly: true,
+      secure: env.COOKIE_SECURE,
+      sameSite: 'lax',
+    })
+    return reply.status(204).send()
   })
 }
