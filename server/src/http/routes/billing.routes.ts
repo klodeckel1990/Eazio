@@ -7,6 +7,7 @@ import { requireAuth } from '../auth-guard.js'
 import { findUserById } from '../../modules/auth/users.repo.js'
 import { getEntitlement, isPremium, setEntitlement } from '../../modules/billing/entitlements.js'
 import { parseRcEvent } from '../../modules/billing/revenuecat.js'
+import { countUsageSince, FREE_RECIPE_IMPORTS_PER_WEEK, WEEK_MS } from '../../modules/billing/usage.js'
 
 const WebhookSchema = z.object({
   event: z
@@ -55,9 +56,15 @@ export function registerBillingRoutes(app: FastifyInstance, db: DB): void {
     },
   )
 
-  // Aktueller Entitlement-Status fürs UI (server-autoritativ).
+  // Aktueller Entitlement-Status + Free-Kontingent fürs UI (server-autoritativ).
   app.get('/api/billing/status', { preHandler: requireAuth }, async (req, reply) => {
-    const ent = getEntitlement(db, req.user!.id)
-    return reply.send({ premium: isPremium(db, req.user!.id), ...ent })
+    const userId = req.user!.id
+    const ent = getEntitlement(db, userId)
+    return reply.send({
+      premium: isPremium(db, userId),
+      ...ent,
+      recipeImportsUsed: countUsageSince(db, userId, 'recipe_import', Date.now() - WEEK_MS),
+      recipeImportLimit: FREE_RECIPE_IMPORTS_PER_WEEK,
+    })
   })
 }

@@ -12,6 +12,15 @@ const settingsUpdate = vi.fn()
 const goalsGet = vi.fn()
 const goalsUpdate = vi.fn()
 
+vi.mock('../auth/AuthContext', () => ({
+  useAuth: () => ({
+    deleteAccount: vi.fn(),
+    refreshEntitlement: vi.fn(),
+    premium: false,
+    user: { id: 'u1', username: 'tester' },
+  }),
+}))
+
 vi.mock('../api/client', () => ({
   ApiError: class ApiError extends Error {
     status: number

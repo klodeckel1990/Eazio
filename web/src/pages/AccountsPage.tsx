@@ -5,6 +5,8 @@ import { disablePush, enablePush, pushAvailable } from '../lib/push'
 import { setThemePref, themePref, type ThemePref } from '../lib/theme'
 import { api, ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { PaywallSheet } from '../components/PaywallSheet'
+import { getPlatform } from '../lib/social-login'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
 import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconCheck, IconCart } from '../components/icons'
 
@@ -16,8 +18,14 @@ const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }
   { value: 'bring', title: 'Bring!', desc: 'Direkt in die Bring!-Einkaufsliste übernehmen.' },
 ]
 
+const MANAGE_SUB_URL: Record<string, string> = {
+  ios: 'https://apps.apple.com/account/subscriptions',
+  android: 'https://play.google.com/store/account/subscriptions',
+}
+
 export function AccountsPage() {
-  const { deleteAccount } = useAuth()
+  const { deleteAccount, premium, user } = useAuth()
+  const [paywall, setPaywall] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -599,6 +607,41 @@ export function AccountsPage() {
         </div>
       </div>
 
+      {/* ---- Premium ---------------------------------------------------- */}
+      <h2 className="section-title">Tellerwert Premium</h2>
+      <div className="card pad-lg stack">
+        {premium ? (
+          <>
+            <div className="row-card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+              <span className="row-icon"><IconStar /></span>
+              <div className="row-main">
+                <div className="row-title"><span className="text">Premium aktiv</span></div>
+                <div className="row-sub">
+                  {user?.premiumUntil
+                    ? `Läuft bis ${new Date(user.premiumUntil).toLocaleDateString('de-DE')}`
+                    : 'Danke für deine Unterstützung!'}
+                </div>
+              </div>
+            </div>
+            <a className="btn btn-soft btn-block" href={MANAGE_SUB_URL[getPlatform()] ?? MANAGE_SUB_URL.ios} target="_blank" rel="noopener noreferrer">
+              Abo verwalten
+            </a>
+          </>
+        ) : (
+          <>
+            <div>
+              <strong>Mehr aus Tellerwert holen</strong>
+              <p className="muted" style={{ margin: 0 }}>
+                Unbegrenzte Rezept-Importe, KI-Foto-Tracking und mehr.
+              </p>
+            </div>
+            <button type="button" className="btn btn-primary btn-block" onClick={() => setPaywall(true)}>
+              <IconStar /> Premium freischalten
+            </button>
+          </>
+        )}
+      </div>
+
       {/* ---- Konto & Rechtliches --------------------------------------- */}
       <h2 className="section-title">Konto &amp; Rechtliches</h2>
 
@@ -654,6 +697,8 @@ export function AccountsPage() {
           </div>
         )}
       </div>
+
+      {paywall && <PaywallSheet onClose={() => setPaywall(false)} />}
     </div>
   )
 }

@@ -45,12 +45,57 @@ function page(title: string, body: string): string {
     <p class="stand">Stand: ${STAND}</p>
     ${body}
     <footer>
-      <a href="/datenschutz">Datenschutz</a> · <a href="/impressum">Impressum</a>
+      <a href="/datenschutz">Datenschutz</a> · <a href="/impressum">Impressum</a> · <a href="/nutzungsbedingungen">Nutzungsbedingungen</a>
     </footer>
   </div>
 </body>
 </html>`
 }
+
+const NUTZUNG = `
+<p>Diese Bedingungen regeln die Nutzung der App und Website <strong>Tellerwert</strong>
+(Ernährungs- und Kalorientagebuch), angeboten von Jens Gossen, Billrothstr. 18,
+45147 Essen (siehe <a href="/impressum">Impressum</a>).</p>
+
+<h2>1. Leistung</h2>
+<p>Tellerwert stellt Funktionen zum Tracken von Mahlzeiten, Nährwerten und Aktivität
+bereit. Ein Teil der Funktionen ist kostenlos; erweiterte Funktionen sind dem
+kostenpflichtigen Abo „Tellerwert Premium" vorbehalten.</p>
+
+<h2>2. Tellerwert Premium (Abo)</h2>
+<ul>
+  <li>Premium ist als <strong>automatisch verlängerndes Abo</strong> erhältlich:
+      <strong>1,99 €/Monat</strong> oder <strong>19,99 €/Jahr</strong> (inkl. USt.).</li>
+  <li>Der Kauf und die Abrechnung erfolgen über deinen <strong>Apple-App-Store-</strong>
+      bzw. <strong>Google-Play-Account</strong>. Die Zahlung wird mit Kaufbestätigung fällig.</li>
+  <li>Das Abo <strong>verlängert sich automatisch</strong> um die gewählte Laufzeit, sofern
+      es nicht mindestens 24 Stunden vor Ablauf gekündigt wird. Die Verlängerung wird
+      innerhalb von 24 Stunden vor Ablauf berechnet.</li>
+  <li><strong>Kündigung & Verwaltung</strong> jederzeit in den Abo-Einstellungen deines
+      App-Store-/Play-Store-Accounts. Eine angefangene Periode wird nicht anteilig erstattet.</li>
+  <li>Ein eventuelles Gratis-Testangebot endet automatisch; bei nicht rechtzeitiger
+      Kündigung geht es in das kostenpflichtige Abo über.</li>
+</ul>
+
+<h2>3. Widerruf</h2>
+<p>Für digitale Inhalte gilt das gesetzliche Widerrufsrecht; mit dem Start der
+Abo-Leistung kann es erlöschen. Rückerstattungen wickelt der jewerige Store
+(Apple/Google) nach dessen Richtlinien ab.</p>
+
+<h2>4. Pflichten der Nutzer</h2>
+<p>Die App ersetzt keine medizinische oder ernährungswissenschaftliche Beratung.
+Nährwert- und KI-Schätzungen (z. B. aus Fotos oder Importen) können fehlerhaft sein und
+sind vor dem Verlassen auf sie zu prüfen.</p>
+
+<h2>5. Haftung</h2>
+<p>Wir haften unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie nach dem
+Produkthaftungsgesetz; im Übrigen nur bei Verletzung wesentlicher Vertragspflichten und
+begrenzt auf den vertragstypisch vorhersehbaren Schaden.</p>
+
+<h2>6. Änderungen & Recht</h2>
+<p>Wir können diese Bedingungen anpassen, wenn sich die App oder die Rechtslage ändert;
+es gilt die hier veröffentlichte Fassung. Es gilt deutsches Recht.</p>
+`
 
 const IMPRESSUM = `
 <h2>Angaben gemäß § 5 DDG</h2>
@@ -152,5 +197,8 @@ export function registerLegalRoutes(app: FastifyInstance): void {
   })
   app.get('/impressum', async (_req, reply) => {
     return reply.type('text/html; charset=utf-8').send(page('Impressum', IMPRESSUM))
+  })
+  app.get('/nutzungsbedingungen', async (_req, reply) => {
+    return reply.type('text/html; charset=utf-8').send(page('Nutzungsbedingungen', NUTZUNG))
   })
 }

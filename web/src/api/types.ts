@@ -1,4 +1,11 @@
-export interface User { id: string; username: string }
+export interface User { id: string; username: string; premium?: boolean; premiumUntil?: number | null }
+export interface BillingStatus {
+  premium: boolean
+  status: string
+  premiumUntil: number | null
+  recipeImportsUsed: number
+  recipeImportLimit: number
+}
 // Login/register response: user plus the bearer token (returned exactly once).
 export interface AuthResponse extends User { token: string }
 export type SocialProvider = 'google' | 'apple'

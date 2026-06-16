@@ -14,6 +14,8 @@ import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { CalendarSheet } from '../components/CalendarSheet'
 import { CustomFoodSheet } from '../components/CustomFoodSheet'
+import { PaywallSheet } from '../components/PaywallSheet'
+import { useAuth } from '../auth/AuthContext'
 import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconCamera, IconFlame, IconSteps, IconDrop, IconCalendar, IconChevronLeft, IconChevronRight, IconPlus, IconBook, IconCoffee, IconPlate, IconMoon, IconApple } from '../components/icons'
 
 interface RowState {
@@ -68,6 +70,8 @@ export function TrackerPage() {
   const [addMenuFor, setAddMenuFor] = useState<Daytime | null>(null)
   const [photoBusy, setPhotoBusy] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const { premium } = useAuth()
+  const [paywall, setPaywall] = useState(false)
   const [expanded, setExpanded] = useState<Daytime | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   const autoMatched = useRef(false)
@@ -359,8 +363,9 @@ export function TrackerPage() {
   // Foto: merkt die Mahlzeit, öffnet Kamera/Galerie (File-Input — funktioniert
   // im Web und in der nativen WebView, kein Camera-Plugin nötig).
   const choosePhoto = (dt: Daytime) => {
-    setDaytime(dt)
     setAddMenuFor(null)
+    if (!premium) { setPaywall(true); return } // KI-Foto ist Premium
+    setDaytime(dt)
     photoInputRef.current?.click()
   }
   const handlePhotoFile = async (file: File) => {
@@ -379,7 +384,9 @@ export function TrackerPage() {
         appendLines(res.lines)
       }
     } catch (e) {
-      if (e instanceof ApiError) {
+      if (e instanceof ApiError && e.status === 403) {
+        setPaywall(true) // premium_required (Server-Gate)
+      } else if (e instanceof ApiError) {
         setError(e.status === 503 ? 'Foto-Analyse gerade nicht verfügbar. Bitte später erneut.' : e.message)
       } else if (e instanceof Error && e.message === 'image_load_failed') {
         setError('Bild konnte nicht gelesen werden.')
@@ -811,7 +818,7 @@ export function TrackerPage() {
             <button type="button" className="add-option" onClick={() => choosePhoto(addMenuFor)}>
               <span className="add-option-ico ingredients"><IconCamera /></span>
               <span className="add-option-text">
-                <strong>Mahlzeit fotografieren</strong>
+                <strong>Mahlzeit fotografieren{!premium ? ' · Premium' : ''}</strong>
                 <span>KI erkennt Zutaten &amp; Mengen automatisch</span>
               </span>
               <IconChevronRight className="add-option-chev" />
@@ -825,6 +832,12 @@ export function TrackerPage() {
           barcode={createBarcode}
           onCreated={(food) => { setCreateBarcode(null); stageFood(food) }}
           onClose={() => setCreateBarcode(null)}
+        />
+      )}
+      {paywall && (
+        <PaywallSheet
+          subtitle="Mahlzeiten per Foto erfassen — Zutaten & Mengen automatisch erkannt."
+          onClose={() => setPaywall(false)}
         />
       )}
       {calOpen && (

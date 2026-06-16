@@ -3,16 +3,20 @@ import { api, ApiError, getToken, setToken } from '../api/client'
 import { pushTokenToWidgets } from '../lib/shared-auth'
 import { disablePush, syncPushRegistration } from '../lib/push'
 import { getPlatform, socialLogin } from '../lib/social-login'
+import { configureBilling, logoutBilling } from '../lib/billing'
 import type { SocialProvider, User } from '../api/types'
 
 interface AuthState {
   user: User | null
   loading: boolean
+  premium: boolean
   login: (username: string, password: string) => Promise<void>
   loginWithProvider: (provider: SocialProvider) => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
+  /** Entitlement vom Server neu holen (nach Kauf/Restore, App-Resume). */
+  refreshEntitlement: () => Promise<void>
 }
 const Ctx = createContext<AuthState | null>(null)
 
@@ -30,6 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void pushTokenToWidgets(getToken())
         // APNs-Tokens rotieren — Registrierung still auffrischen (no-op im Web)
         void syncPushRegistration()
+        // RevenueCat mit der userId verknüpfen (no-op im Web)
+        void configureBilling(u.id)
       })
       .catch(() => { if (alive) setUser(null) })
       .finally(() => { if (alive) setLoading(false) })
@@ -38,24 +44,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = async (username: string, password: string) => {
-    const res = await api.auth.login(username, password)
+  const refreshEntitlement = async () => {
+    try {
+      setUser(await api.auth.me())
+    } catch {
+      /* Netz-/Auth-Fehler: bisherigen Stand behalten */
+    }
+  }
+  // Nach erfolgreichem Login/Register: Token + Basis-User setzen, dann Billing
+  // verknüpfen und das Entitlement (premium) vom Server nachladen.
+  const onAuthed = (res: { id: string; username: string; token: string }) => {
     setToken(res.token)
     setUser({ id: res.id, username: res.username })
     void pushTokenToWidgets(res.token)
+    void configureBilling(res.id)
+    void refreshEntitlement()
+  }
+  const login = async (username: string, password: string) => {
+    onAuthed(await api.auth.login(username, password))
   }
   const loginWithProvider = async (provider: SocialProvider) => {
     const { idToken, name } = await socialLogin(provider)
-    const res = await api.auth.oauthLogin(provider, idToken, name, getPlatform())
-    setToken(res.token)
-    setUser({ id: res.id, username: res.username })
-    void pushTokenToWidgets(res.token)
+    onAuthed(await api.auth.oauthLogin(provider, idToken, name, getPlatform()))
   }
   const register = async (username: string, email: string, password: string) => {
-    const res = await api.auth.register(username, email, password)
-    setToken(res.token)
-    setUser({ id: res.id, username: res.username })
-    void pushTokenToWidgets(res.token)
+    onAuthed(await api.auth.register(username, email, password))
   }
   // Lokalen Zustand kappen — gemeinsam für Logout und Konto-Löschung.
   const clearLocalSession = async () => {
@@ -76,17 +89,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     // vor dem Session-Ende, solange der Bearer noch gilt
     await disablePush().catch(() => {})
+    await logoutBilling().catch(() => {})
     await api.auth.logout().catch((e) => { if (!(e instanceof ApiError)) throw e })
     await clearLocalSession()
   }
   const deleteAccount = async () => {
     // Push-Token serverseitig mitgelöscht; lokal trotzdem abmelden.
     await disablePush().catch(() => {})
+    await logoutBilling().catch(() => {})
     await api.auth.deleteAccount()
     await clearLocalSession()
   }
   return (
-    <Ctx.Provider value={{ user, loading, login, loginWithProvider, register, logout, deleteAccount }}>
+    <Ctx.Provider
+      value={{
+        user,
+        loading,
+        premium: !!user?.premium,
+        login,
+        loginWithProvider,
+        register,
+        logout,
+        deleteAccount,
+        refreshEntitlement,
+      }}
+    >
       {children}
     </Ctx.Provider>
   )

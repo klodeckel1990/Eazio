@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import type { ImportedRecipe, RecipeIngredient } from '../api/types'
 import { IconWand, IconCheck, IconClose, IconAlert } from '../components/icons'
+import { PaywallSheet } from '../components/PaywallSheet'
+import { useAuth } from '../auth/AuthContext'
 
 const DIFFICULTIES = ['einfach', 'mittel', 'schwer'] as const
 function importErrorMessage(code: string): string {
@@ -30,7 +32,15 @@ const systemLang = (): string => (navigator.language || 'de').split(/[-_]/)[0] |
 
 export function ImportPage() {
   const navigate = useNavigate()
+  const { premium } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [paywall, setPaywall] = useState(false)
+  const [quota, setQuota] = useState<{ used: number; limit: number } | null>(null)
+
+  const loadQuota = () => {
+    if (premium) return
+    api.billing.status().then((s) => setQuota({ used: s.recipeImportsUsed, limit: s.recipeImportLimit })).catch(() => {})
+  }
 
   const [mode, setMode] = useState<'text' | 'link'>('text')
   const [input, setInput] = useState('')
@@ -58,8 +68,10 @@ export function ImportPage() {
       setMinutes(r.totalMinutes ? String(r.totalMinutes) : '')
       setIngredients(r.ingredients)
       setSteps(r.steps)
+      loadQuota() // verbrauchten Import einrechnen
     } catch (e) {
-      if (e instanceof ApiError) setImportError(importErrorMessage(e.message))
+      if (e instanceof ApiError && e.status === 403) setPaywall(true) // Wochenlimit erreicht
+      else if (e instanceof ApiError) setImportError(importErrorMessage(e.message))
       else throw e
     } finally {
       setImporting(false)
@@ -87,6 +99,11 @@ export function ImportPage() {
     setSearchParams({}, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (premium) { setQuota(null); return }
+    api.billing.status().then((s) => setQuota({ used: s.recipeImportsUsed, limit: s.recipeImportLimit })).catch(() => {})
+  }, [premium])
 
   const handleSave = async () => {
     if (ingredients.length === 0 || saving) return
@@ -151,6 +168,18 @@ export function ImportPage() {
         <button type="button" className="btn btn-primary btn-block" onClick={handleImport} disabled={importing || !input.trim()}>
           {importing ? <><span className="spinner" /> Importieren…</> : <><IconWand /> Importieren</>}
         </button>
+        {!premium && quota && (
+          <span className="muted small">
+            {Math.max(0, quota.limit - quota.used)} von {quota.limit} Importen diese Woche frei ·{' '}
+            <button
+              type="button"
+              onClick={() => setPaywall(true)}
+              style={{ background: 'none', border: 0, padding: 0, font: 'inherit', color: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              Unbegrenzt mit Premium
+            </button>
+          </span>
+        )}
       </div>
 
       {preview && (
@@ -211,6 +240,13 @@ export function ImportPage() {
             <button type="button" className="btn btn-ghost" onClick={() => setPreview(null)}>Verwerfen</button>
           </div>
         </div>
+      )}
+
+      {paywall && (
+        <PaywallSheet
+          subtitle="Unbegrenzt Rezepte importieren — und alle Premium-Funktionen."
+          onClose={() => setPaywall(false)}
+        />
       )}
     </div>
   )
