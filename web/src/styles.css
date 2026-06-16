@@ -837,13 +837,16 @@ select {
   white-space: nowrap;
 }
 .stat-lbl {
-  display: block;
+  /* feste Labels (z. B. „Schritte im Schnitt“, „von 4.000 ml Wasser“) dürfen
+     auf max. 2 Zeilen umbrechen statt mit … abgeschnitten zu werden */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   color: var(--ink-2);
   font-size: 0.78rem;
   line-height: 1.3;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 .diary-group { padding: 0.8rem 1rem; }
 .diary-group-head {
