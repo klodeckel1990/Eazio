@@ -11,6 +11,7 @@ import {
 import { toDetail } from '../../modules/foods/foods.service.js'
 import { OffUnavailableError } from '../../modules/foods/off.client.js'
 import { scanNutritionLabel } from '../../modules/foods/label-scan.js'
+import { analyzeMealPhoto, itemsToText } from '../../modules/foods/meal-photo.js'
 
 const SearchSchema = z.object({
   q: z.string().trim().min(1).max(120),
@@ -96,6 +97,31 @@ export function registerFoodRoutes(app: FastifyInstance, db: DB): void {
       const result = await scanNutritionLabel(image, mediaType)
       if (!result) return reply.status(503).send({ error: 'ai_unavailable' })
       return reply.send(result)
+    },
+  )
+
+  // Mahlzeiten-Foto → Vision erkennt Zutaten + Mengen → dieselbe Match-Logik
+  // wie die Texteingabe (analyze → Zutaten-Text → matchFoodText). Loggt nicht;
+  // der Client zeigt die Treffer im bestehenden Review-Flow.
+  app.post(
+    '/api/foods/photo-meal',
+    {
+      preHandler: requireAuth,
+      bodyLimit: 8 * 1024 * 1024,
+      config: { rateLimit: { max: 15, timeWindow: '1 minute' } },
+    },
+    async (req, reply) => {
+      const { image, mediaType } = z
+        .object({
+          image: z.string().min(100).max(7_000_000),
+          mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+        })
+        .parse(req.body)
+      const analysis = await analyzeMealPhoto(image, mediaType)
+      if (!analysis) return reply.status(503).send({ error: 'ai_unavailable' })
+      if (analysis.items.length === 0) return reply.send({ lines: [], mealGuess: null })
+      const lines = await matchFoodText(db, req.user!.id, itemsToText(analysis.items))
+      return reply.send({ lines, mealGuess: analysis.mealGuess })
     },
   )
 

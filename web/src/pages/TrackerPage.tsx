@@ -6,6 +6,7 @@ import type { Daytime, DiaryDay, DiaryEntry, DiaryLogResult, FoodMatchLine, Food
 import { DAYTIME_LABELS, defaultDaytime } from '../lib/daytime'
 import { round } from '../lib/nutrition'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
+import { toJpegBase64 } from '../lib/image'
 import { addDays, dayLabel, todayStr } from '../lib/dates'
 import { initHealthSync, pushDayToHealth } from '../lib/health'
 import { pushLiveActivity } from '../lib/live-activity'
@@ -13,7 +14,7 @@ import { refreshWidgets } from '../lib/shared-auth'
 import { FoodRow } from '../components/FoodRow'
 import { CalendarSheet } from '../components/CalendarSheet'
 import { CustomFoodSheet } from '../components/CustomFoodSheet'
-import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconFlame, IconSteps, IconDrop, IconCalendar, IconChevronLeft, IconChevronRight, IconPlus, IconBook, IconCoffee, IconPlate, IconMoon, IconApple } from '../components/icons'
+import { IconWand, IconCheck, IconCheckCircle, IconAlert, IconBookmark, IconClose, IconScan, IconCamera, IconFlame, IconSteps, IconDrop, IconCalendar, IconChevronLeft, IconChevronRight, IconPlus, IconBook, IconCoffee, IconPlate, IconMoon, IconApple } from '../components/icons'
 
 interface RowState {
   foodId: string
@@ -65,6 +66,8 @@ export function TrackerPage() {
   const [composerOpen, setComposerOpen] = useState(false)
   const [createBarcode, setCreateBarcode] = useState<string | null>(null)
   const [addMenuFor, setAddMenuFor] = useState<Daytime | null>(null)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const [expanded, setExpanded] = useState<Daytime | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   const autoMatched = useRef(false)
@@ -112,6 +115,20 @@ export function TrackerPage() {
     setDate((d) => addDays(d, dx < 0 ? 1 : -1))
   }
 
+  // append to whatever is already staged (e.g. gescannte Produkte / Foto-Treffer)
+  // — the list only empties on Loggen, manuelles Entfernen oder Leeren
+  const appendLines = (newLines: FoodMatchLine[]) => {
+    setLines((prev) => [...prev, ...newLines])
+    setKeys((prev) => [...prev, ...newLines.map(() => nextKey())])
+    setRows((prev) => [
+      ...prev,
+      ...newLines.map((l) => ({
+        foodId: l.selectedFoodId ?? l.candidates[0]?.id ?? '',
+        grams: l.suggestedAmountG,
+      })),
+    ])
+  }
+
   const matchText = async (input: string) => {
     if (!input.trim()) return
     setError(null)
@@ -121,17 +138,7 @@ export function TrackerPage() {
     setMatching(true)
     try {
       const res = await api.foods.match(input)
-      // append to whatever is already staged (e.g. gescannte Produkte) —
-      // the list only empties on Loggen, manuelles Entfernen oder Leeren
-      setLines((prev) => [...prev, ...res.lines])
-      setKeys((prev) => [...prev, ...res.lines.map(() => nextKey())])
-      setRows((prev) => [
-        ...prev,
-        ...res.lines.map((l) => ({
-          foodId: l.selectedFoodId ?? l.candidates[0]?.id ?? '',
-          grams: l.suggestedAmountG,
-        })),
-      ])
+      appendLines(res.lines)
       setText('') // matched — das Feld ist frei für weitere Zutaten
       setComposerOpen(false) // Sheet zu, damit die gematchte Liste sichtbar wird
     } catch (e) {
@@ -349,6 +356,40 @@ export function TrackerPage() {
     setComposerOpen(true)
     requestAnimationFrame(() => composerRef.current?.focus())
   }
+  // Foto: merkt die Mahlzeit, öffnet Kamera/Galerie (File-Input — funktioniert
+  // im Web und in der nativen WebView, kein Camera-Plugin nötig).
+  const choosePhoto = (dt: Daytime) => {
+    setDaytime(dt)
+    setAddMenuFor(null)
+    photoInputRef.current?.click()
+  }
+  const handlePhotoFile = async (file: File) => {
+    setError(null)
+    setLogResult(null)
+    setUndone(false)
+    setPresetSaved(false)
+    setPhotoBusy(true)
+    try {
+      const image = await toJpegBase64(file)
+      const res = await api.foods.photoMeal(image, 'image/jpeg')
+      if (res.mealGuess && DAYTIME_ORDER.includes(res.mealGuess)) setDaytime(res.mealGuess)
+      if (res.lines.length === 0) {
+        setError('Auf dem Foto wurden keine Lebensmittel erkannt — versuch ein klareres Bild oder tippe sie ein.')
+      } else {
+        appendLines(res.lines)
+      }
+    } catch (e) {
+      if (e instanceof ApiError) {
+        setError(e.status === 503 ? 'Foto-Analyse gerade nicht verfügbar. Bitte später erneut.' : e.message)
+      } else if (e instanceof Error && e.message === 'image_load_failed') {
+        setError('Bild konnte nicht gelesen werden.')
+      } else {
+        throw e
+      }
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
   const chooseRecipe = (dt: Daytime) => {
     sessionStorage.setItem(PENDING_DAYTIME_KEY, dt)
     void navigate('/recipes')
@@ -391,6 +432,14 @@ export function TrackerPage() {
 
   return (
     <div className="page" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void handlePhotoFile(f) }}
+      />
       <header className="page-head diary-head">
         <div className="diary-head-row">
           <h1>Tagebuch</h1>
@@ -558,6 +607,12 @@ export function TrackerPage() {
       {matching && lines.length === 0 && !composerOpen && (
         <div className="card pad-lg meal-matching">
           <IconWand className="inline-ico" /> Zutaten werden gematcht…
+        </div>
+      )}
+
+      {photoBusy && (
+        <div className="card pad-lg meal-matching">
+          <IconCamera className="inline-ico" /> Foto wird analysiert…
         </div>
       )}
 
@@ -750,6 +805,14 @@ export function TrackerPage() {
               <span className="add-option-text">
                 <strong>Preset tracken</strong>
                 <span>Gespeicherte Kombination erneut loggen</span>
+              </span>
+              <IconChevronRight className="add-option-chev" />
+            </button>
+            <button type="button" className="add-option" onClick={() => choosePhoto(addMenuFor)}>
+              <span className="add-option-ico ingredients"><IconCamera /></span>
+              <span className="add-option-text">
+                <strong>Mahlzeit fotografieren</strong>
+                <span>KI erkennt Zutaten &amp; Mengen automatisch</span>
               </span>
               <IconChevronRight className="add-option-chev" />
             </button>

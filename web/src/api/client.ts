@@ -148,6 +148,8 @@ export const api = {
     search: (q: string, limit = 10) =>
       req<{ results: FoodSummary[] }>('GET', `/foods/search?q=${encodeURIComponent(q)}&limit=${limit}`),
     match: (text: string) => req<{ lines: FoodMatchLine[] }>('POST', '/foods/match', { text }),
+    photoMeal: (image: string, mediaType: 'image/jpeg' | 'image/png' | 'image/webp') =>
+      req<{ lines: FoodMatchLine[]; mealGuess: Daytime | null }>('POST', '/foods/photo-meal', { image, mediaType }),
     barcode: (ean: string) => req<FoodSummary>('GET', `/foods/barcode/${ean}`),
     create: (body: CustomFoodInput) => req<FoodSummary>('POST', '/foods', body),
     labelScan: (image: string, mediaType: string) =>

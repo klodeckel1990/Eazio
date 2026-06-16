@@ -36,6 +36,9 @@ const schema = z.object({
   // error when it's missing.
   ANTHROPIC_API_KEY: z.string().optional(),
   RECIPE_LLM_MODEL: z.string().default('claude-haiku-4-5'),
+  // Mahlzeiten-Foto-Analyse (Zutaten + Mengenschätzung) — stärkeres Vision-Modell
+  // als der Rezept-Import, weil Portionsschätzung aus dem Bild anspruchsvoller ist.
+  PHOTO_LLM_MODEL: z.string().default('claude-sonnet-4-6'),
   // Optional Apify token to resolve Instagram links (caption scraping) on import.
   // Without it, Instagram links fall back to "paste the caption".
   APIFY_TOKEN: z.string().optional(),
