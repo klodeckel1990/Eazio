@@ -75,15 +75,15 @@ export function PresetsPage() {
         <ul className="list">
           {presets.map(preset => (
             <li key={preset.id}>
-              <div className="row-card">
-                <span className="row-icon alt"><IconBookmark /></span>
-                <div className="row-main">
-                  <div className="row-title"><span className="text">{preset.name}</span></div>
+              <div className="card preset-card">
+                <div className="preset-head">
+                  <span className="row-icon alt"><IconBookmark /></span>
+                  <span className="preset-name">{preset.name}</span>
                 </div>
-                <div className="row-actions">
+                <div className="preset-actions">
                   <button
                     type="button"
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-primary"
                     onClick={() => { void handleLoad(preset.id) }}
                   >
                     Im Tracker laden
