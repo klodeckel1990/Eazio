@@ -4,7 +4,7 @@ import { api, ApiError, API_BASE } from '../api/client'
 import type { RecipeDetail, RecipeIngredient, ShoppingListFormat } from '../api/types'
 import { buildTrackerText } from '../lib/recipe'
 import { buildShoppingText, bringDeeplink, copyText, SHOPPING_FORMAT_LABEL } from '../lib/shoppingList'
-import { IconAlert, IconBowl, IconCart, IconCheck, IconChevronLeft, IconClock, IconCopy, IconHeart, IconHeartFilled, IconTrash } from '../components/icons'
+import { IconAlert, IconBowl, IconCart, IconCheck, IconChevronLeft, IconClock, IconCopy, IconExternal, IconHeart, IconHeartFilled, IconTrash } from '../components/icons'
 
 const FACTORS = [
   { label: 'Ganzes', value: 1 },
@@ -13,6 +13,18 @@ const FACTORS = [
   { label: '¼', value: 0.25 },
 ]
 const DIFF_LABEL: Record<string, string> = { einfach: 'Einfach', mittel: 'Mittel', schwer: 'Schwer' }
+/** Quellen-Link-Beschriftung je nach Plattform der Original-URL. */
+function sourceLabel(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '')
+    if (host.includes('instagram')) return 'Auf Instagram ansehen'
+    if (host.includes('tiktok')) return 'Auf TikTok ansehen'
+    if (host.includes('youtu')) return 'Auf YouTube ansehen'
+    return `Quelle ansehen (${host})`
+  } catch {
+    return 'Quelle ansehen'
+  }
+}
 const ingredientLine = (ing: RecipeIngredient): string =>
   [ing.quantity, ing.unit, ing.name].filter(Boolean).join(' ')
 const round2 = (n: number) => Math.round(n * 100) / 100
@@ -83,6 +95,12 @@ export function RecipeDetailPage() {
     navigate('/', { state: { presetText: buildTrackerText(recipe.ingredients, factor) } })
   }
 
+  const openSource = () => {
+    // window.open (nicht reines <a>): öffnet in der nativen WebView extern,
+    // statt die App wegzunavigieren — wie beim Bring!-Deeplink.
+    if (recipe?.sourceUrl) window.open(recipe.sourceUrl, '_blank', 'noopener')
+  }
+
   return (
     <div className="page">
       <div className="detail-top">
@@ -120,6 +138,19 @@ export function RecipeDetailPage() {
             {recipe.totalMinutes != null && <span className="rc-time"><IconClock /> {recipe.totalMinutes} Min.</span>}
             {recipe.servings != null && <span className="muted">{recipe.servings} Portionen</span>}
           </div>
+
+          {recipe.sourceUrl && (
+            <a
+              className="btn btn-soft btn-sm"
+              style={{ alignSelf: 'flex-start' }}
+              href={recipe.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => { e.preventDefault(); openSource() }}
+            >
+              <IconExternal /> {sourceLabel(recipe.sourceUrl)}
+            </a>
+          )}
 
           <section>
             <span className="label">Zutaten</span>

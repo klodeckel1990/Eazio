@@ -175,6 +175,16 @@ export function IconShare(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+export function IconExternal(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M14 5h5v5" />
+      <path d="M19 5 11.5 12.5" />
+      <path d="M18 13.5V18a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 18V9a1.5 1.5 0 0 1 1.5-1.5H11" />
+    </Svg>
+  )
+}
+
 export function IconSettings(props: SVGProps<SVGSVGElement>) {
   return (
     <Svg {...props}>
