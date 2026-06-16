@@ -191,6 +191,53 @@ einer Datenschutz-Aufsichtsbehörde zu beschweren.</p>
 Es gilt die jeweils hier veröffentlichte Fassung.</p>
 `
 
+// Öffentliche Konto-Lösch-Anleitung — von Apple wie Google Play (Data-Safety:
+// „Konto-URL löschen") verlangt: erreichbar ohne Login, beschreibt die Schritte
+// sowie die gelöschten/aufbewahrten Datentypen. Die eigentliche Löschung läuft
+// in der App über Einstellungen → „Konto löschen" (DELETE /api/auth/me).
+const KONTO_LOESCHEN = `
+<p>Du kannst dein <strong>Tellerwert</strong>-Konto und alle zugehörigen Daten
+jederzeit selbst löschen. Die Löschung ist sofort wirksam und unwiderruflich.</p>
+
+<h2>In der App löschen (empfohlen)</h2>
+<ol>
+  <li>Öffne Tellerwert und melde dich an.</li>
+  <li>Tippe unten in der Navigation auf <strong>Einstellungen</strong>.</li>
+  <li>Scrolle nach unten zum Bereich <strong>„Konto löschen"</strong>.</li>
+  <li>Tippe auf <strong>„Konto löschen"</strong> und bestätige mit
+      <strong>„Ja, endgültig löschen"</strong>.</li>
+</ol>
+<p>Dein Konto wird daraufhin sofort entfernt und du wirst abgemeldet.</p>
+
+<h2>Per E-Mail anfragen</h2>
+<p>Falls du keinen Zugriff mehr auf die App hast, schreib uns an
+<a href="mailto:webmaster@tellerwert.de?subject=Konto%20l%C3%B6schen">webmaster@tellerwert.de</a>
+mit dem Betreff „Konto löschen" und nenne den in der App verwendeten Benutzernamen
+bzw. die E-Mail-Adresse. Wir löschen das Konto dann innerhalb von 30 Tagen und
+bestätigen dir die Löschung.</p>
+
+<h2>Welche Daten gelöscht werden</h2>
+<p>Mit dem Konto werden alle zugehörigen personenbezogenen Daten unwiderruflich entfernt:</p>
+<ul>
+  <li>Konto- und Profildaten (Benutzername, E-Mail-Adresse, Anmelde-/Login-Daten, Sitzungen)</li>
+  <li>Tagebuch- und Wasser-Einträge, Ziele und Statistiken</li>
+  <li>gespeicherte Rezepte, Presets und Lebensmittel-Zuordnungen</li>
+  <li>verknüpfte Yazio-Konten und deren Zugangsdaten</li>
+  <li>Push-Token und Erinnerungseinstellungen</li>
+  <li>Abo-/Premium-Status in unserer Datenbank</li>
+</ul>
+
+<h2>Aufbewahrung</h2>
+<p>Dein Konto und sämtliche oben genannten Daten werden sofort und dauerhaft
+gelöscht. Eine darüber hinausgehende Aufbewahrung findet nicht statt; etwaige
+technische Sicherungskopien werden im regulären Backup-Zyklus (spätestens nach
+30 Tagen) überschrieben.</p>
+<p class="note">Kauf- und Abodaten, die Apple (App Store) bzw. Google (Google Play)
+im Rahmen deines Kaufs verwalten, liegen bei diesen Anbietern und unterliegen
+deren Richtlinien. Ein laufendes Abo kündigst du in den Einstellungen des
+jeweiligen App-Stores.</p>
+`
+
 export function registerLegalRoutes(app: FastifyInstance): void {
   app.get('/datenschutz', async (_req, reply) => {
     return reply.type('text/html; charset=utf-8').send(page('Datenschutzerklärung', DATENSCHUTZ))
@@ -200,5 +247,8 @@ export function registerLegalRoutes(app: FastifyInstance): void {
   })
   app.get('/nutzungsbedingungen', async (_req, reply) => {
     return reply.type('text/html; charset=utf-8').send(page('Nutzungsbedingungen', NUTZUNG))
+  })
+  app.get('/konto-loeschen', async (_req, reply) => {
+    return reply.type('text/html; charset=utf-8').send(page('Konto und Daten löschen', KONTO_LOESCHEN))
   })
 }
