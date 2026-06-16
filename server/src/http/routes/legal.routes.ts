@@ -55,20 +55,18 @@ function page(title: string, body: string): string {
 const IMPRESSUM = `
 <h2>Angaben gemäß § 5 DDG</h2>
 <p>
-  [VERANTWORTLICHER_NAME]<br>
-  [STRASSE_NR]<br>
-  [PLZ_ORT]<br>
+  Jens Gossen<br>
+  Billrothstr. 18<br>
+  45147 Essen<br>
   Deutschland
 </p>
 <h2>Kontakt</h2>
 <p>
-  E-Mail: <a href="mailto:[KONTAKT_EMAIL]">[KONTAKT_EMAIL]</a><br>
-  Telefon: [TELEFON_OPTIONAL]
+  E-Mail: <a href="mailto:webmaster@tellerwert.de">webmaster@tellerwert.de</a><br>
+  Telefon: +49 151 40222988
 </p>
-<h2>Umsatzsteuer-ID</h2>
-<p>[UST_ID_ODER_ENTFERNEN]</p>
 <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-<p>[VERANTWORTLICHER_NAME], Anschrift wie oben.</p>
+<p>Jens Gossen, Anschrift wie oben.</p>
 `
 
 const DATENSCHUTZ = `
@@ -78,9 +76,9 @@ Kalorientagebuch).</p>
 
 <h2>1. Verantwortlicher</h2>
 <p>
-  [VERANTWORTLICHER_NAME]<br>
-  [STRASSE_NR], [PLZ_ORT], Deutschland<br>
-  E-Mail: <a href="mailto:[KONTAKT_EMAIL]">[KONTAKT_EMAIL]</a>
+  Jens Gossen<br>
+  Billrothstr. 18, 45147 Essen, Deutschland<br>
+  E-Mail: <a href="mailto:webmaster@tellerwert.de">webmaster@tellerwert.de</a>
 </p>
 
 <h2>2. Hosting</h2>
@@ -140,7 +138,7 @@ dein Konto und alle zugehörigen Daten unwiderruflich entfernt.</p>
 <p>Dir stehen die Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung der
 Verarbeitung, Datenübertragbarkeit und Widerspruch zu. Erteilte Einwilligungen kannst du
 jederzeit mit Wirkung für die Zukunft widerrufen. Wende dich dafür an
-<a href="mailto:[KONTAKT_EMAIL]">[KONTAKT_EMAIL]</a>. Außerdem hast du das Recht, dich bei
+<a href="mailto:webmaster@tellerwert.de">webmaster@tellerwert.de</a>. Außerdem hast du das Recht, dich bei
 einer Datenschutz-Aufsichtsbehörde zu beschweren.</p>
 
 <h2>12. Änderungen</h2>
