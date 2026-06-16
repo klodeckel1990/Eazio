@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { healthAvailable, healthOptedIn, setHealthOptIn } from '../lib/health'
 import { liveActivityAvailable, liveActivityEnabled, setLiveActivityEnabled } from '../lib/live-activity'
 import { disablePush, enablePush, pushAvailable } from '../lib/push'
@@ -8,9 +8,21 @@ import { useAuth } from '../auth/AuthContext'
 import { PaywallSheet } from '../components/PaywallSheet'
 import { getPlatform } from '../lib/social-login'
 import type { Account, Goals, ShoppingListFormat } from '../api/types'
-import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconCheck, IconCart } from '../components/icons'
+import { IconUser, IconStar, IconTrash, IconPlus, IconAlert, IconCheck, IconCart, IconTarget, IconMoon, IconHeart, IconChevronLeft, IconChevronRight, IconSettings } from '../components/icons'
 
 const LEGAL_BASE = 'https://tellerwert.de'
+
+type Section = 'profile' | 'appearance' | 'health' | 'yazio' | 'shopping' | 'premium' | 'account'
+
+const SECTION_TITLES: Record<Section, string> = {
+  profile: 'Profil & Ziele',
+  appearance: 'Darstellung',
+  health: 'Erinnerungen & Gesundheit',
+  yazio: 'Yazio',
+  shopping: 'Einkaufsliste',
+  premium: 'Tellerwert Premium',
+  account: 'Konto & Rechtliches',
+}
 
 const FORMAT_OPTIONS: { value: ShoppingListFormat; title: string; desc: string }[] = [
   { value: 'plain', title: 'Klartext', desc: 'Einfache Liste – ideal für WhatsApp & Notizen.' },
@@ -49,6 +61,7 @@ export function AccountsPage() {
   const [reminderTime, setReminderTime] = useState('19:30')
   const [reminderError, setReminderError] = useState<string | null>(null)
   const [mealRemindersOn, setMealRemindersOn] = useState<boolean | null>(null)
+  const [section, setSection] = useState<Section | null>(null)
 
   const loadAccounts = () => {
     api.accounts.list()
@@ -243,15 +256,56 @@ export function AccountsPage() {
     }
   }
 
+  const themeLabel = theme === 'dark' ? 'Dunkel' : theme === 'light' ? 'Hell' : 'System'
+  const formatLabel = FORMAT_OPTIONS.find((o) => o.value === format)?.title ?? '—'
+  const yazioSub =
+    accounts === null ? 'Wird geladen…'
+      : accounts.length === 0 ? 'Nicht verknüpft'
+        : `${accounts.length} ${accounts.length === 1 ? 'Konto' : 'Konten'} verknüpft`
+  const premiumSub = premium
+    ? (user?.premiumUntil ? `Aktiv bis ${new Date(user.premiumUntil).toLocaleDateString('de-DE')}` : 'Aktiv')
+    : 'Frei – Upgrade möglich'
+  const healthVisible = healthAvailable() || liveActivityAvailable() || pushAvailable()
+
+  const MENU: { key: Section; title: string; sub: string; icon: ReactNode; tint: string; show: boolean }[] = [
+    { key: 'profile', title: 'Profil & Ziele', sub: 'Kalorien-, Wasser- & Proteinziel', icon: <IconTarget />, tint: 's-green', show: true },
+    { key: 'appearance', title: 'Darstellung', sub: themeLabel, icon: <IconMoon />, tint: 's-neutral', show: true },
+    { key: 'health', title: 'Erinnerungen & Gesundheit', sub: 'Push, Apple Health, Live Activity', icon: <IconHeart />, tint: 's-rose', show: healthVisible },
+    { key: 'yazio', title: 'Yazio', sub: yazioSub, icon: <IconUser />, tint: 's-teal', show: true },
+    { key: 'shopping', title: 'Einkaufsliste', sub: formatLabel, icon: <IconCart />, tint: 's-amber', show: true },
+    { key: 'premium', title: 'Tellerwert Premium', sub: premiumSub, icon: <IconStar />, tint: 's-green', show: true },
+    { key: 'account', title: 'Konto & Rechtliches', sub: 'Datenschutz, Impressum, Konto löschen', icon: <IconSettings />, tint: 's-neutral', show: true },
+  ]
+
   return (
     <div className="page">
-      <header className="page-head">
-        <h1>Einstellungen</h1>
-        <span className="sub">Profil, App und Verknüpfungen.</span>
-      </header>
+      {section ? (
+        <header className="page-head settings-subhead">
+          <button type="button" className="btn btn-ghost btn-sm settings-back" onClick={() => setSection(null)}>
+            <IconChevronLeft /> Einstellungen
+          </button>
+          <h1>{SECTION_TITLES[section]}</h1>
+        </header>
+      ) : (
+        <>
+          <header className="page-head">
+            <h1>Einstellungen</h1>
+            <span className="sub">Profil, App und Verknüpfungen.</span>
+          </header>
+          <div className="stack settings-menu">
+            {MENU.filter((m) => m.show).map((m) => (
+              <button key={m.key} type="button" className="add-option" onClick={() => setSection(m.key)}>
+                <span className={`add-option-ico ${m.tint}`}>{m.icon}</span>
+                <span className="add-option-text"><strong>{m.title}</strong><span>{m.sub}</span></span>
+                <IconChevronRight className="add-option-chev" />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
-      {/* ---- Profil & Ziele -------------------------------------------- */}
-      <h2 className="section-title">Profil &amp; Ziele</h2>
+      {section === 'profile' && (
+        <>
       {goals && (
         <div className="card pad-lg stack">
           <button
@@ -308,8 +362,11 @@ export function AccountsPage() {
         </div>
       )}
 
-      {/* ---- Darstellung ------------------------------------------------ */}
-      <h2 className="section-title">Darstellung</h2>
+        </>
+      )}
+
+      {section === 'appearance' && (
+        <>
       <div className="card stack">
         <p className="muted">Hell, Dunkel oder automatisch dem System folgen.</p>
         <div className="seg" role="group" aria-label="Erscheinungsbild">
@@ -326,10 +383,13 @@ export function AccountsPage() {
         </div>
       </div>
 
-      {/* ---- Gesundheit & Motivation (nur native App) ------------------- */}
+        </>
+      )}
+
+      {section === 'health' && (
+        <>
       {(healthAvailable() || liveActivityAvailable() || pushAvailable()) && (
         <>
-          <h2 className="section-title">Gesundheit &amp; Motivation</h2>
           {pushAvailable() && (
             <div className="card stack">
               <div className="water-card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
@@ -437,10 +497,11 @@ export function AccountsPage() {
           )}
         </>
       )}
+        </>
+      )}
 
-      {/* ---- Yazio ------------------------------------------------------ */}
-      <h2 className="section-title">Yazio</h2>
-
+      {section === 'yazio' && (
+        <>
       {accounts === null ? (
         <p className="loading-inline"><span className="spinner" /> Lade Konten…</p>
       ) : accounts.length === 0 ? (
@@ -579,9 +640,11 @@ export function AccountsPage() {
         </form>
       </div>
 
-      {/* ---- App -------------------------------------------------------- */}
-      <h2 className="section-title">App</h2>
+        </>
+      )}
 
+      {section === 'shopping' && (
+        <>
       <div className="card stack">
         <strong><IconCart /> Einkaufsliste</strong>
         <p className="muted">
@@ -607,8 +670,11 @@ export function AccountsPage() {
         </div>
       </div>
 
-      {/* ---- Premium ---------------------------------------------------- */}
-      <h2 className="section-title">Tellerwert Premium</h2>
+        </>
+      )}
+
+      {section === 'premium' && (
+        <>
       <div className="card pad-lg stack">
         {premium ? (
           <>
@@ -642,9 +708,11 @@ export function AccountsPage() {
         )}
       </div>
 
-      {/* ---- Konto & Rechtliches --------------------------------------- */}
-      <h2 className="section-title">Konto &amp; Rechtliches</h2>
+        </>
+      )}
 
+      {section === 'account' && (
+        <>
       <div className="card stack">
         <a className="btn btn-soft btn-block" href={`${LEGAL_BASE}/datenschutz`} target="_blank" rel="noopener noreferrer">
           Datenschutzerklärung
@@ -697,6 +765,9 @@ export function AccountsPage() {
           </div>
         )}
       </div>
+
+        </>
+      )}
 
       {paywall && <PaywallSheet onClose={() => setPaywall(false)} />}
     </div>

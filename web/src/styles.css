@@ -1814,6 +1814,15 @@ input[type='search']:focus {
 .add-option-ico.ingredients { background: var(--primary-100); color: var(--primary-700); }
 .add-option-ico.recipe { background: var(--amber-100); color: var(--amber); }
 .add-option-ico.preset { background: var(--teal-100); color: var(--teal); }
+/* Einstellungs-Menü (Master/Detail) — Icon-Tints + Sub-Header */
+.add-option-ico.s-green { background: var(--primary-100); color: var(--primary-700); }
+.add-option-ico.s-amber { background: var(--amber-100); color: var(--amber); }
+.add-option-ico.s-teal { background: var(--teal-100); color: var(--teal); }
+.add-option-ico.s-rose { background: var(--danger-100); color: var(--danger); }
+.add-option-ico.s-neutral { background: var(--surface-2); color: var(--ink-2); }
+.settings-menu { margin-top: 0.2rem; }
+.settings-subhead { display: grid; gap: 0.25rem; }
+.settings-back { justify-self: start; padding-left: 0.35rem; }
 .add-option-text { flex: 1; min-width: 0; display: grid; gap: 0.05rem; }
 .add-option-text strong { font-size: 0.98rem; }
 .add-option-text span { color: var(--ink-2); font-size: 0.8rem; }

@@ -88,6 +88,7 @@ describe('AccountsPage', () => {
       { id: 'a1', label: 'Mein Konto', yazioUsername: 'jens@x.de', isDefault: true },
     ])
     render(<AccountsPage />)
+    await userEvent.click(await screen.findByRole('button', { name: /Yazio/i }))
     await waitFor(() => expect(screen.getByText(/Mein Konto/)).toBeInTheDocument())
     expect(screen.getByText(/jens@x\.de/)).toBeInTheDocument()
   })
@@ -97,12 +98,14 @@ describe('AccountsPage', () => {
       { id: 'a1', label: 'Haupt', yazioUsername: 'a@b.de', isDefault: true },
     ])
     render(<AccountsPage />)
+    await userEvent.click(await screen.findByRole('button', { name: /Yazio/i }))
     await waitFor(() => expect(screen.getByText(/Standard/i)).toBeInTheDocument())
   })
 
   it('links a new account when the form is submitted', async () => {
     render(<AccountsPage />)
     await waitFor(() => expect(list).toHaveBeenCalledTimes(1))
+    await userEvent.click(await screen.findByRole('button', { name: /Yazio/i }))
 
     await userEvent.type(screen.getByLabelText(/Bezeichnung/i), 'Me')
     await userEvent.type(screen.getByLabelText(/Benutzername/i), 'me@x.de')
@@ -119,6 +122,7 @@ describe('AccountsPage', () => {
     link.mockRejectedValue(new ApiError(400, 'invalid_credentials'))
     render(<AccountsPage />)
     await waitFor(() => expect(list).toHaveBeenCalledTimes(1))
+    await userEvent.click(await screen.findByRole('button', { name: /Yazio/i }))
 
     await userEvent.type(screen.getByLabelText(/Bezeichnung/i), 'Me')
     await userEvent.type(screen.getByLabelText(/Benutzername/i), 'me@x.de')
