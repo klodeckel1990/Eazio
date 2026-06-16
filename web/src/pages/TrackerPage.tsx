@@ -432,11 +432,11 @@ export function TrackerPage() {
 
   return (
     <div className="page" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      {/* kein capture-Attribut: iOS bietet so Kamera UND Fotomediathek zur Auswahl */}
       <input
         ref={photoInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         style={{ display: 'none' }}
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void handlePhotoFile(f) }}
       />
