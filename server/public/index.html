@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tellerwert – Ernährungstagebuch für iPhone</title>
+<meta name="description" content="Tellerwert ist dein smartes Ernährungstagebuch: Rezepte per Link importieren, Mahlzeiten per Foto tracken, Kalorien und Makros immer im Blick. Jetzt im App Store.">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Tellerwert – dein smartes Ernährungstagebuch">
+<meta property="og:description" content="Rezepte per Link importieren, Mahlzeiten per Foto tracken, Kalorien und Makros im Blick.">
+<meta property="og:image" content="/shot-1.jpg">
+<meta name="theme-color" content="#1f5640">
+<style>
+  :root{
+    --ink:#2b2b28; --cream:#f4efe6; --green:#2f6f54; --green-deep:#1f5640;
+    --teal:#37a386; --terra:#dd7a4f; --muted:#7a766c; --card:#ffffff; --line:#e7e0d3;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; color:var(--ink); background:var(--cream);
+    font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 22px;}
+  a{color:var(--green);}
+  h1,h2,h3,.brand .name{font-family:Georgia,"Times New Roman",serif; font-weight:700;}
+
+  /* Header */
+  header.site{padding:20px 0; position:sticky; top:0; z-index:10;
+    background:rgba(244,239,230,.86); backdrop-filter:saturate(160%) blur(10px);
+    border-bottom:1px solid var(--line);}
+  .bar{display:flex; align-items:center; justify-content:space-between; gap:14px;}
+  .brand{display:flex; align-items:center; gap:11px; text-decoration:none; color:var(--ink);}
+  .brand img{width:38px; height:38px; border-radius:10px;}
+  .brand .name{font-size:23px;}
+
+  /* App Store badge */
+  .badge{display:inline-flex; align-items:center; gap:11px; text-decoration:none;
+    background:var(--green-deep); color:#fff; padding:11px 18px 11px 16px;
+    border-radius:14px; box-shadow:0 6px 18px rgba(31,86,64,.28);
+    transition:transform .12s ease, box-shadow .12s ease;}
+  .badge:hover{transform:translateY(-1px); box-shadow:0 10px 24px rgba(31,86,64,.34);}
+  .badge svg{width:26px; height:26px; fill:#fff; flex:none;}
+  .badge .b1{display:block; font-size:11px; letter-spacing:.04em; opacity:.85; line-height:1.1;}
+  .badge .b2{display:block; font-size:18px; font-weight:600; line-height:1.15;}
+  header .badge{padding:8px 15px 8px 13px;}
+  header .badge svg{width:20px; height:20px;}
+  header .badge .b2{font-size:15px;}
+
+  /* Hero */
+  .hero{padding:64px 0 36px;
+    background:linear-gradient(180deg,#fbeede 0%, var(--cream) 46%);}
+  .hero h1{font-size:clamp(34px,6vw,54px); line-height:1.08; margin:0 0 18px; max-width:14ch;}
+  .hero .lead{font-size:clamp(18px,2.4vw,22px); color:#46443e; max-width:34ch; margin:0 0 30px;}
+  .cta-row{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .cta-note{color:var(--muted); font-size:14px;}
+
+  /* Screenshots */
+  .shots{padding:30px 0 8px;}
+  .shot-row{display:flex; gap:26px; justify-content:center; flex-wrap:wrap;}
+  .shot{flex:0 1 250px; max-width:260px; text-align:center;}
+  .shot img{width:100%; border-radius:22px; border:1px solid var(--line);
+    box-shadow:0 18px 40px rgba(43,43,40,.14); display:block;}
+  .shot .cap{margin-top:14px; color:var(--muted); font-size:14px; line-height:1.45;}
+
+  /* Features */
+  .features{padding:54px 0 18px;}
+  .features h2{font-size:clamp(26px,4vw,34px); text-align:center; margin:0 0 6px;}
+  .features .sub{text-align:center; color:var(--muted); margin:0 0 38px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px;}
+  .feat{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px;}
+  .feat .ic{width:44px; height:44px; border-radius:12px; background:#e9f1ec;
+    display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .feat .ic svg{width:24px; height:24px; stroke:var(--green); fill:none; stroke-width:1.9;}
+  .feat h3{font-size:19px; margin:0 0 6px;}
+  .feat p{margin:0; color:#55524b; font-size:15px;}
+
+  /* CTA band */
+  .band{margin:64px 0 0; background:var(--green-deep); color:#fff;}
+  .band .wrap{padding:50px 22px; text-align:center;}
+  .band h2{font-size:clamp(24px,4vw,32px); margin:0 0 10px; color:#fff;}
+  .band p{margin:0 0 26px; color:#cfe0d7;}
+  .band .badge{background:#fff; color:var(--green-deep); box-shadow:0 8px 22px rgba(0,0,0,.22);}
+  .band .badge svg{fill:var(--green-deep);}
+
+  /* Footer */
+  footer.site{padding:30px 0 44px; color:var(--muted); font-size:14px;}
+  footer.site .wrap{display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;}
+  footer.site a{color:var(--muted);}
+  footer.site nav{display:flex; gap:16px; flex-wrap:wrap;}
+</style>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap bar">
+      <a class="brand" href="/">
+        <img src="/icon-192.png" alt="Tellerwert Logo">
+        <span class="name">Tellerwert</span>
+      </a>
+      <a class="badge" href="https://apps.apple.com/de/app/id6779640213" target="_blank" rel="noopener">
+        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        <span><span class="b1">Laden im</span><span class="b2">App Store</span></span>
+      </a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <h1>Iss bewusster – ganz ohne Aufwand.</h1>
+      <p class="lead">Tellerwert ist dein smartes Ernährungstagebuch: Rezepte per Link importieren, Mahlzeiten per Foto tracken und Kalorien, Makros &amp; Wasser immer im Blick.</p>
+      <div class="cta-row">
+        <a class="badge" href="https://apps.apple.com/de/app/id6779640213" target="_blank" rel="noopener">
+          <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          <span><span class="b1">Laden im</span><span class="b2">App Store</span></span>
+        </a>
+        <span class="cta-note">Kostenlos laden · Premium optional</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="shots">
+    <div class="wrap shot-row">
+      <figure class="shot"><img src="/shot-1.jpg" alt="Tagebuch-Ansicht von Tellerwert"><figcaption class="cap">Kalorien, Makros, Schritte &amp; Wasser – dein Tag auf einen Blick.</figcaption></figure>
+      <figure class="shot"><img src="/shot-2.jpg" alt="Verlauf und Statistik in Tellerwert"><figcaption class="cap">Verlauf &amp; Trends: sieh deine grünen Tage und Durchschnitte.</figcaption></figure>
+      <figure class="shot"><img src="/shot-3.jpg" alt="Gespeicherte Rezepte in Tellerwert"><figcaption class="cap">Rezepte aus Instagram &amp; Blogs per Link importieren.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="wrap">
+      <h2>Tracken, das Spaß macht</h2>
+      <p class="sub">Weniger tippen, mehr verstehen.</p>
+      <div class="grid">
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11M4 12h11M4 19h7"/><path d="M18 4l3 3-3 3"/></svg></div>
+          <h3>Rezepte importieren</h3>
+          <p>Link aus Instagram, TikTok oder einem Blog einfügen – Tellerwert übernimmt Zutaten und Nährwerte automatisch.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h0a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+          <h3>Mahlzeiten per Foto</h3>
+          <p>Teller fotografieren – die KI erkennt Zutaten und schätzt die Mengen. Tracking in Sekunden.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M12 3v9"/></svg></div>
+          <h3>Kalorien &amp; Makros</h3>
+          <p>Kalorienbudget, Protein, Kohlenhydrate, Fett und Wasser – klar dargestellt und leicht zu erreichen.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></svg></div>
+          <h3>Verlauf &amp; Trends</h3>
+          <p>Wochen- und Monatsverlauf, grüne Tage und Durchschnitte – damit du dranbleibst.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <h2>Bereit für einen bewussteren Teller?</h2>
+      <p>Lade Tellerwert kostenlos und starte noch heute.</p>
+      <a class="badge" href="https://apps.apple.com/de/app/id6779640213" target="_blank" rel="noopener">
+        <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+        <span><span class="b1">Laden im</span><span class="b2">App Store</span></span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="site">
+    <div class="wrap">
+      <span>© 2026 Jens Gossen · Tellerwert</span>
+      <nav>
+        <a href="/datenschutz">Datenschutz</a>
+        <a href="/impressum">Impressum</a>
+        <a href="/nutzungsbedingungen">Nutzungsbedingungen</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

@@ -135,8 +135,12 @@ export function buildApp(
   registerLegalRoutes(app)
   registerBillingRoutes(app, db)
 
+  // Öffentliche Web-Präsenz = statische Landingpage (server/public), NICHT mehr
+  // die React-PWA. Die native App (Capacitor) wird weiter aus web/ gebaut; sie
+  // spricht nur die /api/*-Routen an. Unbekannte Nicht-API-Pfade fallen auf die
+  // Landingpage zurück (alte PWA-Deeplinks landen so sauber auf der Startseite).
   const webDir =
-    opts.webDir ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist')
+    opts.webDir ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../public')
   if (existsSync(webDir)) {
     void app.register(fastifyStatic, { root: webDir, wildcard: false })
     app.setNotFoundHandler((req, reply) => {

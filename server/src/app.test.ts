@@ -19,6 +19,17 @@ describe('app factory', () => {
     expect(res.statusCode).toBe(401)
   })
 
+  it('serves the static landing page at / from the default public dir', async () => {
+    const app = buildApp(createTestDb())
+    const res = await app.inject({ method: 'GET', url: '/' })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toMatch(/text\/html/)
+    expect(res.body).toContain('Tellerwert')
+    expect(res.body).toContain('App Store')
+    // the React PWA shell must no longer be served
+    expect(res.body).not.toContain('id="root"')
+  })
+
   it('serves the SPA with an /api JSON 404 fallback when a web dir exists', async () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'eazio-web-'))
     writeFileSync(path.join(dir, 'index.html'), '<!doctype html><div id="root">SPA</div>')

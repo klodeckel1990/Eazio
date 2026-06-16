@@ -15,9 +15,11 @@ COPY app/package.json ./app/package.json
 # sandbox (TLS interception), so resolve fresh here in the clean build network.
 RUN npm install --no-audit --no-fund
 
-# Build web (vite) then server (tsc -> dist), then drop dev deps.
+# Build the server only (tsc -> dist), then drop dev deps. The public web
+# presence is the static landing page in server/public; the React app in web/
+# is no longer served here — it is built separately into the native app.
 COPY . .
-RUN npm run build
+RUN npm run build --workspace server
 RUN npm prune --omit=dev
 
 # ---- runtime ----
@@ -27,13 +29,13 @@ ENV NODE_ENV=production \
     PORT=3000 \
     DATABASE_PATH=/data/eazio.db
 
-# Mirror the repo layout so server/dist resolves ../../web/dist and ../../drizzle.
+# Mirror the repo layout so server/dist resolves ../drizzle, ../seeds, ../public.
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/server/package.json ./server/package.json
 COPY --from=builder /app/server/dist ./server/dist
 COPY --from=builder /app/server/drizzle ./server/drizzle
 COPY --from=builder /app/server/seeds ./server/seeds
-COPY --from=builder /app/web/dist ./web/dist
+COPY --from=builder /app/server/public ./server/public
 
 RUN mkdir -p /data
 EXPOSE 3000
