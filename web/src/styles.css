@@ -1747,7 +1747,7 @@ input[type='search']:focus {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.28s ease;
   /* hebt das Sheet über die iOS-Tastatur (Höhe via Keyboard-Plugin) */
   padding-bottom: var(--kb-h, 0px);
   transition: padding-bottom 0.25s cubic-bezier(0.38, 0.7, 0.125, 1);
@@ -1762,11 +1762,11 @@ input[type='search']:focus {
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   box-shadow: var(--sh-3);
   padding: 0.8rem 1.1rem calc(0.8rem + env(safe-area-inset-bottom));
-  animation: calUp 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: calUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes calUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 /* Plus-Modal der Mahlzeiten-Liste: Zutaten / Rezept / Preset tracken */
@@ -1777,7 +1777,7 @@ input[type='search']:focus {
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   box-shadow: var(--sh-3);
   padding: 0.9rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom));
-  animation: calUp 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: calUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   display: grid;
   gap: 0.6rem;
 }
@@ -1823,6 +1823,9 @@ input[type='search']:focus {
 /* Geführtes Tracking-Sheet: scrollt, wenn viele Zutaten / Tastatur offen */
 .composer-sheet { max-height: calc(100dvh - 3.5rem); overflow-y: auto; overscroll-behavior: contain; }
 .composer-sheet .totals { margin: 0; }
+/* Inhalt je Schritt (Eingabe/Laden/Review) sanft ein- statt hart umblenden.
+   key={sheetView} im JSX spielt die Animation bei jedem Schrittwechsel neu ab. */
+.composer-body { display: grid; gap: 0.6rem; animation: fadeUp 0.32s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .composer-back { justify-self: start; }
 .composer-clear { justify-self: center; color: var(--ink-3); }
 .composer-addmore { justify-self: stretch; }

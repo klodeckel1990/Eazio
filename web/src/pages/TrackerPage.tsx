@@ -662,6 +662,7 @@ export function TrackerPage() {
               <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>
             )}
 
+            <div className="composer-body" key={sheetView}>
             {sheetView === 'busy' && (
               <div className="match-loading">
                 <span className="spinner" />
@@ -805,6 +806,7 @@ export function TrackerPage() {
                 </button>
               </>
             )}
+            </div>
           </div>
         </div>,
         document.body,
