@@ -1820,6 +1820,32 @@ input[type='search']:focus {
 .add-option-chev { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
 .composer-sheet textarea { resize: none; }
 .composer-sheet .banner { margin: 0; }
+/* Geführtes Tracking-Sheet: scrollt, wenn viele Zutaten / Tastatur offen */
+.composer-sheet { max-height: calc(100dvh - 3.5rem); overflow-y: auto; overscroll-behavior: contain; }
+.composer-sheet .totals { margin: 0; }
+.composer-back { justify-self: start; }
+.composer-clear { justify-self: center; color: var(--ink-3); }
+.composer-addmore { justify-self: stretch; }
+/* Lade-Zustand während Matching / Foto-Analyse */
+.match-loading {
+  display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+  padding: 2.2rem 1rem; text-align: center;
+}
+.match-loading .spinner { width: 32px; height: 32px; }
+.match-loading-title { font-weight: 600; }
+.match-loading-sub { color: var(--ink-2); font-size: 0.85rem; }
+/* „Zutaten bereit“-Leiste, wenn das Sheet mit ungeloggten Treffern geschlossen wurde */
+.resume-bar {
+  display: flex; align-items: center; gap: 0.6rem; width: 100%;
+  margin-top: 0.8rem; padding: 0.85rem 1rem;
+  background: var(--primary-100); color: var(--primary-700);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  border-radius: var(--r-lg); box-shadow: var(--sh-1);
+  font: inherit; font-weight: 600; text-align: left; cursor: pointer;
+}
+.resume-bar:active { background: color-mix(in srgb, var(--primary) 16%, var(--bg)); }
+.resume-bar .resume-text { flex: 1; min-width: 0; }
+.resume-bar svg { width: 20px; height: 20px; flex: none; }
 
 /* Eigenes Produkt anlegen — Formular-Sheet (scrollt, falls Tastatur offen) */
 .cf-sheet {

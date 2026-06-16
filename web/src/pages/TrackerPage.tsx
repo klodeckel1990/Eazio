@@ -66,6 +66,9 @@ export function TrackerPage() {
   const [presetSaved, setPresetSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [composerOpen, setComposerOpen] = useState(false)
+  // Im Review-Schritt „Weitere Zutat“ schaltet kurzzeitig zurück zur Eingabe,
+  // obwohl schon Zutaten gematcht sind.
+  const [addingMore, setAddingMore] = useState(false)
   const [createBarcode, setCreateBarcode] = useState<string | null>(null)
   const [addMenuFor, setAddMenuFor] = useState<Daytime | null>(null)
   const [photoBusy, setPhotoBusy] = useState(false)
@@ -139,18 +142,19 @@ export function TrackerPage() {
     setLogResult(null)
     setUndone(false)
     setPresetSaved(false)
+    setComposerOpen(true) // geführtes Sheet bleibt/öffnet (auch bei Rezept/Preset-Seeding)
     setMatching(true)
     try {
       const res = await api.foods.match(input)
       appendLines(res.lines)
       setText('') // matched — das Feld ist frei für weitere Zutaten
-      setComposerOpen(false) // Sheet zu, damit die gematchte Liste sichtbar wird
+      setAddingMore(false) // → Review-Schritt im Sheet (gematchte Zutaten + Loggen)
     } catch (e) {
       if (e instanceof ApiError) {
         setError(e.message)
         // Auto-Match fehlgeschlagen — Text in den Editor retten statt verwerfen
         setText(input)
-        setComposerOpen(true)
+        setAddingMore(true) // zurück zur Eingabe (Text gerettet, Fehler sichtbar)
       } else {
         throw e
       }
@@ -188,7 +192,8 @@ export function TrackerPage() {
     setLines((prev) => [...prev, line])
     setKeys((prev) => [...prev, nextKey()])
     setRows((prev) => [...prev, { foodId: food.id, grams: suggested }])
-    setComposerOpen(false) // Sheet zu, das Produkt steht in der Liste
+    setAddingMore(false)
+    setComposerOpen(true) // Produkt im Review-Schritt des Sheets zeigen
   }
 
   const handleScan = async () => {
@@ -276,7 +281,8 @@ export function TrackerPage() {
       setRows([])
       setKeys([])
       setText('')
-      setComposerOpen(false)
+      setAddingMore(false)
+      setComposerOpen(false) // geloggt → Sheet zu, Erfolgsbanner auf der Seite
       refreshDay()
     } catch (e) {
       if (e instanceof ApiError) setError(e.message)
@@ -357,6 +363,7 @@ export function TrackerPage() {
   const chooseIngredients = (dt: Daytime) => {
     setDaytime(dt)
     setAddMenuFor(null)
+    setAddingMore(false)
     setComposerOpen(true)
     requestAnimationFrame(() => composerRef.current?.focus())
   }
@@ -373,6 +380,8 @@ export function TrackerPage() {
     setLogResult(null)
     setUndone(false)
     setPresetSaved(false)
+    setAddingMore(false)
+    setComposerOpen(true) // Lade-/Review-Schritt im geführten Sheet zeigen
     setPhotoBusy(true)
     try {
       const image = await toJpegBase64(file)
@@ -436,6 +445,11 @@ export function TrackerPage() {
   // counts them (server: remainingKcal = kcalTarget + countedKcal - consumed), so the
   // shown total and the progress bar must use the same extended budget to stay in sync.
   const dayBudget = day ? day.goals.kcalTarget + (day.activity?.countedKcal ?? 0) : 0
+
+  // Geführtes Sheet: ein Modal, drei Schritte — Lade-Zustand hat Vorrang, danach
+  // die gematchten Zutaten zum Prüfen & Loggen, sonst die Freitext-Eingabe.
+  const sheetView: 'busy' | 'review' | 'input' =
+    matching || photoBusy ? 'busy' : lines.length > 0 && !addingMore ? 'review' : 'input'
 
   return (
     <div className="page" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
@@ -611,23 +625,29 @@ export function TrackerPage() {
         })}
       </div>
 
-      {matching && lines.length === 0 && !composerOpen && (
-        <div className="card pad-lg meal-matching">
-          <IconWand className="inline-ico" /> Zutaten werden gematcht…
-        </div>
-      )}
-
-      {photoBusy && (
-        <div className="card pad-lg meal-matching">
-          <IconCamera className="inline-ico" /> Foto wird analysiert…
-        </div>
+      {!composerOpen && lines.length > 0 && (
+        <button
+          type="button"
+          className="resume-bar"
+          onClick={() => { setAddingMore(false); setComposerOpen(true) }}
+        >
+          <IconWand />
+          <span className="resume-text">
+            {lines.length} {lines.length === 1 ? 'Zutat' : 'Zutaten'} bereit – ansehen &amp; loggen
+          </span>
+          <IconChevronRight />
+        </button>
       )}
 
       {composerOpen && createPortal(
         <div className="cal-overlay" onClick={() => setComposerOpen(false)} role="presentation">
           <div className="add-sheet composer-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Zutaten tracken">
             <div className="add-sheet-head">
-              <h3>Zutaten für {MEAL_TITLES[daytime]}</h3>
+              <h3>
+                {sheetView === 'review'
+                  ? <><IconCheckCircle className="inline-ico" /> Gematcht · {MEAL_TITLES[daytime]}</>
+                  : `Zutaten für ${MEAL_TITLES[daytime]}`}
+              </h3>
               <button
                 type="button"
                 className="btn btn-icon btn-ghost btn-sm"
@@ -637,124 +657,157 @@ export function TrackerPage() {
                 <IconClose />
               </button>
             </div>
+
             {error && (
               <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>
             )}
-            <textarea
-              id="tracker-text"
-              ref={composerRef}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              rows={4}
-              placeholder={'z. B.\n80g Haferflocken\n200ml Milch\n1 Banane'}
-            />
-            <div className="btn-row">
-              <button
-                type="button"
-                className="btn btn-primary btn-lg"
-                style={{ flex: 1 }}
-                onClick={() => { void handleMatch() }}
-                disabled={matching || !text.trim()}
-              >
-                <IconWand />
-                {matching ? 'Matchen…' : 'Matchen'}
-              </button>
-              {isNativeApp() && (
+
+            {sheetView === 'busy' && (
+              <div className="match-loading">
+                <span className="spinner" />
+                <span className="match-loading-title">
+                  {photoBusy ? 'Foto wird analysiert…' : 'Zutaten werden gematcht…'}
+                </span>
+                <span className="match-loading-sub">Gleich kannst du prüfen und loggen.</span>
+              </div>
+            )}
+
+            {sheetView === 'input' && (
+              <>
+                {lines.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm composer-back"
+                    onClick={() => setAddingMore(false)}
+                  >
+                    <IconChevronLeft /> Zurück zu {lines.length} {lines.length === 1 ? 'Zutat' : 'Zutaten'}
+                  </button>
+                )}
+                <textarea
+                  id="tracker-text"
+                  ref={composerRef}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  rows={4}
+                  placeholder={'z. B.\n80g Haferflocken\n200ml Milch\n1 Banane'}
+                />
+                <div className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-lg"
+                    style={{ flex: 1 }}
+                    onClick={() => { void handleMatch() }}
+                    disabled={matching || !text.trim()}
+                  >
+                    <IconWand />
+                    Matchen
+                  </button>
+                  {isNativeApp() && (
+                    <button
+                      type="button"
+                      className="btn btn-soft btn-lg"
+                      onClick={() => { void handleScan() }}
+                      aria-label="Barcode scannen"
+                      title="Barcode scannen"
+                    >
+                      <IconScan />
+                      Scannen
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+
+            {sheetView === 'review' && (
+              <>
+                <div className="totals">
+                  <div className="kcal-big">
+                    <span className="n">{Math.round(reviewTotals.kcal)}</span>
+                    <span className="l">kcal gesamt</span>
+                  </div>
+                  <div className="macro-mini">
+                    <div><span className="mn">{round(reviewTotals.carb)}</span><span className="ml">KH</span></div>
+                    <div><span className="mn">{round(reviewTotals.protein)}</span><span className="ml">Protein</span></div>
+                    <div><span className="mn">{round(reviewTotals.fat)}</span><span className="ml">Fett</span></div>
+                  </div>
+                </div>
+
+                <div className="stack">
+                  {lines.map((line, i) => (
+                    <FoodRow
+                      key={keys[i] ?? i}
+                      line={line}
+                      value={rows[i] ?? { foodId: '', grams: 0 }}
+                      onChange={(v) => handleRowChange(i, v)}
+                      onRemove={() => handleRowRemove(i)}
+                      onResearch={(q) => handleResearch(i, q)}
+                    />
+                  ))}
+                </div>
+
                 <button
                   type="button"
-                  className="btn btn-soft btn-lg"
-                  onClick={() => { void handleScan() }}
-                  aria-label="Barcode scannen"
-                  title="Barcode scannen"
+                  className="btn btn-soft composer-addmore"
+                  onClick={() => { setAddingMore(true); requestAnimationFrame(() => composerRef.current?.focus()) }}
                 >
-                  <IconScan />
-                  Scannen
+                  <IconPlus /> Weitere Zutat
                 </button>
-              )}
-            </div>
+
+                {presetSaved && (
+                  <p className="banner success"><IconCheck /><span className="banner-text">Als Preset gespeichert.</span></p>
+                )}
+
+                <div className="field">
+                  <span className="label">Mahlzeit</span>
+                  <div className="seg" role="group" aria-label="Mahlzeit">
+                    {(Object.entries(DAYTIME_LABELS) as [Daytime, string][]).map(([key, lbl]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={daytime === key}
+                        onClick={() => setDaytime(key)}
+                      >
+                        {lbl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-lg"
+                    style={{ flex: 1 }}
+                    onClick={() => { void handleLog() }}
+                    disabled={loggableRows.length === 0 || logging}
+                  >
+                    <IconCheck />
+                    {logging ? 'Loggen…' : `Als ${DAYTIME_LABELS[daytime]} loggen`}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-lg"
+                    onClick={() => { void handleSavePreset() }}
+                    disabled={loggableRows.length === 0}
+                    aria-label="Als Preset speichern"
+                    title="Als Preset speichern"
+                  >
+                    <IconBookmark />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm composer-clear"
+                  onClick={handleReset}
+                >
+                  <IconClose /> Liste leeren
+                </button>
+              </>
+            )}
           </div>
         </div>,
         document.body,
-      )}
-
-      {lines.length > 0 && (
-        <>
-          <div className="totals">
-            <div className="kcal-big">
-              <span className="n">{Math.round(reviewTotals.kcal)}</span>
-              <span className="l">kcal gesamt</span>
-            </div>
-            <div className="macro-mini">
-              <div><span className="mn">{round(reviewTotals.carb)}</span><span className="ml">KH</span></div>
-              <div><span className="mn">{round(reviewTotals.protein)}</span><span className="ml">Protein</span></div>
-              <div><span className="mn">{round(reviewTotals.fat)}</span><span className="ml">Fett</span></div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 className="section-title">Zutaten</h2>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={handleReset}
-              aria-label="Liste leeren"
-            >
-              <IconClose /> Leeren
-            </button>
-          </div>
-          <div className="stack">
-            {lines.map((line, i) => (
-              <FoodRow
-                key={keys[i] ?? i}
-                line={line}
-                value={rows[i] ?? { foodId: '', grams: 0 }}
-                onChange={(v) => handleRowChange(i, v)}
-                onRemove={() => handleRowRemove(i)}
-                onResearch={(q) => handleResearch(i, q)}
-              />
-            ))}
-          </div>
-
-          <div className="card stack">
-            <div className="field">
-              <span className="label">Mahlzeit</span>
-              <div className="seg" role="group" aria-label="Mahlzeit">
-                {(Object.entries(DAYTIME_LABELS) as [Daytime, string][]).map(([key, lbl]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    aria-pressed={daytime === key}
-                    onClick={() => setDaytime(key)}
-                  >
-                    {lbl}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="btn-row">
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ flex: 1 }}
-                onClick={() => { void handleLog() }}
-                disabled={loggableRows.length === 0 || logging || matching}
-              >
-                <IconCheck />
-                {logging ? 'Loggen…' : `Als ${DAYTIME_LABELS[daytime]} loggen`}
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => { void handleSavePreset() }}
-                disabled={loggableRows.length === 0}
-              >
-                <IconBookmark />
-                Preset
-              </button>
-            </div>
-          </div>
-        </>
       )}
 
       {logResult && !undone && (
