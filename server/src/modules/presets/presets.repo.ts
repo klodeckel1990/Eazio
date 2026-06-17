@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
-import { presets, presetItems } from '../../db/schema.js'
+import { presets, presetItems, foods } from '../../db/schema.js'
 
 export interface PresetItemInput {
   rawText: string
@@ -23,6 +23,8 @@ export interface PresetItem {
   serving: string | null
   servingQuantity: number | null
   amountG: number
+  /** Anzeige-Einheit: 'ml' bei Getränken (BLS-Gruppe N / baseUnit ml), sonst 'g'. */
+  unit: 'g' | 'ml'
 }
 
 export interface PresetWithItems extends PresetSummary {
@@ -80,8 +82,12 @@ export function getPreset(db: DB, userId: string, id: string): PresetWithItems |
       serving: presetItems.serving,
       servingQuantity: presetItems.servingQuantity,
       amountG: presetItems.amountG,
+      // ml bei Getränken (gespiegelt zu diary.repo isDrinkFood); Legacy-Items
+      // ohne passendes foods-Match fallen via LEFT JOIN auf 'g' zurück.
+      unit: sql<'g' | 'ml'>`CASE WHEN ${foods.baseUnit} = 'ml' OR (${foods.source} = 'bls' AND ${foods.category} = 'N') THEN 'ml' ELSE 'g' END`,
     })
     .from(presetItems)
+    .leftJoin(foods, eq(foods.id, presetItems.productId))
     .where(eq(presetItems.presetId, id))
     .orderBy(asc(presetItems.position))
     .all()

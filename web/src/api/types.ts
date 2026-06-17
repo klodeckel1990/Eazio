@@ -43,7 +43,7 @@ export interface MatchResponse { accountId: string; lines: MatchLine[] }
 export interface LogResult { logId: string; count: number; date: string; daytime: Daytime; accountId: string }
 export interface LogLine { productId: string; name: string; amountGrams: number; serving?: string | null; servingQuantity?: number | null }
 export interface Preset { id: string; name: string }
-export interface PresetItem { position: number; rawText: string; productId: string; serving: string | null; servingQuantity: number | null; amountG: number }
+export interface PresetItem { position: number; rawText: string; productId: string; serving: string | null; servingQuantity: number | null; amountG: number; unit?: 'g' | 'ml' }
 export interface PresetWithItems extends Preset { items: PresetItem[] }
 
 export interface RecipeIngredient { raw: string; quantity: string; unit: string; name: string }

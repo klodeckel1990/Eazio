@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
 import { isDrink } from '../lib/nutrition'
 import type { Preset, RecentFood } from '../api/types'
+import { FoodPicker, type PickedItem } from '../components/FoodPicker'
 import { IconBookmark, IconTrash, IconAlert, IconPlus, IconChevronLeft, IconChevronRight, IconCheck } from '../components/icons'
 
 interface EditItem {
@@ -12,6 +13,7 @@ interface EditItem {
   amountG: number
   serving: string | null
   servingQuantity: number | null
+  unit: 'g' | 'ml'
 }
 let _seq = 0
 const nextKey = () => `pi-${_seq++}`
@@ -21,10 +23,11 @@ export function PresetsPage() {
   const [presets, setPresets] = useState<Preset[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Ansehen/Bearbeiten
-  const [editing, setEditing] = useState<{ id: string; name: string; items: EditItem[] } | null>(null)
+  // Ansehen/Bearbeiten (id === null → neues Preset)
+  const [editing, setEditing] = useState<{ id: string | null; name: string; items: EditItem[] } | null>(null)
   const [editLoading, setEditLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   // Neu aus Verlauf
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -75,6 +78,7 @@ export function PresetsPage() {
           amountG: it.amountG,
           serving: it.serving,
           servingQuantity: it.servingQuantity,
+          unit: it.unit ?? 'g',
         })),
       })
     } catch (err) {
@@ -85,23 +89,48 @@ export function PresetsPage() {
     }
   }
 
+  const newPreset = () => {
+    setError(null)
+    setEditing({ id: null, name: '', items: [] })
+  }
+
+  const addPicked = (items: PickedItem[]) => {
+    setEditing((cur) => cur && ({
+      ...cur,
+      items: [
+        ...cur.items,
+        ...items.map((it) => ({
+          key: nextKey(),
+          rawText: it.rawText,
+          productId: it.productId,
+          amountG: Math.round(it.amountG),
+          serving: null,
+          servingQuantity: null,
+          unit: (it.food && isDrink(it.food) ? 'ml' : 'g') as 'g' | 'ml',
+        })),
+      ],
+    }))
+  }
+
   const saveEdit = async () => {
     if (!editing || saving) return
     if (!editing.name.trim()) { setError('Bitte einen Namen vergeben.'); return }
-    if (editing.items.length === 0) { setError('Mindestens eine Zutat – sonst Preset löschen.'); return }
+    if (editing.items.length === 0) { setError('Mindestens eine Zutat hinzufügen.'); return }
     setSaving(true)
     setError(null)
+    const payloadItems = editing.items.map(it => ({
+      rawText: it.rawText,
+      productId: it.productId,
+      amountG: it.amountG,
+      serving: it.serving,
+      servingQuantity: it.servingQuantity,
+    }))
     try {
-      await api.presets.update(editing.id, {
-        name: editing.name.trim(),
-        items: editing.items.map(it => ({
-          rawText: it.rawText,
-          productId: it.productId,
-          amountG: it.amountG,
-          serving: it.serving,
-          servingQuantity: it.servingQuantity,
-        })),
-      })
+      if (editing.id === null) {
+        await api.presets.create(editing.name.trim(), payloadItems)
+      } else {
+        await api.presets.update(editing.id, { name: editing.name.trim(), items: payloadItems })
+      }
       setEditing(null)
       loadPresets()
     } catch (err) {
@@ -161,7 +190,7 @@ export function PresetsPage() {
           <button type="button" className="btn btn-ghost btn-sm settings-back" onClick={() => setEditing(null)}>
             <IconChevronLeft /> Presets
           </button>
-          <h1>Preset bearbeiten</h1>
+          <h1>{editing.id === null ? 'Neues Preset' : 'Preset bearbeiten'}</h1>
         </header>
         {error && <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>}
         {editLoading ? (
@@ -184,7 +213,7 @@ export function PresetsPage() {
                     <div className="pie-amt">
                       <input type="number" inputMode="numeric" min={0} max={20000} value={it.amountG}
                         onChange={e => setEditing({ ...editing, items: editing.items.map((x, xi) => xi === i ? { ...x, amountG: Number(e.target.value) || 0 } : x) })} />
-                      <span className="pie-unit">g</span>
+                      <span className="pie-unit">{it.unit}</span>
                     </div>
                     <button type="button" className="btn btn-icon btn-danger" aria-label="Zutat entfernen" title="Entfernen"
                       onClick={() => setEditing({ ...editing, items: editing.items.filter((_, xi) => xi !== i) })}>
@@ -194,16 +223,27 @@ export function PresetsPage() {
                 </li>
               ))}
             </ul>
+            {editing.items.length === 0 && (
+              <p className="muted">Noch keine Zutaten – über „Zutat hinzufügen" matchen, suchen oder scannen.</p>
+            )}
+            <button type="button" className="btn btn-soft btn-block" onClick={() => setPickerOpen(true)}>
+              <IconPlus /> Zutat hinzufügen
+            </button>
             <div className="btn-row">
               <button type="button" className="btn btn-primary btn-lg" style={{ flex: 1 }}
                 onClick={() => { void saveEdit() }} disabled={saving || editing.items.length === 0}>
                 <IconCheck /> {saving ? 'Speichern…' : 'Speichern'}
               </button>
             </div>
-            <button type="button" className="btn btn-danger btn-block" onClick={() => { void handleRemove(editing.id) }}>
-              <IconTrash /> Preset löschen
-            </button>
+            {editing.id !== null && (
+              <button type="button" className="btn btn-danger btn-block" onClick={() => { void handleRemove(editing.id!) }}>
+                <IconTrash /> Preset löschen
+              </button>
+            )}
           </>
+        )}
+        {pickerOpen && (
+          <FoodPicker title="Zutaten hinzufügen" onClose={() => setPickerOpen(false)} onAdd={addPicked} />
         )}
       </div>
     )
@@ -279,9 +319,14 @@ export function PresetsPage() {
 
       {error && <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>}
 
-      <button type="button" className="btn btn-soft btn-block preset-new" onClick={() => { void openHistory() }}>
-        <IconPlus /> Neues Preset aus Verlauf
-      </button>
+      <div className="btn-row preset-new">
+        <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={newPreset}>
+          <IconPlus /> Neues Preset
+        </button>
+        <button type="button" className="btn btn-soft" style={{ flex: 1 }} onClick={() => { void openHistory() }}>
+          <IconBookmark /> Aus Verlauf
+        </button>
+      </div>
 
       {presets === null ? (
         <p className="loading-inline"><span className="spinner" /> Lade Presets…</p>
