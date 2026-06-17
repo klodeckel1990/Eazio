@@ -2004,14 +2004,16 @@ input[type='search']:focus {
 .composer-sheet textarea { resize: none; }
 .composer-sheet .banner { margin: 0; }
 /* Geführtes Tracking-Sheet: scrollt, wenn viele Zutaten / Tastatur offen */
-.composer-sheet { max-height: calc(100dvh - 3.5rem); overflow-y: auto; overscroll-behavior: contain; }
+.composer-sheet { max-height: calc(100dvh - 3.5rem); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
 .composer-sheet .totals { margin: 0; }
 /* Inhalt je Schritt (Eingabe/Laden/Review) sanft ein- statt hart umblenden.
    key={sheetView} im JSX spielt die Animation bei jedem Schrittwechsel neu ab. */
 .composer-body { display: grid; gap: 0.6rem; min-width: 0; animation: fadeUp 0.32s cubic-bezier(0.2, 0.7, 0.2, 1); }
-/* Grid-Items dürfen unter ihre max-content-Breite schrumpfen (sonst sprengt
-   nowrap-Text wie lange Zutatenlisten das Sheet über den Bildschirmrand). */
-.add-sheet > * { min-width: 0; }
+/* Grid-Items (auch eine Ebene tiefer) dürfen unter ihre max-content-Breite
+   schrumpfen — sonst sprengt nowrap-Text (lange Titel/Zutatenlisten) das Sheet
+   über den Bildschirmrand und es lässt sich seitlich scrollen. */
+.add-sheet > *,
+.composer-body > * { min-width: 0; }
 .composer-back { justify-self: start; }
 .composer-clear { justify-self: center; color: var(--ink-3); }
 .composer-addmore { justify-self: stretch; }
