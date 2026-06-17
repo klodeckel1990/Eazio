@@ -98,7 +98,7 @@ export const api = {
   },
   pantry: {
     list: () => req<{ items: PantryItem[] }>('GET', '/pantry'),
-    add: (items: { foodId: string; amountG: number }[]) =>
+    add: (items: { foodId: string; amountG: number; expiresAt?: number | null }[]) =>
       req<{ items: PantryItem[] }>('POST', '/pantry', { items }),
     update: (id: string, patch: { amountG?: number; expiresAt?: number | null }) =>
       req<void>('PATCH', `/pantry/${id}`, patch),

@@ -11,7 +11,13 @@ import {
 
 const AddSchema = z.object({
   items: z
-    .array(z.object({ foodId: z.string().min(1), amountG: z.number().positive().max(100000) }))
+    .array(
+      z.object({
+        foodId: z.string().min(1),
+        amountG: z.number().positive().max(100000),
+        expiresAt: z.number().int().nullable().optional(),
+      }),
+    )
     .min(1)
     .max(50),
 })
@@ -32,7 +38,7 @@ export function registerPantryRoutes(app: FastifyInstance, db: DB): void {
 
   app.post('/api/pantry', { preHandler: requireAuth }, async (req, reply) => {
     const b = AddSchema.parse(req.body)
-    for (const it of b.items) addOrIncrementPantry(db, req.user!.id, it.foodId, it.amountG)
+    for (const it of b.items) addOrIncrementPantry(db, req.user!.id, it.foodId, it.amountG, it.expiresAt ?? null)
     return reply.status(201).send({ items: listPantry(db, req.user!.id) })
   })
 

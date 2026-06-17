@@ -46,14 +46,25 @@ export function listPantry(db: DB, userId: string): PantryRow[] {
     .all()
 }
 
-/** Food in den Vorrat legen — existiert es schon, wird die Menge addiert. */
-export function addOrIncrementPantry(db: DB, userId: string, foodId: string, amountG: number): void {
+/** Food in den Vorrat legen — existiert es schon, wird die Menge addiert; ein
+ *  neu angegebenes MHD überschreibt, ein fehlendes (null) lässt es unberührt. */
+export function addOrIncrementPantry(
+  db: DB,
+  userId: string,
+  foodId: string,
+  amountG: number,
+  expiresAt: number | null = null,
+): void {
   const now = Date.now()
   db.insert(pantryItems)
-    .values({ id: randomUUID(), userId, foodId, amountG, expiresAt: null, addedAt: now, updatedAt: now })
+    .values({ id: randomUUID(), userId, foodId, amountG, expiresAt, addedAt: now, updatedAt: now })
     .onConflictDoUpdate({
       target: [pantryItems.userId, pantryItems.foodId],
-      set: { amountG: sql`${pantryItems.amountG} + ${amountG}`, updatedAt: now },
+      set: {
+        amountG: sql`${pantryItems.amountG} + ${amountG}`,
+        expiresAt: sql`COALESCE(excluded.expires_at, ${pantryItems.expiresAt})`,
+        updatedAt: now,
+      },
     })
     .run()
 }

@@ -43,4 +43,24 @@ describe('pantry repo', () => {
     expect(removePantryItem(db, u1.id, oats.id)).toBe(true)
     expect(listPantry(db, u1.id)).toHaveLength(1)
   })
+
+  it('stores expiresAt on add and keeps it when re-adding without a new date', async () => {
+    const db = createTestDb()
+    const u = await createUser(db, 'p3', 'pw-123456')
+    seedFood(db, 'f-rice', 'Reis')
+
+    addOrIncrementPantry(db, u.id, 'f-rice', 500, 1_900_000_000_000)
+    let row = listPantry(db, u.id)[0]!
+    expect(row.expiresAt).toBe(1_900_000_000_000)
+
+    // erneut hinzufügen ohne MHD → Menge addiert, MHD bleibt (COALESCE)
+    addOrIncrementPantry(db, u.id, 'f-rice', 100)
+    row = listPantry(db, u.id)[0]!
+    expect(row.amountG).toBe(600)
+    expect(row.expiresAt).toBe(1_900_000_000_000)
+
+    // erneut mit neuem MHD → überschreibt
+    addOrIncrementPantry(db, u.id, 'f-rice', 0.0001, 2_000_000_000_000)
+    expect(listPantry(db, u.id)[0]!.expiresAt).toBe(2_000_000_000_000)
+  })
 })
