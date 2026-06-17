@@ -1,11 +1,12 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
-import type { FoodSummary, PantryItem } from '../api/types'
+import type { FoodSummary, PantryItem, RecipeMatch } from '../api/types'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
 import { unitOf, dateValue, parseDate, inDays, expiryClass, expiryLabel } from '../lib/pantry'
 import { CustomFoodSheet } from './CustomFoodSheet'
-import { IconScan, IconSearch, IconClose, IconPlus, IconCheck, IconAlert, IconCalendar, IconTrash } from './icons'
+import { IconScan, IconSearch, IconClose, IconPlus, IconCheck, IconAlert, IconCalendar, IconTrash, IconChevronRight, IconCheckCircle, IconBook } from './icons'
 
 // ---- geteilte Felder ------------------------------------------------------
 
@@ -311,6 +312,61 @@ export function PantryEditSheet({ item, onClose, onSaved }: {
           <IconCheck /> Speichern
         </button>
       </div>
+    </SheetShell>
+  )
+}
+
+// ---- „Was kann ich kochen?" — Rezept-Matches (Premium) --------------------
+
+export function PantryMatchesSheet({ onClose }: { onClose: () => void }) {
+  const navigate = useNavigate()
+  const [matches, setMatches] = useState<RecipeMatch[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    api.pantry.recipeMatches()
+      .then((r) => setMatches(r.matches))
+      .catch((e) => { if (e instanceof ApiError) setError('Konnte nicht geladen werden.'); else throw e })
+  }, [])
+
+  const open = (id: string) => { onClose(); navigate(`/recipes/${id}`) }
+
+  return (
+    <SheetShell title="Was kann ich kochen?" onClose={onClose}>
+      {error && <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>}
+
+      {matches === null && !error ? (
+        <p className="loading-inline"><span className="spinner" /> Gleiche mit deinem Vorrat ab…</p>
+      ) : matches && matches.length === 0 ? (
+        <div className="empty">
+          <span className="emoji"><IconBook /></span>
+          <h3>Noch keine Rezepte</h3>
+          <p>Importiere Rezepte – dann zeigen wir dir, welche du aus deinem Vorrat kochen kannst.</p>
+        </div>
+      ) : (
+        <ul className="list pantry-matches">
+          {(matches ?? []).map((m) => {
+            const complete = m.have === m.total
+            const pct = Math.round((m.have / m.total) * 100)
+            return (
+              <li key={m.recipeId}>
+                <button type="button" className={`pantry-match ${complete ? 'is-complete' : ''}`} onClick={() => open(m.recipeId)}>
+                  <span className="pantry-match-info">
+                    <span className="pantry-match-title">{m.title}</span>
+                    <span className="pantry-match-cov">
+                      {complete
+                        ? <span className="pantry-match-all"><IconCheckCircle /> Alles da!</span>
+                        : <>{m.have}/{m.total} Zutaten · fehlt: {m.missing.slice(0, 3).join(', ')}{m.missing.length > 3 ? ` +${m.missing.length - 3}` : ''}</>}
+                    </span>
+                    <span className="pantry-match-bar"><span className={complete ? 'full' : ''} style={{ width: `${pct}%` }} /></span>
+                  </span>
+                  <IconChevronRight />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </SheetShell>
   )
 }

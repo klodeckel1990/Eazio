@@ -262,6 +262,16 @@ export interface PantryItem {
   carbs: number | null
 }
 
+/** Rezept-Treffer gegen den Vorrat (Premium: „Was kann ich kochen?"). */
+export interface RecipeMatch {
+  recipeId: string
+  title: string
+  hasImage: boolean
+  total: number
+  have: number
+  missing: string[]
+}
+
 /** Zuletzt getracktes Lebensmittel — Quelle für „neues Preset aus History". */
 export interface RecentFood {
   foodId: string

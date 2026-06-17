@@ -2,12 +2,15 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import type { DB } from '../../db/client.js'
 import { requireAuth } from '../auth-guard.js'
+import { isPremium } from '../../modules/billing/entitlements.js'
 import {
   addOrIncrementPantry,
   listPantry,
   removePantryItem,
   updatePantryItem,
 } from '../../modules/pantry/pantry.repo.js'
+import { matchRecipes } from '../../modules/pantry/recipe-match.js'
+import { listRecipesWithIngredients } from '../../modules/recipes/recipes.repo.js'
 
 const AddSchema = z.object({
   items: z
@@ -35,6 +38,15 @@ const IdParams = z.object({ id: z.string().min(1) })
 // Premium-Routen dazu (Phase 2/3).
 export function registerPantryRoutes(app: FastifyInstance, db: DB): void {
   app.get('/api/pantry', { preHandler: requireAuth }, async (req) => ({ items: listPantry(db, req.user!.id) }))
+
+  // „Was kann ich kochen?" — Rezepte gegen Vorrat matchen (Premium).
+  app.get('/api/pantry/recipe-matches', { preHandler: requireAuth }, async (req, reply) => {
+    const userId = req.user!.id
+    if (!isPremium(db, userId)) return reply.status(403).send({ error: 'premium_required' })
+    const pantryNames = listPantry(db, userId).map((p) => p.name)
+    const recipes = listRecipesWithIngredients(db, userId)
+    return { matches: matchRecipes(recipes, pantryNames) }
+  })
 
   app.post('/api/pantry', { preHandler: requireAuth }, async (req, reply) => {
     const b = AddSchema.parse(req.body)

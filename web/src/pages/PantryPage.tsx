@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, ApiError } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
 import type { PantryItem } from '../api/types'
 import { groupOf, unitOf, expiryClass, expiryLabel } from '../lib/pantry'
-import { PantryAddSheet, PantryEditSheet } from '../components/PantrySheets'
-import { IconBox, IconPlus, IconAlert, IconChevronRight } from '../components/icons'
+import { PantryAddSheet, PantryEditSheet, PantryMatchesSheet } from '../components/PantrySheets'
+import { PaywallSheet } from '../components/PaywallSheet'
+import { IconBox, IconPlus, IconAlert, IconChevronRight, IconBowl } from '../components/icons'
 
 export function PantryPage() {
+  const { premium } = useAuth()
   const [items, setItems] = useState<PantryItem[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<PantryItem | null>(null)
+  const [matches, setMatches] = useState(false)
+  const [paywall, setPaywall] = useState(false)
 
   const load = () => {
     api.pantry.list()
@@ -46,9 +51,14 @@ export function PantryPage() {
 
       {error && <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>}
 
-      <button type="button" className="btn btn-primary btn-block" onClick={() => setAdding(true)}>
-        <IconPlus /> Artikel hinzufügen
-      </button>
+      <div className="pantry-actions">
+        <button type="button" className="btn btn-primary" onClick={() => setAdding(true)}>
+          <IconPlus /> Artikel hinzufügen
+        </button>
+        <button type="button" className="btn btn-soft" onClick={() => (premium ? setMatches(true) : setPaywall(true))}>
+          <IconBowl /> Was kann ich kochen?
+        </button>
+      </div>
 
       {items === null ? (
         <p className="loading-inline"><span className="spinner" /> Lade Vorrat…</p>
@@ -86,6 +96,14 @@ export function PantryPage() {
 
       {adding && <PantryAddSheet onClose={() => setAdding(false)} onAdded={load} />}
       {editing && <PantryEditSheet item={editing} onClose={() => setEditing(null)} onSaved={load} />}
+      {matches && <PantryMatchesSheet onClose={() => setMatches(false)} />}
+      {paywall && (
+        <PaywallSheet
+          title="Rezepte aus deinem Vorrat"
+          subtitle="Sieh mit einem Tippen, welche deiner Rezepte du jetzt kochen kannst – und was noch fehlt."
+          onClose={() => setPaywall(false)}
+        />
+      )}
     </div>
   )
 }

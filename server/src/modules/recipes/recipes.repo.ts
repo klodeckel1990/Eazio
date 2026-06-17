@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
 import { recipes, recipeIngredients } from '../../db/schema.js'
 import type { ExtractedIngredient } from './types.js'
@@ -97,6 +97,41 @@ export function listRecipes(db: DB, userId: string): RecipeSummary[] {
     totalMinutes: r.totalMinutes,
     isFavorite: r.isFavorite,
     hasImage: r.imageMime != null,
+  }))
+}
+
+export interface RecipeWithIngredients {
+  id: string
+  title: string
+  hasImage: boolean
+  ingredients: string[] // Zutaten-Namen (für Vorrats-Matching)
+}
+
+/** Alle Rezepte des Nutzers samt Zutaten-Namen — 2 Queries statt N (Matching). */
+export function listRecipesWithIngredients(db: DB, userId: string): RecipeWithIngredients[] {
+  const rows = db
+    .select({ id: recipes.id, title: recipes.title, imageMime: recipes.imageMime })
+    .from(recipes)
+    .where(eq(recipes.userId, userId))
+    .orderBy(desc(recipes.isFavorite), desc(recipes.createdAt))
+    .all()
+  if (rows.length === 0) return []
+  const ings = db
+    .select({ recipeId: recipeIngredients.recipeId, name: recipeIngredients.name })
+    .from(recipeIngredients)
+    .where(inArray(recipeIngredients.recipeId, rows.map((r) => r.id)))
+    .all()
+  const byRecipe = new Map<string, string[]>()
+  for (const ing of ings) {
+    const arr = byRecipe.get(ing.recipeId)
+    if (arr) arr.push(ing.name)
+    else byRecipe.set(ing.recipeId, [ing.name])
+  }
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    hasImage: r.imageMime != null,
+    ingredients: byRecipe.get(r.id) ?? [],
   }))
 }
 
