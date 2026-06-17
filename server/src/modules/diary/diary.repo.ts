@@ -1,6 +1,16 @@
-import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, isNotNull, or, sql, type SQL } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
 import { diaryEntries, waterEntries, foods } from '../../db/schema.js'
+
+/** „Dieses Lebensmittel ist ein Getränk" → zählt zum Wasser-Counter.
+ *  BLS speichert auch Getränke in Gramm (baseUnit='g'); erkennbar nur an der
+ *  Hauptgruppe 'N' = alkoholfreie Getränke (Cola/Wasser/Limo/Kaffee/Tee).
+ *  OFF/eigene Getränke haben baseUnit='ml'. Gramm≈ml (Dichte ~1).
+ *  Bewusst NICHT: Alkohol (BLS 'P'), da nicht hydrierend. */
+export const isDrinkFood: SQL = or(
+  eq(foods.baseUnit, 'ml'),
+  and(eq(foods.source, 'bls'), eq(foods.category, 'N')),
+)!
 
 export type DiaryEntryRow = typeof diaryEntries.$inferSelect
 export type NewDiaryEntry = typeof diaryEntries.$inferInsert
@@ -163,7 +173,7 @@ export function dayDrinkMl(db: DB, userId: string, date: string): number {
     .select({ total: sql<number>`COALESCE(SUM(${diaryEntries.amountG}), 0)` })
     .from(diaryEntries)
     .innerJoin(foods, eq(diaryEntries.foodId, foods.id))
-    .where(and(eq(diaryEntries.userId, userId), eq(diaryEntries.date, date), eq(foods.baseUnit, 'ml')))
+    .where(and(eq(diaryEntries.userId, userId), eq(diaryEntries.date, date), isDrinkFood))
     .get()
   return Math.round(row?.total ?? 0)
 }

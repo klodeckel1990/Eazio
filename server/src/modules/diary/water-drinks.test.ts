@@ -8,10 +8,10 @@ import { foods } from '../../db/schema.js'
 import { addWater, dayDrinkMl, insertEntries, recentFoods } from './diary.repo.js'
 import { getDay } from './diary.service.js'
 
-function seedFood(db: DB, id: string, name: string, baseUnit: 'g' | 'ml') {
+function seedFood(db: DB, id: string, name: string, baseUnit: 'g' | 'ml', source = 'custom', category: string | null = null) {
   const ts = Date.now()
   db.insert(foods)
-    .values({ id, source: 'custom', name, baseUnit, kcal: 40, version: 1, createdAt: ts, updatedAt: ts })
+    .values({ id, source, name, baseUnit, category, kcal: 40, version: 1, createdAt: ts, updatedAt: ts })
     .run()
 }
 
@@ -40,21 +40,24 @@ describe('drinks → water counter & recent foods', () => {
     const today = dateInTz(new Date(), env.TZ)
     seedFood(db, 'f-water', 'Wasser', 'ml')
     seedFood(db, 'f-juice', 'Saft', 'ml')
+    seedFood(db, 'f-cola', 'Colagetränk koffeinhaltig', 'g', 'bls', 'N') // BLS-Getränk in Gramm
     seedFood(db, 'f-apple', 'Apfel', 'g')
     insertEntries(db, [
       entry(u.id, today, 'f-water', 'Wasser', 500),
       entry(u.id, today, 'f-juice', 'Saft', 250),
+      entry(u.id, today, 'f-cola', 'Cola', 200),
       entry(u.id, today, 'f-apple', 'Apfel', 150),
     ])
 
-    expect(dayDrinkMl(db, u.id, today)).toBe(750) // 500 + 250; Apfel (g) zählt nicht
+    // 500 + 250 (ml) + 200 (BLS-N in g ≈ ml); Apfel (g, kein Getränk) zählt nicht
+    expect(dayDrinkMl(db, u.id, today)).toBe(950)
 
     const day = getDay(db, u.id, today)
-    expect(day.water.fromDrinksMl).toBe(750)
-    expect(day.water.totalMl).toBe(750) // kein manuelles Wasser
+    expect(day.water.fromDrinksMl).toBe(950)
+    expect(day.water.totalMl).toBe(950) // kein manuelles Wasser
 
     addWater(db, u.id, today, 300, 'w1')
-    expect(getDay(db, u.id, today).water.totalMl).toBe(1050) // 750 Getränke + 300 manuell
+    expect(getDay(db, u.id, today).water.totalMl).toBe(1250) // 950 Getränke + 300 manuell
   })
 
   it('lists recently tracked foods grouped by food', async () => {

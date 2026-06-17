@@ -4,6 +4,7 @@ import type { DB } from '../../db/client.js'
 import { activityDays, diaryEntries, foods, waterEntries } from '../../db/schema.js'
 import { dateInTz } from '../meals/daytime.js'
 import { getGoals, type Goals } from '../goals/goals.repo.js'
+import { isDrinkFood } from './diary.repo.js'
 import { getStreak, previousDay, type Streak } from './streak.js'
 
 export interface StatsDay {
@@ -74,7 +75,7 @@ export function getStats(db: DB, userId: string, count: number): StatsResult {
     .select({ date: diaryEntries.date, ml: sql<number>`SUM(${diaryEntries.amountG})` })
     .from(diaryEntries)
     .innerJoin(foods, eq(diaryEntries.foodId, foods.id))
-    .where(and(eq(diaryEntries.userId, userId), gte(diaryEntries.date, from), eq(foods.baseUnit, 'ml')))
+    .where(and(eq(diaryEntries.userId, userId), gte(diaryEntries.date, from), isDrinkFood))
     .groupBy(diaryEntries.date)
     .all()
 
