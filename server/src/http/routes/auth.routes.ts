@@ -5,6 +5,8 @@ import { env } from '../../config/env.js'
 import type { DB } from '../../db/client.js'
 import { createUser, findUserByUsername, findUserByEmail, findUserById, getPasswordHash, setUserPassword } from '../../modules/auth/users.repo.js'
 import { verifyPassword, dummyVerifyHash } from '../../modules/auth/password.js'
+import { createResetToken } from '../../modules/auth/password-reset.js'
+import { sendMail } from '../../modules/mail/resend.js'
 import {
   createBearerSession,
   deleteSession,
@@ -238,6 +240,35 @@ export function registerAuthRoutes(
       if (!stored || !ok) return reply.status(401).send({ error: 'invalid_password' })
       await setUserPassword(db, req.user!.id, body.newPassword)
       return reply.status(204).send()
+    },
+  )
+
+  // Passwort vergessen: schickt (falls ein Passwort-Konto mit der E-Mail
+  // existiert) einen Reset-Link per Mail. Antwortet IMMER 200 → keine
+  // Existenz-Preisgabe. Eng rate-limited.
+  app.post(
+    '/api/auth/password/forgot',
+    { config: { rateLimit: { max: 5, timeWindow: '15 minutes' } } },
+    async (req, reply) => {
+      const { email } = z.object({ email: z.string().trim().toLowerCase().email().max(254) }).parse(req.body)
+      const user = findUserByEmail(db, email)
+      const hash = user ? getPasswordHash(db, user.id) : null
+      if (user && hash) {
+        const token = createResetToken(user.id, hash)
+        const link = `${env.PUBLIC_BASE_URL}/passwort-zuruecksetzen?token=${encodeURIComponent(token)}`
+        const html = `<!doctype html><div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#2b2b28;max-width:520px">
+<h2 style="font-family:Georgia,serif">Passwort zurücksetzen</h2>
+<p>Du hast für dein Tellerwert-Konto <strong>${user.username}</strong> ein neues Passwort angefordert. Der Link ist 30 Minuten gültig:</p>
+<p><a href="${link}" style="display:inline-block;background:#1f5640;color:#fff;text-decoration:none;padding:12px 20px;border-radius:12px">Neues Passwort setzen</a></p>
+<p style="color:#7a766c;font-size:13px">Falls du das nicht warst, ignoriere diese Mail einfach — dein Passwort bleibt unverändert.</p>
+</div>`
+        const text = `Passwort für ${user.username} zurücksetzen (30 Min gültig):\n${link}\n\nNicht angefordert? Dann einfach ignorieren.`
+        // Versand nicht den Request blockieren lassen (gleiche Antwortzeit egal ob Konto existiert).
+        setImmediate(() => {
+          sendMail({ to: email, subject: 'Tellerwert – Passwort zurücksetzen', html, text }).catch(() => {})
+        })
+      }
+      return reply.send({ ok: true })
     },
   )
 

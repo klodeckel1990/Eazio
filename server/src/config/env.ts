@@ -63,6 +63,12 @@ const schema = z.object({
   APNS_TOPIC: z.string().default('de.tellerwert.app'),
   // Android-Push: Pfad zum Firebase-Service-Account-JSON (FCM HTTP v1).
   FCM_SERVICE_ACCOUNT_PATH: z.string().optional(),
+  // Transaktionsmail (Resend) für Passwort-Reset. Ohne Key bleibt der Versand
+  // inert (forgot-Route antwortet trotzdem 200, schickt aber keine Mail).
+  RESEND_API_KEY: z.string().optional(),
+  MAIL_FROM: z.string().default('Tellerwert <noreply@tellerwert.de>'),
+  // Basis-URL für Links in Mails (Passwort-Reset-Seite).
+  PUBLIC_BASE_URL: z.string().default('https://tellerwert.de'),
 })
 
 const parsed = schema.safeParse(process.env)

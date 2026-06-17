@@ -90,6 +90,8 @@ export const api = {
     deleteAccount: () => req<void>('DELETE', '/auth/me'),
     changePassword: (currentPassword: string, newPassword: string) =>
       req<void>('PATCH', '/auth/password', { currentPassword, newPassword }),
+    forgotPassword: (email: string) =>
+      req<{ ok: boolean }>('POST', '/auth/password/forgot', { email }),
   },
   billing: {
     status: () => req<BillingStatus>('GET', '/billing/status'),
