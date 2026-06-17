@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNotNull, or, sql, type SQL } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
 import { diaryEntries, waterEntries, foods } from '../../db/schema.js'
 
@@ -178,11 +178,21 @@ export function dayDrinkMl(db: DB, userId: string, date: string): number {
   return Math.round(row?.total ?? 0)
 }
 
+/** Teilmenge der übergebenen foodIds, die Getränke sind (für die ml-Anzeige
+ *  geloggter Einträge im Tagebuch). */
+export function drinkFoodIds(db: DB, ids: string[]): Set<string> {
+  if (ids.length === 0) return new Set()
+  const rows = db.select({ id: foods.id }).from(foods).where(and(isDrinkFood, inArray(foods.id, ids))).all()
+  return new Set(rows.map((r) => r.id))
+}
+
 export interface RecentFood {
   foodId: string
   name: string
   amountG: number
   baseUnit: string
+  source: string
+  category: string | null
   lastUsed: number
   uses: number
 }
@@ -196,6 +206,8 @@ export function recentFoods(db: DB, userId: string, limit = 30): RecentFood[] {
       name: diaryEntries.nameSnapshot,
       amountG: diaryEntries.amountG,
       baseUnit: foods.baseUnit,
+      source: foods.source,
+      category: foods.category,
       lastUsed: sql<number>`MAX(${diaryEntries.createdAt})`,
       uses: sql<number>`COUNT(*)`,
     })

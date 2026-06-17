@@ -16,6 +16,7 @@ import {
   dayTotals,
   dayWaterTotal,
   deleteEntryRow,
+  drinkFoodIds,
   getEntry,
   insertEntries,
   listDayEntries,
@@ -237,7 +238,7 @@ export interface DayActivity {
 export interface DiaryDay {
   date: string
   defaultDaytime: Daytime
-  entries: DiaryEntryRow[]
+  entries: (DiaryEntryRow & { unit: 'g' | 'ml' })[]
   totals: DayTotals
   goals: Goals
   remainingKcal: number
@@ -256,10 +257,12 @@ export function getDay(db: DB, userId: string, date?: string): DiaryDay {
     activityRow?.activeKcal && getSettings(db, userId).activityBudget
       ? Math.round(activityRow.activeKcal)
       : 0
+  const dayEntries = listDayEntries(db, userId, d)
+  const drinkIds = drinkFoodIds(db, dayEntries.map((e) => e.foodId).filter((x): x is string => !!x))
   return {
     date: d,
     defaultDaytime: resolveDaytime(now, env.TZ),
-    entries: listDayEntries(db, userId, d),
+    entries: dayEntries.map((e) => ({ ...e, unit: (e.foodId && drinkIds.has(e.foodId) ? 'ml' : 'g') as 'g' | 'ml' })),
     totals,
     goals,
     remainingKcal: Math.round(goals.kcalTarget + countedKcal - totals.kcal),

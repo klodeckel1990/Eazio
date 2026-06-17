@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import type { FoodMatchLine, FoodSummary } from '../api/types'
-import { round } from '../lib/nutrition'
+import { isDrink, round } from '../lib/nutrition'
 import { IconClose, IconSearch } from './icons'
 
 export interface FoodRowProps {
@@ -28,6 +28,7 @@ function per(food: FoodSummary, grams: number) {
 export function FoodRow({ line, value, onChange, onRemove, onResearch }: FoodRowProps) {
   const sel = line.candidates.find((c) => c.id === value.foodId)
   const n = sel ? per(sel, value.grams) : null
+  const unit = sel && isDrink(sel) ? 'ml' : 'g'
 
   const fieldId = useId()
   const [query, setQuery] = useState(line.name)
@@ -114,14 +115,14 @@ export function FoodRow({ line, value, onChange, onRemove, onResearch }: FoodRow
               id={`${fieldId}-grams`}
               type="number"
               inputMode="decimal"
-              aria-label="Gramm"
+              aria-label={unit === 'ml' ? 'Milliliter' : 'Gramm'}
               value={value.grams}
               onChange={(e) => {
                 const parsed = Number(e.target.value)
                 onChange({ foodId: value.foodId, grams: isNaN(parsed) ? 0 : parsed })
               }}
             />
-            <span className="unit">{sel?.baseUnit === 'ml' ? 'ml' : 'g'}</span>
+            <span className="unit">{unit}</span>
             <button type="button" aria-label="Mehr" onClick={() => setGrams(value.grams + 10)}>+</button>
           </div>
         </div>

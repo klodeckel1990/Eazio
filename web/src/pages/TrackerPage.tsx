@@ -612,7 +612,7 @@ export function TrackerPage() {
                     <li key={entry.id} className="diary-item">
                       <span className="diary-name">{entry.nameSnapshot}</span>
                       <span className="diary-meta">
-                        {entry.amountG > 1 ? `${round(entry.amountG)} g · ` : ''}{Math.round(entry.kcal)} kcal
+                        {entry.amountG > 1 ? `${round(entry.amountG)} ${entry.unit ?? 'g'} · ` : ''}{Math.round(entry.kcal)} kcal
                         {entry.mirrorStatus === 'failed' ? ' · ⚠︎ Yazio' : ''}
                       </span>
                       <button

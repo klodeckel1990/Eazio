@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
+import { isDrink } from '../lib/nutrition'
 import type { Preset, RecentFood } from '../api/types'
 import { IconBookmark, IconTrash, IconAlert, IconPlus, IconChevronLeft, IconChevronRight, IconCheck } from '../components/icons'
 
@@ -250,7 +251,7 @@ export function PresetsPage() {
                       <input type="number" inputMode="numeric" min={0} max={20000} disabled={!sel?.on}
                         value={sel?.amountG ?? Math.round(f.amountG)}
                         onChange={e => setPicked(p => ({ ...p, [f.foodId]: { on: true, amountG: Number(e.target.value) || 0 } }))} />
-                      <span className="pie-unit">{f.baseUnit === 'ml' ? 'ml' : 'g'}</span>
+                      <span className="pie-unit">{isDrink(f) ? 'ml' : 'g'}</span>
                     </div>
                   </div>
                 </li>

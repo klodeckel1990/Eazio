@@ -171,6 +171,8 @@ export interface DiaryEntry {
   origin: string
   mirrorStatus: 'pending' | 'mirrored' | 'skipped' | 'failed' | null
   createdAt: number
+  /** Anzeige-Einheit: 'ml' bei Getränken, sonst 'g' (server-berechnet). */
+  unit?: 'g' | 'ml'
 }
 
 export interface Streak {
@@ -247,6 +249,8 @@ export interface RecentFood {
   name: string
   amountG: number
   baseUnit: string
+  source: string
+  category: string | null
   lastUsed: number
   uses: number
 }
