@@ -69,7 +69,9 @@ export async function runReminderTick(
       .from(pushLog)
       .where(and(eq(pushLog.userId, userId), eq(pushLog.date, date)))
       .all()
-    if (nudgedToday.length > 0) continue
+    // Wasser-Erinnerungen sind ein anderer Appell — sie unterdrücken die
+    // Abend-Erinnerung („heute noch nichts getrackt") nicht.
+    if (nudgedToday.some((n) => n.kind !== 'water')) continue
 
     const msg = reminderMessage(getStreak(db, userId).currentStreak)
     const delivered = await deliverToUser(db, userId, msg, {
@@ -96,7 +98,9 @@ export function startReminderJob(db: DB, log: FastifyBaseLogger): void {
       // Mahlzeiten zuerst — die Abend-Erinnerung sieht deren push_log und
       // hält dann die Klappe.
       const { runMealReminderTick } = await import('./meal-reminders.js')
+      const { runWaterReminderTick } = await import('./water-reminders.js')
       await runMealReminderTick(db, { log })
+      await runWaterReminderTick(db, { log })
       await runReminderTick(db, { log })
     })().catch((err) => log.error({ err }, 'reminder tick failed'))
   }, 60_000)

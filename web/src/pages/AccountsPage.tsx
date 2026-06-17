@@ -61,6 +61,7 @@ export function AccountsPage() {
   const [reminderTime, setReminderTime] = useState('19:30')
   const [reminderError, setReminderError] = useState<string | null>(null)
   const [mealRemindersOn, setMealRemindersOn] = useState<boolean | null>(null)
+  const [waterRemindersOn, setWaterRemindersOn] = useState<boolean | null>(null)
   const [section, setSection] = useState<Section | null>(null)
 
   const loadAccounts = () => {
@@ -78,6 +79,7 @@ export function AccountsPage() {
       setReminderOn(s.reminderPush)
       setReminderTime(s.reminderTime)
       setMealRemindersOn(s.mealReminders)
+      setWaterRemindersOn(s.waterReminders)
     }).catch(() => {})
     api.goals.get().then(setGoals).catch(() => {})
   }, [])
@@ -116,8 +118,8 @@ export function AccountsPage() {
     setReminderError(null)
     if (reminderOn) {
       setReminderOn(false)
-      await disablePush()
       api.settings.update({ reminderPush: false }).catch(() => {})
+      if (!mealRemindersOn && !waterRemindersOn) await disablePush()
       return
     }
     try {
@@ -138,8 +140,8 @@ export function AccountsPage() {
     if (mealRemindersOn) {
       setMealRemindersOn(false)
       api.settings.update({ mealReminders: false }).catch(() => {})
-      // Token bleibt registriert, falls die Abend-Erinnerung noch an ist
-      if (!reminderOn) await disablePush()
+      // Token bleibt registriert, falls eine andere Erinnerung noch an ist
+      if (!reminderOn && !waterRemindersOn) await disablePush()
       return
     }
     try {
@@ -149,6 +151,27 @@ export function AccountsPage() {
       }
       setMealRemindersOn(true)
       api.settings.update({ mealReminders: true }).catch(() => {})
+    } catch {
+      setReminderError('Registrierung fehlgeschlagen. Bitte erneut versuchen.')
+    }
+  }
+
+  const toggleWaterReminders = async () => {
+    if (waterRemindersOn === null) return
+    setReminderError(null)
+    if (waterRemindersOn) {
+      setWaterRemindersOn(false)
+      api.settings.update({ waterReminders: false }).catch(() => {})
+      if (!reminderOn && !mealRemindersOn) await disablePush()
+      return
+    }
+    try {
+      if (!(await enablePush())) {
+        setReminderError('Benachrichtigungen sind in den iOS-Einstellungen deaktiviert.')
+        return
+      }
+      setWaterRemindersOn(true)
+      api.settings.update({ waterReminders: true }).catch(() => {})
     } catch {
       setReminderError('Registrierung fehlgeschlagen. Bitte erneut versuchen.')
     }
@@ -434,6 +457,22 @@ export function AccountsPage() {
                   onClick={() => { void toggleMealReminders() }}
                 >
                   {mealRemindersOn ? 'An' : 'Aus'}
+                </button>
+              </div>
+              <div className="water-card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+                <div>
+                  <strong>Wasser-Erinnerung</strong>
+                  <p className="muted" style={{ margin: 0 }}>
+                    Ein dezenter Stups am Nachmittag, wenn du dein Wasserziel noch nicht erreicht hast.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={waterRemindersOn ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm'}
+                  aria-pressed={waterRemindersOn ?? false}
+                  onClick={() => { void toggleWaterReminders() }}
+                >
+                  {waterRemindersOn ? 'An' : 'Aus'}
                 </button>
               </div>
               {reminderError && (

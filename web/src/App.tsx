@@ -2,8 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { AuthProvider } from './auth/AuthContext'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { TabBar } from './components/Nav'
-import { OnboardingWizard } from './components/OnboardingWizard'
-import { ProfileOnboarding } from './components/ProfileOnboarding'
+import { Onboarding } from './components/Onboarding'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { TrackerPage } from './pages/TrackerPage'
@@ -21,8 +20,7 @@ function Shell() {
         <Outlet />
       </main>
       <TabBar />
-      <ProfileOnboarding />
-      <OnboardingWizard />
+      <Onboarding />
     </div>
   )
 }

@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState, type ComponentType, type SVGProps } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { ActivityLevel, Gender, GoalType, Goals, OnboardingPlan } from '../api/types'
+import { enablePush, pushAvailable } from '../lib/push'
+import { healthAvailable, setHealthOptIn } from '../lib/health'
 import {
-  IconArrowRight, IconCheckCircle, IconChevronLeft, IconClipboard, IconFigure,
-  IconLeaf, IconScale, IconSparkle, IconTarget,
+  IconArrowRight, IconBowl, IconCart, IconCheckCircle, IconChevronLeft, IconClipboard,
+  IconClock, IconFigure, IconHeart, IconLeaf, IconScale, IconSparkle, IconTarget, IconWand,
 } from './icons'
 
-// Profil-Onboarding als Fullscreen-Experience (Look & Feel nach dem
-// Stitch-Entwurf): Schritt-Label + Fortschrittsbalken oben, großes
-// line-art Icon mit Draw-In-Animation im hellgrünen Kreis, Optionszeilen
-// mit Häkchen, am Ende die grüne Plan-Karte mit dem Tagesziel.
-// Öffnet sich automatisch solange goals.onboardedAt fehlt; später erneut
-// über das Event 'tellerwert:edit-profile' (Einstellungen).
+// Ein einziger, durchgehend gestalteter Onboarding-Flow (.ob-screen-Look):
+// Profil-Fragebogen → Plan → freundliche Consent-Schritte (Erinnerungen, Apple
+// Health, nur nativ) → kompakter Tipps-Screen → Fertig. Öffnet sich automatisch
+// solange goals.onboardedAt fehlt; resumed beim Consent-Teil, wenn das Profil
+// schon steht, aber onboardingDone noch nicht. Aus den Einstellungen (Event
+// 'tellerwert:edit-profile') läuft nur der Fragebogen (mode='edit').
 
-type StepId = 'intro' | 'goal' | 'about' | 'target' | 'activity' | 'result'
+type StepId = 'intro' | 'goal' | 'about' | 'target' | 'activity' | 'result' | 'reminders' | 'health' | 'tips' | 'done'
+const NUMBERED: StepId[] = ['goal', 'about', 'target', 'activity']
 
 interface Answers {
   goalType: GoalType | null
@@ -66,12 +70,18 @@ const STEP_ICONS: Record<StepId, ComponentType<SVGProps<SVGSVGElement>>> = {
   target: IconScale,
   activity: IconFigure,
   result: IconSparkle,
+  reminders: IconClock,
+  health: IconHeart,
+  tips: IconWand,
+  done: IconCheckCircle,
 }
 
 const num = (s: string): number => parseFloat(s.replace(',', '.'))
 
-export function ProfileOnboarding() {
+export function Onboarding() {
+  const navigate = useNavigate()
   const [show, setShow] = useState(false)
+  const [mode, setMode] = useState<'full' | 'edit'>('full')
   const [step, setStep] = useState<StepId>('intro')
   const [answers, setAnswers] = useState<Answers>({
     goalType: null, gender: null, birthYear: '', heightCm: '', weightKg: '',
@@ -81,12 +91,20 @@ export function ProfileOnboarding() {
   const [plan, setPlan] = useState<OnboardingPlan | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [busy, setBusy] = useState(false)
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // erster Schritt nach dem Plan (Consent zuerst, sonst Tipps) — fürs Resume
+  const firstPostResult: StepId = pushAvailable() ? 'reminders' : healthAvailable() ? 'health' : 'tips'
 
   useEffect(() => {
     let alive = true
-    api.goals.get()
-      .then((g) => { if (alive && !g.onboardedAt) setShow(true) })
+    Promise.all([api.goals.get(), api.settings.get()])
+      .then(([g, s]) => {
+        if (!alive) return
+        if (!g.onboardedAt) { setMode('full'); setStep('intro'); setShow(true) }
+        else if (!s.onboardingDone) { setMode('full'); setStep(firstPostResult); setShow(true) }
+      })
       .catch(() => {})
     const onEdit = (e: Event) => {
       const goals = (e as CustomEvent<Goals | undefined>).detail
@@ -103,6 +121,7 @@ export function ProfileOnboarding() {
         })
       }
       setPlan(null)
+      setMode('edit')
       setStep('intro')
       setShow(true)
     }
@@ -112,16 +131,26 @@ export function ProfileOnboarding() {
       window.removeEventListener('tellerwert:edit-profile', onEdit)
       if (advanceTimer.current) clearTimeout(advanceTimer.current)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const ORDER: StepId[] = ['intro', 'goal', 'about',
+  const ORDER: StepId[] = [
+    'intro', 'goal', 'about',
     ...(answers.goalType === 'maintain' ? [] : (['target'] as StepId[])),
-    'activity', 'result']
+    'activity', 'result',
+    ...(mode === 'full'
+      ? ([
+          ...(pushAvailable() ? (['reminders'] as StepId[]) : []),
+          ...(healthAvailable() ? (['health'] as StepId[]) : []),
+          'tips', 'done',
+        ] as StepId[])
+      : []),
+  ]
   const idx = ORDER.indexOf(step)
-  // numbered steps exclude intro & result ("Schritt 1 von 3/4")
-  const numbered: StepId[] = ORDER.filter((s) => s !== 'intro' && s !== 'result')
+  const numbered = ORDER.filter((s) => NUMBERED.includes(s))
   const stepNo = numbered.indexOf(step) + 1
-  const progress = step === 'result' ? 100 : Math.round((Math.max(stepNo - 1, 0) / numbered.length) * 100 + (stepNo > 0 ? 100 / numbered.length / 2 : 0))
+  const progress = Math.round((Math.max(stepNo - 1, 0) / numbered.length) * 100 + (stepNo > 0 ? 100 / numbered.length / 2 : 0))
+  const barWidth = step === 'intro' ? 4 : NUMBERED.includes(step) ? progress : 100
 
   const goTo = (next: StepId, delay = 0) => {
     if (advanceTimer.current) clearTimeout(advanceTimer.current)
@@ -137,9 +166,8 @@ export function ProfileOnboarding() {
 
   const finishLater = () => {
     setShow(false)
-    api.goals.skipOnboarding()
-      .then(() => window.dispatchEvent(new Event('tellerwert:onboarded')))
-      .catch(() => {})
+    api.goals.skipOnboarding().catch(() => {})
+    api.settings.update({ onboardingDone: true }).catch(() => {})
   }
 
   const submit = () => {
@@ -161,10 +189,25 @@ export function ProfileOnboarding() {
       .finally(() => setSaving(false))
   }
 
-  const close = () => {
-    setShow(false)
-    window.dispatchEvent(new Event('tellerwert:onboarded'))
+  // Consent: Push-Erlaubnis holen, bei Erfolg alle drei Erinnerungen anschalten
+  const enableReminders = async () => {
+    setBusy(true)
+    try {
+      const ok = await enablePush().catch(() => false)
+      if (ok) await api.settings.update({ reminderPush: true, mealReminders: true, waterReminders: true }).catch(() => {})
+    } finally {
+      setBusy(false)
+      next()
+    }
   }
+  const enableHealth = () => { setHealthOptIn(true); next() } // triggert HealthKit-Permission + ersten Sync
+
+  const finishFull = () => {
+    setShow(false)
+    api.settings.update({ onboardingDone: true }).catch(() => {})
+  }
+  const goAccounts = () => { finishFull(); navigate('/accounts') }
+  const closeEdit = () => setShow(false)
 
   if (!show) return null
 
@@ -191,29 +234,31 @@ export function ProfileOnboarding() {
     : true
 
   return (
-    <div className="ob-screen" role="dialog" aria-modal="true" aria-label="Profil einrichten">
+    <div className="ob-screen" role="dialog" aria-modal="true" aria-label="Onboarding">
       <header className="ob-head">
-        {idx > 0 && step !== 'result' ? (
+        {idx > 0 && NUMBERED.includes(step) ? (
           <button type="button" className="ob-back" onClick={back} aria-label="Zurück">
             <IconChevronLeft />
           </button>
         ) : <span className="ob-back-spacer" />}
         <span className="ob-brand"><IconLeaf /> Tellerwert</span>
-        {step !== 'result' ? (
-          <button type="button" className="ob-later" onClick={finishLater}>Später</button>
+        {NUMBERED.includes(step) ? (
+          <button type="button" className="ob-later" onClick={mode === 'edit' ? closeEdit : finishLater}>
+            {mode === 'edit' ? 'Abbrechen' : 'Später'}
+          </button>
         ) : <span className="ob-back-spacer" />}
       </header>
 
-      {step !== 'intro' && step !== 'result' && (
+      {NUMBERED.includes(step) && (
         <div className="ob-meta">
           <span>Schritt {stepNo} von {numbered.length}</span>
           <span>{progress} %</span>
         </div>
       )}
-      <div className="ob-progress" aria-hidden="true"><span style={{ width: `${step === 'intro' ? 4 : progress}%` }} /></div>
+      <div className="ob-progress" aria-hidden="true"><span style={{ width: `${barWidth}%` }} /></div>
 
       <div className="ob-body" key={step}>
-        <div className={`ob-stage ${step === 'result' ? 'celebrate' : ''}`}>
+        <div className={`ob-stage ${step === 'result' || step === 'done' ? 'celebrate' : ''}`}>
           <StageIcon />
         </div>
 
@@ -392,8 +437,59 @@ export function ProfileOnboarding() {
               {plan.etaWeeks
                 ? `Bleibst du in deinem Tempo, erreichst du dein Wunschgewicht in etwa ${plan.etaWeeks} Wochen. `
                 : ''}
-              Dranbleiben zählt mehr als Perfektion – schon das Tracken selbst macht den
-              Unterschied. Alle Werte kannst du jederzeit in den Einstellungen anpassen.
+              Alle Werte kannst du jederzeit in den Einstellungen anpassen.
+            </p>
+          </>
+        )}
+
+        {step === 'reminders' && (
+          <>
+            <h1 className="ob-title">Bleib mühelos dran</h1>
+            <p className="ob-sub">
+              Sanfte Erinnerungen helfen beim Dranbleiben – abends, wenn du noch nichts
+              getrackt hast, zur gewohnten Mahlzeitenzeit und tagsüber ans Trinken.
+              Du kannst alles jederzeit in den Einstellungen anpassen.
+            </p>
+          </>
+        )}
+
+        {step === 'health' && (
+          <>
+            <h1 className="ob-title">Mit Apple Health verbinden</h1>
+            <p className="ob-sub">
+              Optional: Tellerwert liest Schritte, Aktivität und Gewicht und schreibt
+              deine Mahlzeiten &amp; Wasser zurück. So passt dein Budget zu deinem Tag –
+              deine Daten bleiben auf dem Gerät.
+            </p>
+          </>
+        )}
+
+        {step === 'tips' && (
+          <>
+            <h1 className="ob-title">Drei Dinge, die Tellerwert leicht machen</h1>
+            <ul className="ob-tips">
+              <li>
+                <span className="ob-tip-ico"><IconBowl /></span>
+                <span><strong>Schnell tracken</strong> – Zutaten als Text eintippen („100 g Haferflocken, 1 Banane"); Mengen, Einheiten und Treffer erkennt die App automatisch.</span>
+              </li>
+              <li>
+                <span className="ob-tip-ico"><IconWand /></span>
+                <span><strong>Rezepte importieren</strong> – aus Instagram, Blogs oder eingefügtem Text; die KI zieht Zutaten und Schritte heraus.</span>
+              </li>
+              <li>
+                <span className="ob-tip-ico"><IconCart /></span>
+                <span><strong>Kochen &amp; einkaufen</strong> – Rezept in den Tracker übernehmen oder die Zutaten als Einkaufsliste kopieren (Klartext, Notes, Bring!).</span>
+              </li>
+            </ul>
+          </>
+        )}
+
+        {step === 'done' && (
+          <>
+            <h1 className="ob-title">Alles bereit 🎉</h1>
+            <p className="ob-sub">
+              Du kannst sofort lostracken. Optional kannst du noch dein Yazio-Konto
+              verknüpfen, um deine Historie zu importieren oder Einträge zu spiegeln.
             </p>
           </>
         )}
@@ -405,12 +501,7 @@ export function ProfileOnboarding() {
             Los geht&rsquo;s
           </button>
         )}
-        {step === 'result' && (
-          <button type="button" className="btn btn-primary btn-lg btn-block" onClick={close}>
-            Loslegen und ersten Eintrag tracken
-          </button>
-        )}
-        {step !== 'intro' && step !== 'result' && (
+        {NUMBERED.includes(step) && (
           <button
             type="button"
             className="ob-next"
@@ -422,6 +513,40 @@ export function ProfileOnboarding() {
               ? (saving ? <span className="spinner" /> : <>Plan berechnen <IconArrowRight /></>)
               : <IconArrowRight />}
           </button>
+        )}
+        {step === 'result' && (
+          <button type="button" className="btn btn-primary btn-lg btn-block" onClick={() => (mode === 'edit' ? closeEdit() : next())}>
+            {mode === 'edit' ? 'Fertig' : 'Weiter'}
+          </button>
+        )}
+        {step === 'reminders' && (
+          <>
+            <button type="button" className="btn btn-primary btn-lg btn-block" disabled={busy} onClick={() => { void enableReminders() }}>
+              {busy ? <span className="spinner" /> : 'Erinnerungen aktivieren'}
+            </button>
+            <button type="button" className="ob-skip-link" onClick={() => next()}>Überspringen</button>
+          </>
+        )}
+        {step === 'health' && (
+          <>
+            <button type="button" className="btn btn-primary btn-lg btn-block" onClick={enableHealth}>
+              Mit Apple Health verbinden
+            </button>
+            <button type="button" className="ob-skip-link" onClick={() => next()}>Überspringen</button>
+          </>
+        )}
+        {step === 'tips' && (
+          <button type="button" className="btn btn-primary btn-lg btn-block" onClick={() => next()}>
+            Weiter
+          </button>
+        )}
+        {step === 'done' && (
+          <>
+            <button type="button" className="btn btn-primary btn-lg btn-block" onClick={finishFull}>
+              Loslegen
+            </button>
+            <button type="button" className="ob-skip-link" onClick={goAccounts}>Yazio verknüpfen (optional)</button>
+          </>
         )}
       </footer>
     </div>

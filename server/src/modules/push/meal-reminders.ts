@@ -144,7 +144,9 @@ function sentSlotsToday(db: DB, userId: string, date: string): Set<string> {
       .from(pushLog)
       .where(and(eq(pushLog.userId, userId), eq(pushLog.date, date)))
       .all()
-      .map((r) => r.kind),
+      .map((r) => r.kind)
+      // nur Mahlzeiten-Slots zählen zum Tageslimit — Wasser-Pushes sind separat
+      .filter((k) => (MEAL_SLOTS as readonly string[]).includes(k)),
   )
 }
 

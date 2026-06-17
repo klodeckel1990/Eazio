@@ -23,6 +23,8 @@ export interface UserSettings {
   reminderTime: string
   /** Smarte Mahlzeiten-Erinnerungen — lernen aus den üblichen Track-Zeiten. */
   mealReminders: boolean
+  /** Tagsüber an Wasser erinnern, wenn das Tagesziel noch nicht erreicht ist. */
+  waterReminders: boolean
 }
 
 const DEFAULTS: UserSettings = {
@@ -33,6 +35,7 @@ const DEFAULTS: UserSettings = {
   reminderPush: false,
   reminderTime: '19:30',
   mealReminders: false,
+  waterReminders: false,
 }
 
 export function getSettings(db: DB, userId: string): UserSettings {
@@ -61,6 +64,7 @@ function parseSettings(raw: string | null): UserSettings {
       reminderPush: o.reminderPush === true,
       reminderTime: TIME_RE.test(String(o.reminderTime)) ? (o.reminderTime as string) : '19:30',
       mealReminders: o.mealReminders === true,
+      waterReminders: o.waterReminders === true,
     }
   } catch {
     return { ...DEFAULTS }
