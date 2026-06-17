@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import type { DB } from '../../db/client.js'
 import { requireAuth } from '../auth-guard.js'
-import { createPreset, listPresets, getPreset, deletePreset } from '../../modules/presets/presets.repo.js'
+import { createPreset, listPresets, getPreset, updatePreset, deletePreset } from '../../modules/presets/presets.repo.js'
 
 const ItemSchema = z
   .object({
@@ -21,6 +21,13 @@ const CreateSchema = z.object({
   name: z.string().min(1).max(64),
   items: z.array(ItemSchema).min(1).max(50),
 })
+
+const UpdateSchema = z
+  .object({
+    name: z.string().min(1).max(64).optional(),
+    items: z.array(ItemSchema).min(1).max(50).optional(),
+  })
+  .refine((b) => b.name !== undefined || b.items !== undefined, { message: 'nothing to update' })
 
 const IdParams = z.object({ id: z.string().min(1) })
 
@@ -45,6 +52,21 @@ export function registerPresetRoutes(app: FastifyInstance, db: DB): void {
     const preset = getPreset(db, req.user!.id, id)
     if (!preset) return reply.status(404).send({ error: 'not_found' })
     return preset
+  })
+
+  app.put('/api/presets/:id', { preHandler: requireAuth }, async (req, reply) => {
+    const { id } = IdParams.parse(req.params)
+    const b = UpdateSchema.parse(req.body)
+    try {
+      const preset = updatePreset(db, req.user!.id, id, b)
+      if (!preset) return reply.status(404).send({ error: 'not_found' })
+      return preset
+    } catch (err) {
+      if (err instanceof Error && /UNIQUE/i.test(err.message)) {
+        return reply.status(409).send({ error: 'name_taken' })
+      }
+      throw err
+    }
   })
 
   app.delete('/api/presets/:id', { preHandler: requireAuth }, async (req, reply) => {

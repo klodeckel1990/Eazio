@@ -46,7 +46,8 @@ const MEAL_ICONS: Record<Daytime, typeof IconCoffee> = {
 const PENDING_DAYTIME_KEY = 'eazio.pendingDaytime'
 
 export function TrackerPage() {
-  const seeded = (useLocation().state as { presetText?: string } | null)?.presetText ?? ''
+  const location = useLocation()
+  const seeded = (location.state as { presetText?: string } | null)?.presetText ?? ''
   const navigate = useNavigate()
   const [day, setDay] = useState<DiaryDay | null>(null)
   const [date, setDate] = useState(todayStr())
@@ -173,6 +174,10 @@ export function TrackerPage() {
     sessionStorage.removeItem(PENDING_DAYTIME_KEY)
     if (pending && DAYTIME_ORDER.includes(pending)) setDaytime(pending)
     void matchText(seeded)
+    // Verbrauchten Router-State löschen: sonst seedet ein erneutes Mounten der
+    // Seite (Tab-Wechsel zurück) dasselbe Preset nochmal und die Liste ist beim
+    // nächsten Snack wieder vorbefüllt.
+    navigate(location.pathname, { replace: true, state: null })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -545,7 +550,10 @@ export function TrackerPage() {
           <span className="stat-ico water"><IconDrop /></span>
           <span className="stat-text">
             <span className="stat-val">{day.water.totalMl.toLocaleString('de-DE')} ml</span>
-            <span className="stat-lbl">von {day.goals.waterMl.toLocaleString('de-DE')} ml Wasser</span>
+            <span className="stat-lbl">
+              von {day.goals.waterMl.toLocaleString('de-DE')} ml Wasser
+              {day.water.fromDrinksMl ? ` · inkl. ${day.water.fromDrinksMl.toLocaleString('de-DE')} ml aus Getränken` : ''}
+            </span>
           </span>
           <div className="btn-row">
             <button type="button" className="btn btn-soft btn-sm" onClick={() => { void handleWater(250) }}>+250</button>

@@ -10,7 +10,7 @@ import {
   getDay,
   updateEntry,
 } from '../../modules/diary/diary.service.js'
-import { addWater, deleteWater, monthKcalByDay } from '../../modules/diary/diary.repo.js'
+import { addWater, deleteWater, monthKcalByDay, recentFoods } from '../../modules/diary/diary.repo.js'
 import { dateInTz } from '../../modules/meals/daytime.js'
 import { getGoals } from '../../modules/goals/goals.repo.js'
 import { env } from '../../config/env.js'
@@ -59,6 +59,12 @@ export function registerDiaryRoutes(app: FastifyInstance, db: DB): void {
   app.get('/api/diary', { preHandler: requireAuth }, async (req, reply) => {
     const { date } = z.object({ date: DateSchema.optional() }).parse(req.query)
     return reply.send(getDay(db, req.user!.id, date))
+  })
+
+  // zuletzt getrackte Lebensmittel (für „neues Preset aus History")
+  app.get('/api/diary/recent-foods', { preHandler: requireAuth }, async (req, reply) => {
+    const { limit } = z.object({ limit: z.coerce.number().int().min(1).max(50).optional() }).parse(req.query)
+    return reply.send({ foods: recentFoods(db, req.user!.id, limit ?? 30) })
   })
 
   // calendar overview: kcal per logged day of a month + the current target

@@ -594,6 +594,23 @@ select {
 }
 .preset-actions { display: flex; align-items: center; gap: 0.6rem; }
 .preset-actions .btn-primary { flex: 1; }
+/* Name antippbar → Bearbeiten */
+.preset-open { display: flex; align-items: center; gap: 0.7rem; width: 100%; background: none; border: none; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.preset-chev { width: 18px; height: 18px; color: var(--ink-3); flex: none; margin-left: auto; }
+.preset-new { margin-bottom: 0.4rem; }
+/* Preset bearbeiten: Zutaten-Zeilen mit Mengen-Input */
+.preset-item-edit { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.85rem; }
+.pie-name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pie-amt { display: inline-flex; align-items: center; gap: 0.3rem; flex: none; }
+.pie-amt input { width: 78px; text-align: right; }
+.pie-unit { color: var(--ink-2); font-size: 0.85rem; }
+/* Neu aus Verlauf: auswählbare Zeilen */
+.preset-pick { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.85rem; }
+.pick-main { display: flex; align-items: center; gap: 0.65rem; flex: 1; min-width: 0; background: none; border: none; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.pick-check { width: 22px; height: 22px; flex: none; border-radius: var(--r-pill); border: 1.5px solid var(--line-2); display: grid; place-items: center; color: var(--primary-700); }
+.preset-pick.is-on .pick-check { background: var(--primary-100); border-color: var(--primary); }
+.pick-check svg { width: 14px; height: 14px; }
+.pick-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- Ingredient row ------------------------------------------------------ */
 .ingredient {

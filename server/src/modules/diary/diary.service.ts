@@ -12,6 +12,7 @@ import { getActivityDay } from '../activity/activity.repo.js'
 import { getStreak, recomputeStreak, type Streak } from './streak.js'
 import { mirrorEntries, unmirrorEntry, type ClientFactory } from './mirror.service.js'
 import {
+  dayDrinkMl,
   dayTotals,
   dayWaterTotal,
   deleteEntryRow,
@@ -240,7 +241,7 @@ export interface DiaryDay {
   totals: DayTotals
   goals: Goals
   remainingKcal: number
-  water: { totalMl: number; entries: { id: string; ml: number }[] }
+  water: { totalMl: number; fromDrinksMl: number; entries: { id: string; ml: number }[] }
   streak: Streak
   activity: DayActivity | null
 }
@@ -262,10 +263,14 @@ export function getDay(db: DB, userId: string, date?: string): DiaryDay {
     totals,
     goals,
     remainingKcal: Math.round(goals.kcalTarget + countedKcal - totals.kcal),
-    water: {
-      totalMl: dayWaterTotal(db, userId, d),
-      entries: listDayWater(db, userId, d).map((w) => ({ id: w.id, ml: w.ml })),
-    },
+    water: (() => {
+      const fromDrinksMl = dayDrinkMl(db, userId, d)
+      return {
+        totalMl: dayWaterTotal(db, userId, d) + fromDrinksMl,
+        fromDrinksMl,
+        entries: listDayWater(db, userId, d).map((w) => ({ id: w.id, ml: w.ml })),
+      }
+    })(),
     streak: getStreak(db, userId),
     activity: activityRow
       ? {
@@ -312,7 +317,7 @@ export function getWidgetSummary(db: DB, userId: string, date?: string): WidgetS
     protein: totals.protein,
     fat: totals.fat,
     carbs: totals.carbs,
-    waterMl: dayWaterTotal(db, userId, d),
+    waterMl: dayWaterTotal(db, userId, d) + dayDrinkMl(db, userId, d),
     waterTargetMl: goals.waterMl,
     streak: streak.currentStreak,
     steps: activityRow?.steps ?? null,

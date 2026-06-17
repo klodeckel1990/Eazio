@@ -236,9 +236,19 @@ export interface DiaryDay {
   totals: { kcal: number; protein: number; fat: number; carbs: number; sugar: number; fiber: number }
   goals: Goals
   remainingKcal: number
-  water: { totalMl: number; entries: { id: string; ml: number }[] }
+  water: { totalMl: number; fromDrinksMl?: number; entries: { id: string; ml: number }[] }
   streak: Streak
   activity: DayActivity | null
+}
+
+/** Zuletzt getracktes Lebensmittel — Quelle für „neues Preset aus History". */
+export interface RecentFood {
+  foodId: string
+  name: string
+  amountG: number
+  baseUnit: string
+  lastUsed: number
+  uses: number
 }
 
 export interface DiaryMonth {

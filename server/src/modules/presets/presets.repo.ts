@@ -88,6 +88,47 @@ export function getPreset(db: DB, userId: string, id: string): PresetWithItems |
   return { ...preset, items }
 }
 
+/** Name und/oder Items aktualisieren. Items werden komplett ersetzt (positions-
+ *  treu neu angelegt). Ownership-Check in derselben Transaktion. */
+export function updatePreset(
+  db: DB,
+  userId: string,
+  id: string,
+  patch: { name?: string; items?: PresetItemInput[] },
+): PresetWithItems | undefined {
+  const ok = db.transaction((tx) => {
+    const owned = tx
+      .select({ id: presets.id })
+      .from(presets)
+      .where(and(eq(presets.id, id), eq(presets.userId, userId)))
+      .get()
+    if (!owned) return false
+    if (patch.name !== undefined) {
+      tx.update(presets).set({ name: patch.name }).where(eq(presets.id, id)).run()
+    }
+    if (patch.items !== undefined) {
+      tx.delete(presetItems).where(eq(presetItems.presetId, id)).run()
+      patch.items.forEach((it, i) => {
+        tx.insert(presetItems)
+          .values({
+            id: randomUUID(),
+            presetId: id,
+            position: i,
+            rawText: it.rawText,
+            productId: it.productId,
+            serving: it.serving ?? null,
+            servingQuantity: it.servingQuantity ?? null,
+            amountG: it.amountG,
+          })
+          .run()
+      })
+    }
+    return true
+  })
+  if (!ok) return undefined
+  return getPreset(db, userId, id)
+}
+
 export function deletePreset(db: DB, userId: string, id: string): boolean {
   // Ownership check + deletes in one transaction (no TOCTOU window).
   return db.transaction((tx) => {

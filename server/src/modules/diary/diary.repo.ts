@@ -1,6 +1,6 @@
-import { and, asc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
-import { diaryEntries, waterEntries } from '../../db/schema.js'
+import { diaryEntries, waterEntries, foods } from '../../db/schema.js'
 
 export type DiaryEntryRow = typeof diaryEntries.$inferSelect
 export type NewDiaryEntry = typeof diaryEntries.$inferInsert
@@ -153,4 +153,47 @@ export function dayWaterTotal(db: DB, userId: string, date: string): number {
     .where(and(eq(waterEntries.userId, userId), eq(waterEntries.date, date)))
     .get()
   return row?.total ?? 0
+}
+
+/** ml getrackter Getränke (baseUnit='ml') des Tages — zählt zum Wasser-Counter.
+ *  amountG hält bei ml-Lebensmitteln den ml-Wert. Reversibel: Eintrag löschen
+ *  → zählt automatisch weniger (keine separaten Wasser-Zeilen nötig). */
+export function dayDrinkMl(db: DB, userId: string, date: string): number {
+  const row = db
+    .select({ total: sql<number>`COALESCE(SUM(${diaryEntries.amountG}), 0)` })
+    .from(diaryEntries)
+    .innerJoin(foods, eq(diaryEntries.foodId, foods.id))
+    .where(and(eq(diaryEntries.userId, userId), eq(diaryEntries.date, date), eq(foods.baseUnit, 'ml')))
+    .get()
+  return Math.round(row?.total ?? 0)
+}
+
+export interface RecentFood {
+  foodId: string
+  name: string
+  amountG: number
+  baseUnit: string
+  lastUsed: number
+  uses: number
+}
+
+/** Zuletzt getrackte Lebensmittel (je foodId gruppiert, neueste zuerst). Name +
+ *  Menge stammen dank MAX(createdAt) vom jüngsten Eintrag (SQLite min/max-Regel). */
+export function recentFoods(db: DB, userId: string, limit = 30): RecentFood[] {
+  return db
+    .select({
+      foodId: sql<string>`${diaryEntries.foodId}`,
+      name: diaryEntries.nameSnapshot,
+      amountG: diaryEntries.amountG,
+      baseUnit: foods.baseUnit,
+      lastUsed: sql<number>`MAX(${diaryEntries.createdAt})`,
+      uses: sql<number>`COUNT(*)`,
+    })
+    .from(diaryEntries)
+    .innerJoin(foods, eq(diaryEntries.foodId, foods.id))
+    .where(and(eq(diaryEntries.userId, userId), isNotNull(diaryEntries.foodId)))
+    .groupBy(diaryEntries.foodId)
+    .orderBy(desc(sql`MAX(${diaryEntries.createdAt})`))
+    .limit(limit)
+    .all()
 }

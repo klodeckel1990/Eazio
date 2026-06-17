@@ -3,7 +3,7 @@ import type {
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
   ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan, DiaryMonth,
-  CustomFoodInput, LabelScanResult, OAuthConfig, SocialProvider, BillingStatus,
+  CustomFoodInput, LabelScanResult, OAuthConfig, SocialProvider, BillingStatus, RecentFood,
 } from './types'
 
 export class ApiError extends Error {
@@ -112,6 +112,8 @@ export const api = {
     create: (name: string, items: Omit<PresetWithItems['items'][number], 'position'>[]) =>
       req<Preset>('POST', '/presets', { name, items }),
     get: (id: string) => req<PresetWithItems>('GET', `/presets/${id}`),
+    update: (id: string, patch: { name?: string; items?: Omit<PresetWithItems['items'][number], 'position'>[] }) =>
+      req<PresetWithItems>('PUT', `/presets/${id}`, patch),
     remove: (id: string) => req<void>('DELETE', `/presets/${id}`),
   },
   recipes: {
@@ -169,6 +171,7 @@ export const api = {
       req<{ id: string; ml: number }>('POST', '/diary/water', { ml, date }),
     removeWater: (id: string) => req<void>('DELETE', `/diary/water/${id}`),
     month: (month: string) => req<DiaryMonth>('GET', `/diary/month?month=${month}`),
+    recentFoods: (limit = 30) => req<{ foods: RecentFood[] }>('GET', `/diary/recent-foods?limit=${limit}`),
   },
   goals: {
     get: () => req<Goals>('GET', '/goals'),

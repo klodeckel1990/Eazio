@@ -1,7 +1,7 @@
 import { and, eq, gte, sql } from 'drizzle-orm'
 import { env } from '../../config/env.js'
 import type { DB } from '../../db/client.js'
-import { activityDays, diaryEntries, waterEntries } from '../../db/schema.js'
+import { activityDays, diaryEntries, foods, waterEntries } from '../../db/schema.js'
 import { dateInTz } from '../meals/daytime.js'
 import { getGoals, type Goals } from '../goals/goals.repo.js'
 import { getStreak, previousDay, type Streak } from './streak.js'
@@ -69,6 +69,14 @@ export function getStats(db: DB, userId: string, count: number): StatsResult {
     .where(and(eq(waterEntries.userId, userId), gte(waterEntries.date, from)))
     .groupBy(waterEntries.date)
     .all()
+  // getrackte Getränke (baseUnit='ml') zählen wie auf dem Tagebuch zum Wasser
+  const drinkRows = db
+    .select({ date: diaryEntries.date, ml: sql<number>`SUM(${diaryEntries.amountG})` })
+    .from(diaryEntries)
+    .innerJoin(foods, eq(diaryEntries.foodId, foods.id))
+    .where(and(eq(diaryEntries.userId, userId), gte(diaryEntries.date, from), eq(foods.baseUnit, 'ml')))
+    .groupBy(diaryEntries.date)
+    .all()
 
   const activityRows = db
     .select()
@@ -78,6 +86,7 @@ export function getStats(db: DB, userId: string, count: number): StatsResult {
 
   const food = new Map(foodRows.map((row) => [row.date, row]))
   const water = new Map(waterRows.map((row) => [row.date, row.ml]))
+  const drinks = new Map(drinkRows.map((row) => [row.date, Math.round(row.ml)]))
   const activity = new Map(activityRows.map((row) => [row.date, row]))
 
   const days: StatsDay[] = dates.map((date) => {
@@ -88,7 +97,7 @@ export function getStats(db: DB, userId: string, count: number): StatsResult {
       protein: r1(f?.protein ?? 0),
       fat: r1(f?.fat ?? 0),
       carbs: r1(f?.carbs ?? 0),
-      waterMl: water.get(date) ?? 0,
+      waterMl: (water.get(date) ?? 0) + (drinks.get(date) ?? 0),
       entryCount: f?.entryCount ?? 0,
       steps: activity.get(date)?.steps ?? null,
       activeKcal: activity.get(date)?.activeKcal ?? null,
