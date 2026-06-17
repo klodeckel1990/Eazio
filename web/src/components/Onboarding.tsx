@@ -5,7 +5,7 @@ import type { ActivityLevel, Gender, GoalType, Goals, OnboardingPlan } from '../
 import { enablePush, pushAvailable } from '../lib/push'
 import { healthAvailable, setHealthOptIn } from '../lib/health'
 import {
-  IconArrowRight, IconBowl, IconCart, IconCheckCircle, IconChevronLeft, IconClipboard,
+  IconArrowRight, IconBowl, IconBox, IconCamera, IconCart, IconCheckCircle, IconChevronLeft, IconClipboard,
   IconClock, IconFigure, IconHeart, IconLeaf, IconScale, IconSparkle, IconTarget, IconWand,
 } from './icons'
 
@@ -16,7 +16,7 @@ import {
 // schon steht, aber onboardingDone noch nicht. Aus den Einstellungen (Event
 // 'tellerwert:edit-profile') läuft nur der Fragebogen (mode='edit').
 
-type StepId = 'intro' | 'goal' | 'about' | 'target' | 'activity' | 'result' | 'reminders' | 'health' | 'tips' | 'done'
+type StepId = 'intro' | 'goal' | 'about' | 'target' | 'activity' | 'result' | 'reminders' | 'health' | 'tips' | 'premium' | 'done'
 const NUMBERED: StepId[] = ['goal', 'about', 'target', 'activity']
 
 interface Answers {
@@ -73,6 +73,7 @@ const STEP_ICONS: Record<StepId, ComponentType<SVGProps<SVGSVGElement>>> = {
   reminders: IconClock,
   health: IconHeart,
   tips: IconWand,
+  premium: IconSparkle,
   done: IconCheckCircle,
 }
 
@@ -142,7 +143,7 @@ export function Onboarding() {
       ? ([
           ...(pushAvailable() ? (['reminders'] as StepId[]) : []),
           ...(healthAvailable() ? (['health'] as StepId[]) : []),
-          'tips', 'done',
+          'tips', 'premium', 'done',
         ] as StepId[])
       : []),
   ]
@@ -466,7 +467,7 @@ export function Onboarding() {
 
         {step === 'tips' && (
           <>
-            <h1 className="ob-title">Drei Dinge, die Tellerwert leicht machen</h1>
+            <h1 className="ob-title">Vier Dinge, die Tellerwert leicht machen</h1>
             <ul className="ob-tips">
               <li>
                 <span className="ob-tip-ico"><IconBowl /></span>
@@ -477,10 +478,43 @@ export function Onboarding() {
                 <span><strong>Rezepte importieren</strong> – aus Instagram, Blogs oder eingefügtem Text; die KI zieht Zutaten und Schritte heraus.</span>
               </li>
               <li>
+                <span className="ob-tip-ico"><IconBox /></span>
+                <span><strong>Vorratsschrank</strong> – leg deine Lebensmittel an (scannen oder suchen) und behalte den Überblick, was du da hast und was bald abläuft.</span>
+              </li>
+              <li>
                 <span className="ob-tip-ico"><IconCart /></span>
                 <span><strong>Kochen &amp; einkaufen</strong> – Rezept in den Tracker übernehmen oder die Zutaten als Einkaufsliste kopieren (Klartext, Notes, Bring!).</span>
               </li>
             </ul>
+          </>
+        )}
+
+        {step === 'premium' && (
+          <>
+            <h1 className="ob-title">Mehr drin mit Premium</h1>
+            <p className="ob-sub">Wenn du tiefer einsteigen willst, nimmt dir Premium die Fleißarbeit ab:</p>
+            <ul className="ob-tips">
+              <li>
+                <span className="ob-tip-ico"><IconWand /></span>
+                <span><strong>Rezepte ohne Limit</strong> – unbegrenzt aus Links &amp; Text importieren.</span>
+              </li>
+              <li>
+                <span className="ob-tip-ico"><IconCamera /></span>
+                <span><strong>Mahlzeit per Foto</strong> – einfach abfotografieren, die KI erkennt die Zutaten.</span>
+              </li>
+              <li>
+                <span className="ob-tip-ico"><IconBowl /></span>
+                <span><strong>Was kann ich kochen?</strong> – findet Rezepte, die zu deinem Vorrat passen.</span>
+              </li>
+              <li>
+                <span className="ob-tip-ico"><IconSparkle /></span>
+                <span><strong>Koch-Idee aus dem Vorrat</strong> – KI-Rezept aus deinen Vorräten, passend zu deinem Budget.</span>
+              </li>
+            </ul>
+            <p className="ob-free-note">
+              <IconCheckCircle />
+              <span>Tracken, dein Tagebuch, Rezepte speichern, der Vorratsschrank und dein persönlicher Plan bleiben <strong>immer kostenlos</strong>.</span>
+            </p>
           </>
         )}
 
@@ -538,6 +572,11 @@ export function Onboarding() {
         {step === 'tips' && (
           <button type="button" className="btn btn-primary btn-lg btn-block" onClick={() => next()}>
             Weiter
+          </button>
+        )}
+        {step === 'premium' && (
+          <button type="button" className="btn btn-primary btn-lg btn-block" onClick={() => next()}>
+            Verstanden
           </button>
         )}
         {step === 'done' && (

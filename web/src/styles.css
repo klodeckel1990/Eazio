@@ -1824,6 +1824,14 @@ input[type='search']:focus {
 .ob-tips .ob-tip-ico svg { width: 20px; height: 20px; }
 .ob-tips li > span:last-child { font-size: 0.92rem; line-height: 1.5; color: var(--ink-2); }
 .ob-tips li strong { color: var(--ink); }
+.ob-free-note {
+  display: flex; align-items: flex-start; gap: 0.55rem; width: 100%; text-align: left;
+  margin: 1.1rem 0 0; padding: 0.75rem 0.9rem;
+  background: var(--primary-100); color: var(--primary-700);
+  border-radius: var(--r-lg); font-size: 0.9rem; line-height: 1.45;
+}
+.ob-free-note svg { width: 18px; height: 18px; flex: none; margin-top: 0.1rem; }
+.ob-free-note strong { color: var(--primary-700); }
 .ob-plan-card {
   width: 100%;
   background: linear-gradient(150deg, var(--primary), var(--primary-700));
