@@ -619,15 +619,19 @@ select {
 /* „Was kann ich kochen?" — Treffer */
 .pantry-matches { gap: 0.55rem; }
 .pantry-match {
-  display: flex; align-items: center; gap: 0.75rem; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
-  padding: 0.8rem 0.95rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh-1);
+  display: flex; align-items: center; gap: 0.7rem; width: 100%; min-width: 0; overflow: hidden;
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  padding: 0.7rem 0.85rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh-1);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .pantry-match:hover { box-shadow: var(--sh-2); border-color: var(--line-2); }
 .pantry-match.is-complete { border-color: color-mix(in srgb, var(--primary) 45%, transparent); background: color-mix(in srgb, var(--primary-100) 55%, var(--surface)); }
-.pantry-match-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-.pantry-match-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pantry-match-cov { font-size: 0.82rem; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pantry-match-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.pantry-match-title { font-weight: 600; font-size: 0.98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pantry-match-cov {
+  font-size: 0.8rem; color: var(--ink-2); line-height: 1.35;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+}
 .pantry-match-all { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--primary-700); font-weight: 600; }
 .pantry-match-all svg { width: 15px; height: 15px; }
 .pantry-match-bar { height: 5px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
@@ -2004,7 +2008,10 @@ input[type='search']:focus {
 .composer-sheet .totals { margin: 0; }
 /* Inhalt je Schritt (Eingabe/Laden/Review) sanft ein- statt hart umblenden.
    key={sheetView} im JSX spielt die Animation bei jedem Schrittwechsel neu ab. */
-.composer-body { display: grid; gap: 0.6rem; animation: fadeUp 0.32s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.composer-body { display: grid; gap: 0.6rem; min-width: 0; animation: fadeUp 0.32s cubic-bezier(0.2, 0.7, 0.2, 1); }
+/* Grid-Items dürfen unter ihre max-content-Breite schrumpfen (sonst sprengt
+   nowrap-Text wie lange Zutatenlisten das Sheet über den Bildschirmrand). */
+.add-sheet > * { min-width: 0; }
 .composer-back { justify-self: start; }
 .composer-clear { justify-self: center; color: var(--ink-3); }
 .composer-addmore { justify-self: stretch; }
