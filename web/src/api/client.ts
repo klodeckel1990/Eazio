@@ -88,6 +88,8 @@ export const api = {
     ) => req<AuthResponse>('POST', `/auth/oauth/${provider}`, { idToken, name, platform }),
     logout: () => req<void>('POST', '/auth/logout'),
     deleteAccount: () => req<void>('DELETE', '/auth/me'),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      req<void>('PATCH', '/auth/password', { currentPassword, newPassword }),
   },
   billing: {
     status: () => req<BillingStatus>('GET', '/billing/status'),

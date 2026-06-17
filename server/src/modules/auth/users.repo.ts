@@ -38,3 +38,13 @@ export function findUserById(db: DB, id: string): PublicUser | undefined {
     .where(eq(users.id, id))
     .get()
 }
+
+/** Internes Sicherheits-Detail (Hash) — nie an Clients serialisieren. */
+export function getPasswordHash(db: DB, id: string): string | null {
+  return db.select({ h: users.passwordHash }).from(users).where(eq(users.id, id)).get()?.h ?? null
+}
+
+export async function setUserPassword(db: DB, id: string, password: string): Promise<void> {
+  const passwordHash = await hashPassword(password)
+  db.update(users).set({ passwordHash }).where(eq(users.id, id)).run()
+}

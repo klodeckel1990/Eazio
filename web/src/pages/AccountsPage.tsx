@@ -41,6 +41,11 @@ export function AccountsPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [curPw, setCurPw] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [pwError, setPwError] = useState<string | null>(null)
+  const [pwSaved, setPwSaved] = useState(false)
+  const [pwSaving, setPwSaving] = useState(false)
   const [accounts, setAccounts] = useState<Account[] | null>(null)
   const [label, setLabel] = useState('')
   const [username, setUsername] = useState('')
@@ -261,6 +266,25 @@ export function AccountsPage() {
   const handleRemove = async (id: string) => {
     await api.accounts.remove(id)
     loadAccounts()
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPw.length < 8) { setPwError('Neues Passwort: mindestens 8 Zeichen.'); return }
+    setPwSaving(true)
+    setPwError(null)
+    setPwSaved(false)
+    try {
+      await api.auth.changePassword(curPw, newPw)
+      setPwSaved(true)
+      setCurPw('')
+      setNewPw('')
+    } catch (err) {
+      if (err instanceof ApiError) setPwError(err.status === 401 ? 'Aktuelles Passwort stimmt nicht.' : 'Ändern fehlgeschlagen.')
+      else throw err
+    } finally {
+      setPwSaving(false)
+    }
   }
 
   const handleDeleteAccount = async () => {
@@ -760,6 +784,29 @@ export function AccountsPage() {
           <IconLogout /> Abmelden
         </button>
       </div>
+
+      {user?.hasPassword && (
+        <div className="card pad-lg stack">
+          <strong>Passwort ändern</strong>
+          <form className="stack" onSubmit={(e) => { void handleChangePassword(e) }}>
+            <div className="field">
+              <label htmlFor="cur-pw">Aktuelles Passwort</label>
+              <input id="cur-pw" type="password" autoComplete="current-password" value={curPw}
+                onChange={(e) => setCurPw(e.target.value)} required />
+            </div>
+            <div className="field">
+              <label htmlFor="new-pw">Neues Passwort</label>
+              <input id="new-pw" type="password" autoComplete="new-password" minLength={8} value={newPw}
+                onChange={(e) => setNewPw(e.target.value)} required />
+            </div>
+            {pwError && <p className="banner error"><IconAlert /><span className="banner-text">{pwError}</span></p>}
+            {pwSaved && <p className="banner success"><IconCheck /><span className="banner-text">Passwort geändert.</span></p>}
+            <button type="submit" className="btn btn-primary btn-block" disabled={pwSaving || !curPw || !newPw}>
+              {pwSaving ? 'Speichern…' : 'Passwort ändern'}
+            </button>
+          </form>
+        </div>
+      )}
 
       <div className="card stack">
         <a className="btn btn-soft btn-block" href={`${LEGAL_BASE}/datenschutz`} target="_blank" rel="noopener noreferrer">

@@ -1,4 +1,4 @@
-export interface User { id: string; username: string; premium?: boolean; premiumUntil?: number | null }
+export interface User { id: string; username: string; premium?: boolean; premiumUntil?: number | null; hasPassword?: boolean }
 export interface BillingStatus {
   premium: boolean
   status: string

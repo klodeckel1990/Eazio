@@ -3,7 +3,7 @@ import { timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 import { env } from '../../config/env.js'
 import type { DB } from '../../db/client.js'
-import { createUser, findUserByUsername, findUserByEmail, findUserById } from '../../modules/auth/users.repo.js'
+import { createUser, findUserByUsername, findUserByEmail, findUserById, getPasswordHash, setUserPassword } from '../../modules/auth/users.repo.js'
 import { verifyPassword, dummyVerifyHash } from '../../modules/auth/password.js'
 import {
   createBearerSession,
@@ -219,8 +219,27 @@ export function registerAuthRoutes(
       username: user.username,
       premium: isPremium(db, user.id),
       premiumUntil: ent.premiumUntil,
+      hasPassword: getPasswordHash(db, user.id) != null,
     })
   })
+
+  // Passwort ändern (eingeloggt): aktuelles prüfen → neues setzen. Social-only-
+  // Konten (ohne Passwort) scheitern an der konstanten Dummy-Verifikation.
+  app.patch(
+    '/api/auth/password',
+    { preHandler: requireAuth, config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
+    async (req, reply) => {
+      const body = z
+        .object({ currentPassword: z.string().min(1), newPassword: z.string().min(8).max(256) })
+        .parse(req.body)
+      const stored = getPasswordHash(db, req.user!.id)
+      const hash = stored || (await dummyVerifyHash())
+      const ok = await verifyPassword(hash, body.currentPassword)
+      if (!stored || !ok) return reply.status(401).send({ error: 'invalid_password' })
+      await setUserPassword(db, req.user!.id, body.newPassword)
+      return reply.status(204).send()
+    },
+  )
 
   // Konto endgültig löschen (DSGVO / App-Store-Pflicht): entfernt den Nutzer und
   // alle zugehörigen Daten, beendet jede Session und löscht das Session-Cookie.
