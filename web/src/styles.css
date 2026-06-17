@@ -611,6 +611,16 @@ select {
 .preset-pick.is-on .pick-check { background: var(--primary-100); border-color: var(--primary); }
 .pick-check svg { width: 14px; height: 14px; }
 .pick-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Vorratsschrank */
+.pantry-item { display: grid; gap: 0.55rem; padding: 0.7rem 0.9rem; }
+.pantry-head { display: flex; align-items: center; gap: 0.6rem; }
+.pantry-name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pantry-controls { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.pantry-mhd { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--ink-2); }
+.pantry-mhd input { padding: 0.32rem 0.5rem; border: 1px solid var(--line); border-radius: 9px; font: inherit; background: var(--surface); color: var(--ink); }
+.pantry-mhd.exp-red input { border-color: var(--danger); color: var(--danger); }
+.pantry-mhd.exp-yellow input { border-color: var(--amber); color: var(--amber); }
+.pantry-mhd.exp-green input { border-color: color-mix(in srgb, var(--primary) 55%, transparent); }
 
 /* ---- Ingredient row ------------------------------------------------------ */
 .ingredient {

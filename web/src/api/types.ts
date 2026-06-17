@@ -244,6 +244,24 @@ export interface DiaryDay {
   activity: DayActivity | null
 }
 
+/** Ein Eintrag im Vorratsschrank (mit denormalisierten Food-Infos). */
+export interface PantryItem {
+  id: string
+  foodId: string
+  amountG: number
+  expiresAt: number | null
+  addedAt: number
+  name: string
+  brand: string | null
+  baseUnit: string
+  category: string | null
+  source: string
+  kcal: number
+  protein: number | null
+  fat: number | null
+  carbs: number | null
+}
+
 /** Zuletzt getracktes Lebensmittel — Quelle für „neues Preset aus History". */
 export interface RecentFood {
   foodId: string

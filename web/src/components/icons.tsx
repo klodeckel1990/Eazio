@@ -421,3 +421,14 @@ export function IconApple(props: SVGProps<SVGSVGElement>) {
     </Svg>
   )
 }
+
+/** Vorratskiste/Schublade — Vorratsschrank. */
+export function IconBox(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <path d="M3.5 7.5h17v12a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z" />
+      <path d="M3 4h18v3.5H3z" />
+      <path d="M10 11.5h4" />
+    </Svg>
+  )
+}

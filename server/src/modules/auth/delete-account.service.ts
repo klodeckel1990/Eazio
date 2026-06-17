@@ -21,6 +21,7 @@ import {
   recipes,
   subscriptions,
   usageEvents,
+  pantryItems,
 } from '../../db/schema.js'
 
 /**
@@ -49,6 +50,7 @@ export function deleteUserAccount(db: DB, userId: string): boolean {
     // rows that reference foods → before custom foods are removed
     t.delete(diaryEntries).where(eq(diaryEntries.userId, userId)).run()
     t.delete(foodAliases).where(eq(foodAliases.userId, userId)).run()
+    t.delete(pantryItems).where(eq(pantryItems.userId, userId)).run()
 
     t.delete(aliases).where(eq(aliases.userId, userId)).run()
     t.delete(waterEntries).where(eq(waterEntries.userId, userId)).run()

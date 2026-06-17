@@ -120,6 +120,13 @@
       "when": 1781597671139,
       "tag": "0016_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1782000000000,
+      "tag": "0017_pantry",
+      "breakpoints": true
     }
   ]
 }

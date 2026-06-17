@@ -3,7 +3,7 @@ import type {
   ImportedRecipe, RecipeSummary, RecipeDetail, RecipeIngredient, UserSettings,
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
   ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan, DiaryMonth,
-  CustomFoodInput, LabelScanResult, OAuthConfig, SocialProvider, BillingStatus, RecentFood,
+  CustomFoodInput, LabelScanResult, OAuthConfig, SocialProvider, BillingStatus, RecentFood, PantryItem,
 } from './types'
 
 export class ApiError extends Error {
@@ -95,6 +95,14 @@ export const api = {
   },
   billing: {
     status: () => req<BillingStatus>('GET', '/billing/status'),
+  },
+  pantry: {
+    list: () => req<{ items: PantryItem[] }>('GET', '/pantry'),
+    add: (items: { foodId: string; amountG: number }[]) =>
+      req<{ items: PantryItem[] }>('POST', '/pantry', { items }),
+    update: (id: string, patch: { amountG?: number; expiresAt?: number | null }) =>
+      req<void>('PATCH', `/pantry/${id}`, patch),
+    remove: (id: string) => req<void>('DELETE', `/pantry/${id}`),
   },
   accounts: {
     list: () => req<Account[]>('GET', '/accounts'),

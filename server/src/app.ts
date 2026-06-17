@@ -30,6 +30,7 @@ import { registerPushRoutes } from './http/routes/push.routes.js'
 import { registerLegalRoutes } from './http/routes/legal.routes.js'
 import { registerPasswordResetWebRoutes } from './http/routes/password-reset-web.routes.js'
 import { registerBillingRoutes } from './http/routes/billing.routes.js'
+import { registerPantryRoutes } from './http/routes/pantry.routes.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -136,6 +137,7 @@ export function buildApp(
   registerLegalRoutes(app)
   registerPasswordResetWebRoutes(app, db)
   registerBillingRoutes(app, db)
+  registerPantryRoutes(app, db)
 
   // Öffentliche Web-Präsenz = statische Landingpage (server/public), NICHT mehr
   // die React-PWA. Die native App (Capacitor) wird weiter aus web/ gebaut; sie

@@ -385,3 +385,23 @@ export const usageEvents = sqliteTable(
   },
   (t) => [index('usage_user_kind_idx').on(t.userId, t.kind, t.createdAt)],
 )
+
+// Vorratsschrank: was der Nutzer zu Hause hat. amountG in baseUnit (g/ml) wie
+// im Tagebuch. Pro (User, Food) eine Zeile — erneutes Hinzufügen addiert.
+export const pantryItems = sqliteTable(
+  'pantry_items',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    foodId: text('food_id')
+      .notNull()
+      .references(() => foods.id),
+    amountG: real('amount_g').notNull(),
+    expiresAt: integer('expires_at'), // ms epoch; null = ohne MHD
+    addedAt: integer('added_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [unique('pantry_user_food_unq').on(t.userId, t.foodId), index('pantry_user_idx').on(t.userId)],
+)

@@ -8,6 +8,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { TrackerPage } from './pages/TrackerPage'
 import { AccountsPage } from './pages/AccountsPage'
 import { PresetsPage } from './pages/PresetsPage'
+import { PantryPage } from './pages/PantryPage'
 import { RecipesPage } from './pages/RecipesPage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
 import { ImportPage } from './pages/ImportPage'
@@ -41,6 +42,7 @@ export function App() {
               <Route path="/import" element={<ImportPage />} />
               <Route path="/accounts" element={<AccountsPage />} />
               <Route path="/presets" element={<PresetsPage />} />
+              <Route path="/pantry" element={<PantryPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
