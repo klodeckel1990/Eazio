@@ -40,8 +40,7 @@ const PatchSchema = z
 const IdParams = z.object({ id: z.string().min(1) })
 
 const WizardSchema = z.object({
-  style: z.enum(['lowcarb', 'normal']),
-  taste: z.enum(['suess', 'herzhaft']),
+  wish: z.string().max(500).optional(),
   useBudget: z.boolean().optional(),
 })
 
@@ -89,7 +88,7 @@ export function registerPantryRoutes(app: FastifyInstance, db: DB): void {
       }
 
       try {
-        const recipe = await generateRecipe({ style: body.style, taste: body.taste, pantry, budget })
+        const recipe = await generateRecipe({ wish: body.wish ?? '', pantry, budget })
         return reply.status(200).send({ recipe })
       } catch (e) {
         if (e instanceof RecipeImportError) return reply.status(e.status).send({ error: e.code })

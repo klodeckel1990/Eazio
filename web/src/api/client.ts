@@ -104,7 +104,7 @@ export const api = {
       req<void>('PATCH', `/pantry/${id}`, patch),
     remove: (id: string) => req<void>('DELETE', `/pantry/${id}`),
     recipeMatches: () => req<{ matches: RecipeMatch[] }>('GET', '/pantry/recipe-matches'),
-    wizard: (input: { style: 'lowcarb' | 'normal'; taste: 'suess' | 'herzhaft'; useBudget: boolean }) =>
+    wizard: (input: { wish: string; useBudget: boolean }) =>
       req<{ recipe: WizardRecipe }>('POST', '/pantry/wizard', input),
   },
   accounts: {

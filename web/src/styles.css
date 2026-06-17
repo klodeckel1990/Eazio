@@ -640,6 +640,8 @@ select {
 .pantry-match > svg { width: 18px; height: 18px; color: var(--ink-3); flex: none; }
 
 /* KI-Wizard: Toggle + Rezept-Vorschau */
+.wizard-wish { resize: none; width: 100%; }
+.wizard-suggest { margin-top: 0.6rem; }
 .pantry-toggle { display: flex; align-items: flex-start; gap: 0.6rem; margin-top: 1rem; cursor: pointer; }
 .pantry-toggle input { width: 20px; height: 20px; margin-top: 0.1rem; flex: none; accent-color: var(--primary); }
 .pantry-toggle-text { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }

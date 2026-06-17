@@ -373,20 +373,26 @@ export function PantryMatchesSheet({ onClose }: { onClose: () => void }) {
 
 // ---- KI-Wizard „Rezept aus Vorräten" (Premium) ----------------------------
 
+const WIZARD_SUGGESTIONS = ['Herzhaft', 'Süß', 'Low Carb', 'Proteinreich', 'Schnell', 'Vegetarisch', 'Leicht']
+
 export function PantryWizardSheet({ itemCount, onClose }: { itemCount: number; onClose: () => void }) {
   const navigate = useNavigate()
-  const [style, setStyle] = useState<'lowcarb' | 'normal'>('normal')
-  const [taste, setTaste] = useState<'suess' | 'herzhaft'>('herzhaft')
+  const [picks, setPicks] = useState<string[]>(['Herzhaft'])
+  const [wish, setWish] = useState('')
   const [useBudget, setUseBudget] = useState(true)
   const [phase, setPhase] = useState<'config' | 'loading' | 'result'>('config')
   const [recipe, setRecipe] = useState<WizardRecipe | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const togglePick = (s: string) =>
+    setPicks((p) => (p.includes(s) ? p.filter((x) => x !== s) : [...p, s]))
+
   const generate = async () => {
+    const combined = [...picks, wish.trim()].filter(Boolean).join(', ')
     setPhase('loading'); setError(null)
     try {
-      const r = await api.pantry.wizard({ style, taste, useBudget })
+      const r = await api.pantry.wizard({ wish: combined, useBudget })
       setRecipe(r.recipe); setPhase('result')
     } catch (e) {
       if (e instanceof ApiError) {
@@ -430,16 +436,15 @@ export function PantryWizardSheet({ itemCount, onClose }: { itemCount: number; o
       {phase === 'config' && (
         <>
           {itemCount === 0 && <p className="pantry-mode-hint">Leg zuerst Lebensmittel in den Vorrat – daraus baue ich ein Rezept.</p>}
-          <label className="pantry-label">Stil</label>
-          <div className="seg" role="group" aria-label="Stil">
-            <button type="button" aria-pressed={style === 'normal'} onClick={() => setStyle('normal')}>Normal</button>
-            <button type="button" aria-pressed={style === 'lowcarb'} onClick={() => setStyle('lowcarb')}>Low Carb</button>
+          <label className="pantry-label">Worauf hast du Lust?</label>
+          <textarea className="wizard-wish" rows={2} value={wish} onChange={(e) => setWish(e.target.value)}
+            placeholder="Frei beschreiben – z. B. cremig, asiatisch, ohne Zwiebeln, wenig Aufwand …" />
+          <div className="chip-row wizard-suggest">
+            {WIZARD_SUGGESTIONS.map((s) => (
+              <button key={s} type="button" className="chip" aria-pressed={picks.includes(s)} onClick={() => togglePick(s)}>{s}</button>
+            ))}
           </div>
-          <label className="pantry-label">Geschmack</label>
-          <div className="seg" role="group" aria-label="Geschmack">
-            <button type="button" aria-pressed={taste === 'herzhaft'} onClick={() => setTaste('herzhaft')}>Herzhaft</button>
-            <button type="button" aria-pressed={taste === 'suess'} onClick={() => setTaste('suess')}>Süß</button>
-          </div>
+          <p className="pantry-mode-hint">Nur Vorschläge – die KI ergänzt sie sinnvoll und füllt den Rest.</p>
           <label className="pantry-toggle">
             <input type="checkbox" checked={useBudget} onChange={(e) => setUseBudget(e.target.checked)} />
             <span className="pantry-toggle-text">

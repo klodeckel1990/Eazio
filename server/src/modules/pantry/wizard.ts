@@ -11,8 +11,8 @@ export interface WizardBudget {
 }
 
 export interface WizardInput {
-  style: 'lowcarb' | 'normal'
-  taste: 'suess' | 'herzhaft'
+  /** Freitext-Wünsche der Person (Vorschläge + eigene Eingabe), kann leer sein. */
+  wish: string
   pantry: { name: string; amount: number; unit: 'g' | 'ml' }[]
   budget: WizardBudget | null
 }
@@ -39,8 +39,7 @@ const SYSTEM = `Du bist ein kreativer Koch und Ernährungsberater. Du entwirfst 
 
 Regeln:
 - Nutze bevorzugt die gelisteten Vorräte. Grundzutaten (Salz, Pfeffer, Wasser, Öl, gängige Gewürze) darfst du voraussetzen, auch wenn sie nicht gelistet sind. Erfinde keine exotischen Zutaten, die niemand zu Hause hat.
-- Stil „lowcarb": möglichst wenig Kohlenhydrate – keine/kaum Nudeln, Reis, Kartoffeln, Brot, Zucker, Mehl; Fokus auf Eiweiß, Gemüse und gute Fette. Stil „normal": ausgewogen.
-- Geschmack „suess": ein süßes Gericht, Snack oder Dessert. Geschmack „herzhaft": ein herzhaftes Gericht.
+- Berücksichtige die Wünsche der Person sinnvoll – z. B. „herzhaft", „süß", „low carb" (wenig Kohlenhydrate: kaum Nudeln, Reis, Kartoffeln, Brot, Zucker, Mehl; Fokus auf Eiweiß, Gemüse und gute Fette), „proteinreich", „schnell", „vegetarisch". Die Wünsche sind Vorschläge: ergänze sie sinnvoll, kombiniere sie und gleiche Widersprüche pragmatisch aus. Sind keine Wünsche genannt oder lassen sie sich mit dem Vorrat nicht umsetzen, wähle eigenständig etwas Passendes und Sinnvolles.
 - Wenn ein Budget angegeben ist, soll das Gericht ungefähr so viele Kalorien haben (Tagesrest) und die fehlenden Makros möglichst gut decken (bleib eher unter dem kcal-Rest, übertreibe nicht).
 - Alles auf Deutsch, Einheiten metrisch. Sinnvolle, realistische Mengen und Nährwerte – nicht schönrechnen.
 
@@ -97,8 +96,7 @@ export function buildUserMessage(input: WizardInput): string {
   const lines: string[] = ['Vorräte:']
   for (const p of input.pantry) lines.push(`- ${p.name}: ${p.amount} ${p.unit}`)
   lines.push('', 'Vorgaben:')
-  lines.push(`- Stil: ${input.style === 'lowcarb' ? 'Low Carb' : 'Normal'}`)
-  lines.push(`- Geschmack: ${input.taste === 'suess' ? 'süß' : 'herzhaft'}`)
+  lines.push(input.wish.trim() ? `- Wünsche: ${input.wish.trim()}` : '- Wünsche: keine besonderen – wähle eigenständig etwas Sinnvolles.')
   if (input.budget) {
     const b = input.budget
     lines.push(

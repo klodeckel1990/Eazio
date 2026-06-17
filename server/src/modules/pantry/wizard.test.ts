@@ -2,10 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { buildUserMessage, parseWizardText } from './wizard.js'
 
 describe('wizard buildUserMessage', () => {
-  it('lists pantry with units and the constraints', () => {
+  it('lists pantry with units and the free-text wishes + budget', () => {
     const msg = buildUserMessage({
-      style: 'lowcarb',
-      taste: 'herzhaft',
+      wish: 'herzhaft, low carb, schnell',
       pantry: [
         { name: 'Magerquark', amount: 500, unit: 'g' },
         { name: 'Milch', amount: 1000, unit: 'ml' },
@@ -14,17 +13,15 @@ describe('wizard buildUserMessage', () => {
     })
     expect(msg).toContain('- Magerquark: 500 g')
     expect(msg).toContain('- Milch: 1000 ml')
-    expect(msg).toContain('Stil: Low Carb')
-    expect(msg).toContain('Geschmack: herzhaft')
+    expect(msg).toContain('Wünsche: herzhaft, low carb, schnell')
     expect(msg).toContain('ca. 650 kcal')
     expect(msg).toContain('Eiweiß 40 g')
   })
 
-  it('notes when there is no budget', () => {
-    const msg = buildUserMessage({ style: 'normal', taste: 'suess', pantry: [{ name: 'Banane', amount: 120, unit: 'g' }], budget: null })
+  it('falls back to a sensible note when no wish and no budget', () => {
+    const msg = buildUserMessage({ wish: '   ', pantry: [{ name: 'Banane', amount: 120, unit: 'g' }], budget: null })
     expect(msg).toContain('Kein Budget-Bezug')
-    expect(msg).toContain('Stil: Normal')
-    expect(msg).toContain('Geschmack: süß')
+    expect(msg).toContain('keine besonderen')
   })
 })
 
