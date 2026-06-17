@@ -262,6 +262,18 @@ export interface PantryItem {
   carbs: number | null
 }
 
+/** KI-generiertes Rezept aus dem Vorrat (Premium-Wizard). */
+export interface WizardRecipe {
+  title: string
+  servings: number
+  ingredients: RecipeIngredient[]
+  steps: string[]
+  difficulty: string | null
+  totalMinutes: number | null
+  nutrition: { kcal: number; protein: number; carbs: number; fat: number }
+  note: string | null
+}
+
 /** Rezept-Treffer gegen den Vorrat (Premium: „Was kann ich kochen?"). */
 export interface RecipeMatch {
   recipeId: string

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import type { DB } from '../../db/client.js'
+import { env } from '../../config/env.js'
 import { requireAuth } from '../auth-guard.js'
 import { isPremium } from '../../modules/billing/entitlements.js'
 import {
@@ -8,9 +9,13 @@ import {
   listPantry,
   removePantryItem,
   updatePantryItem,
+  type PantryRow,
 } from '../../modules/pantry/pantry.repo.js'
 import { matchRecipes } from '../../modules/pantry/recipe-match.js'
+import { generateRecipe } from '../../modules/pantry/wizard.js'
 import { listRecipesWithIngredients } from '../../modules/recipes/recipes.repo.js'
+import { getDay } from '../../modules/diary/diary.service.js'
+import { RecipeImportError } from '../../modules/recipes/errors.js'
 
 const AddSchema = z.object({
   items: z
@@ -34,6 +39,16 @@ const PatchSchema = z
 
 const IdParams = z.object({ id: z.string().min(1) })
 
+const WizardSchema = z.object({
+  style: z.enum(['lowcarb', 'normal']),
+  taste: z.enum(['suess', 'herzhaft']),
+  useBudget: z.boolean().optional(),
+})
+
+// Getränke in ml, sonst g (gespiegelt zu lib/nutrition.isDrink + diary.isDrinkFood).
+const pantryUnit = (p: PantryRow): 'g' | 'ml' =>
+  p.baseUnit === 'ml' || (p.source === 'bls' && p.category === 'N') ? 'ml' : 'g'
+
 // Vorratsschrank — gratis (anlegen/verwalten). Matching + Wizard kommen als
 // Premium-Routen dazu (Phase 2/3).
 export function registerPantryRoutes(app: FastifyInstance, db: DB): void {
@@ -47,6 +62,41 @@ export function registerPantryRoutes(app: FastifyInstance, db: DB): void {
     const recipes = listRecipesWithIngredients(db, userId)
     return { matches: matchRecipes(recipes, pantryNames) }
   })
+
+  // KI-Wizard: Rezept aus Vorräten erzeugen (Premium).
+  app.post(
+    '/api/pantry/wizard',
+    { preHandler: requireAuth, config: { rateLimit: { max: 20, timeWindow: '5 minutes' } } },
+    async (req, reply) => {
+      const userId = req.user!.id
+      if (!isPremium(db, userId)) return reply.status(403).send({ error: 'premium_required' })
+      if (!env.ANTHROPIC_API_KEY) return reply.status(503).send({ error: 'wizard_unavailable' })
+      const body = WizardSchema.parse(req.body)
+
+      const rows = listPantry(db, userId)
+      if (rows.length === 0) return reply.status(400).send({ error: 'empty_pantry' })
+      const pantry = rows.map((p) => ({ name: p.name, amount: Math.round(p.amountG), unit: pantryUnit(p) }))
+
+      let budget = null
+      if (body.useBudget) {
+        const day = getDay(db, userId)
+        budget = {
+          kcal: Math.max(0, day.remainingKcal),
+          protein: Math.max(0, Math.round((day.goals.proteinG ?? 0) - day.totals.protein)),
+          carbs: Math.max(0, Math.round((day.goals.carbsG ?? 0) - day.totals.carbs)),
+          fat: Math.max(0, Math.round((day.goals.fatG ?? 0) - day.totals.fat)),
+        }
+      }
+
+      try {
+        const recipe = await generateRecipe({ style: body.style, taste: body.taste, pantry, budget })
+        return reply.status(200).send({ recipe })
+      } catch (e) {
+        if (e instanceof RecipeImportError) return reply.status(e.status).send({ error: e.code })
+        throw e
+      }
+    },
+  )
 
   app.post('/api/pantry', { preHandler: requireAuth }, async (req, reply) => {
     const b = AddSchema.parse(req.body)

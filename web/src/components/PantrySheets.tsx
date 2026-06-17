@@ -2,11 +2,11 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api/client'
-import type { FoodSummary, PantryItem, RecipeMatch } from '../api/types'
+import type { FoodSummary, PantryItem, RecipeMatch, WizardRecipe } from '../api/types'
 import { isNativeApp, scanBarcode } from '../lib/barcode'
 import { unitOf, dateValue, parseDate, inDays, expiryClass, expiryLabel } from '../lib/pantry'
 import { CustomFoodSheet } from './CustomFoodSheet'
-import { IconScan, IconSearch, IconClose, IconPlus, IconCheck, IconAlert, IconCalendar, IconTrash, IconChevronRight, IconCheckCircle, IconBook } from './icons'
+import { IconScan, IconSearch, IconClose, IconPlus, IconCheck, IconAlert, IconCalendar, IconTrash, IconChevronRight, IconCheckCircle, IconBook, IconSparkle, IconClock } from './icons'
 
 // ---- geteilte Felder ------------------------------------------------------
 
@@ -366,6 +366,139 @@ export function PantryMatchesSheet({ onClose }: { onClose: () => void }) {
             )
           })}
         </ul>
+      )}
+    </SheetShell>
+  )
+}
+
+// ---- KI-Wizard „Rezept aus Vorräten" (Premium) ----------------------------
+
+export function PantryWizardSheet({ itemCount, onClose }: { itemCount: number; onClose: () => void }) {
+  const navigate = useNavigate()
+  const [style, setStyle] = useState<'lowcarb' | 'normal'>('normal')
+  const [taste, setTaste] = useState<'suess' | 'herzhaft'>('herzhaft')
+  const [useBudget, setUseBudget] = useState(true)
+  const [phase, setPhase] = useState<'config' | 'loading' | 'result'>('config')
+  const [recipe, setRecipe] = useState<WizardRecipe | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const generate = async () => {
+    setPhase('loading'); setError(null)
+    try {
+      const r = await api.pantry.wizard({ style, taste, useBudget })
+      setRecipe(r.recipe); setPhase('result')
+    } catch (e) {
+      if (e instanceof ApiError) {
+        setError(
+          e.status === 400 ? 'Dein Vorrat ist leer – leg zuerst Lebensmittel an.'
+            : e.status === 503 ? 'KI gerade nicht verfügbar – später nochmal.'
+              : 'Rezept konnte nicht erstellt werden – versuch es nochmal.',
+        )
+      } else setError('Etwas ist schiefgelaufen.')
+      setPhase('config')
+    }
+  }
+
+  const save = async () => {
+    if (!recipe || saving) return
+    setSaving(true)
+    try {
+      const summary = await api.recipes.create({
+        title: recipe.title,
+        servings: recipe.servings,
+        sourceUrl: null,
+        sourceType: 'text',
+        imageUrl: null,
+        difficulty: recipe.difficulty,
+        totalMinutes: recipe.totalMinutes,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+      })
+      onClose()
+      navigate(`/recipes/${summary.id}`)
+    } catch (e) {
+      setSaving(false)
+      if (e instanceof ApiError) setError('Speichern fehlgeschlagen.'); else throw e
+    }
+  }
+
+  return (
+    <SheetShell title="Koch-Idee aus deinem Vorrat" onClose={onClose}>
+      {error && <p className="banner error"><IconAlert /><span className="banner-text">{error}</span></p>}
+
+      {phase === 'config' && (
+        <>
+          {itemCount === 0 && <p className="pantry-mode-hint">Leg zuerst Lebensmittel in den Vorrat – daraus baue ich ein Rezept.</p>}
+          <label className="pantry-label">Stil</label>
+          <div className="seg" role="group" aria-label="Stil">
+            <button type="button" aria-pressed={style === 'normal'} onClick={() => setStyle('normal')}>Normal</button>
+            <button type="button" aria-pressed={style === 'lowcarb'} onClick={() => setStyle('lowcarb')}>Low Carb</button>
+          </div>
+          <label className="pantry-label">Geschmack</label>
+          <div className="seg" role="group" aria-label="Geschmack">
+            <button type="button" aria-pressed={taste === 'herzhaft'} onClick={() => setTaste('herzhaft')}>Herzhaft</button>
+            <button type="button" aria-pressed={taste === 'suess'} onClick={() => setTaste('suess')}>Süß</button>
+          </div>
+          <label className="pantry-toggle">
+            <input type="checkbox" checked={useBudget} onChange={(e) => setUseBudget(e.target.checked)} />
+            <span className="pantry-toggle-text">
+              <strong>An mein Tagesbudget anpassen</strong>
+              <span>Restkalorien &amp; fehlende Makros einbeziehen.</span>
+            </span>
+          </label>
+          <div className="btn-row">
+            <button type="button" className="btn btn-primary btn-lg" style={{ flex: 1 }} onClick={() => { void generate() }} disabled={itemCount === 0}>
+              <IconSparkle /> Rezept erzeugen
+            </button>
+          </div>
+        </>
+      )}
+
+      {phase === 'loading' && (
+        <div className="match-loading">
+          <span className="spinner" />
+          <span className="match-loading-title">Ich koche eine Idee aus…</span>
+          <span className="match-loading-sub">Gleich hast du ein Rezept aus deinem Vorrat.</span>
+        </div>
+      )}
+
+      {phase === 'result' && recipe && (
+        <div className="wizard-result">
+          <h3 className="wizard-title">{recipe.title}</h3>
+          <div className="wizard-nutri">
+            <span className="wizard-kcal">{recipe.nutrition.kcal} kcal</span>
+            <span>E {recipe.nutrition.protein} g</span>
+            <span>K {recipe.nutrition.carbs} g</span>
+            <span>F {recipe.nutrition.fat} g</span>
+            {recipe.totalMinutes != null && <span className="wizard-time"><IconClock /> {recipe.totalMinutes} min</span>}
+          </div>
+          {recipe.note && <p className="wizard-note">{recipe.note}</p>}
+
+          <h4 className="wizard-sub">Zutaten</h4>
+          <ul className="wizard-ings">
+            {recipe.ingredients.map((ing, i) => (
+              <li key={i}>
+                {(ing.quantity || ing.unit) && <span className="wi-amt">{[ing.quantity, ing.unit].filter(Boolean).join(' ')}</span>}
+                {ing.name}
+              </li>
+            ))}
+          </ul>
+
+          {recipe.steps.length > 0 && (
+            <>
+              <h4 className="wizard-sub">Zubereitung</h4>
+              <ol className="wizard-steps">{recipe.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
+            </>
+          )}
+
+          <div className="btn-row">
+            <button type="button" className="btn btn-soft" onClick={() => { setRecipe(null); setPhase('config') }} disabled={saving}>Neu</button>
+            <button type="button" className="btn btn-primary btn-lg" style={{ flex: 1 }} onClick={() => { void save() }} disabled={saving}>
+              <IconCheck /> Speichern &amp; öffnen
+            </button>
+          </div>
+        </div>
       )}
     </SheetShell>
   )
