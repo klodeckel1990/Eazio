@@ -97,7 +97,12 @@ export async function socialLogin(
           redirectUrl: `${API_BASE || window.location.origin}/login`,
         }
       }
-    } else {
+    } else if (platform === 'ios') {
+      // iOS: natives "Sign in with Apple" braucht keine Konfiguration.
+      // Android NICHT: dort bieten wir Apple gar nicht an, und das Plugin
+      // bricht die ganze initialize() ab ("apple.android.redirectUrl is null
+      // or empty"), sobald ein apple-Block dabei ist — dann startet auch der
+      // Google-Login nie. Also auf Android nur Google initialisieren.
       init.apple = {}
     }
     await SocialLogin.initialize(init)
@@ -107,7 +112,11 @@ export async function socialLogin(
   const res = await SocialLogin.login(
     provider === 'apple'
       ? { provider: 'apple', options: { scopes: ['email', 'name'] } }
-      : { provider: 'google', options: { scopes: ['email', 'profile'] } },
+      : // Bei Google KEINE scopes übergeben: capgo verlangt für zusätzliche
+        // Scopes einen Authorization-Flow mit MainActivity-Anpassung ("You
+        // CANNOT use scopes without modifying the main activity"). Wir wollen
+        // nur das ID-Token (enthält E-Mail + Name) — also Default-Scopes nutzen.
+        { provider: 'google', options: {} },
   )
   const result = res.result as {
     idToken?: string | null
