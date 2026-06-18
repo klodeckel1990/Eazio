@@ -4,7 +4,7 @@
 // Felder vor; alles bleibt editierbar. Portal wie CalendarSheet (WKWebView
 // kennt kein position:fixed innerhalb von .main).
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { api, ApiError } from '../api/client'
 import type { CustomFoodInput, FoodSummary } from '../api/types'
@@ -47,7 +47,21 @@ export function CustomFoodSheet({ barcode, onCreated, onClose }: Props) {
   const [scanning, setScanning] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Rückbeitrag an Open Food Facts: nur bei Barcode + serverseitig aktivem
+  // Feature anbieten. Opt-in, Voreinstellung an (öffentlich, ODbL).
+  const [offEnabled, setOffEnabled] = useState(false)
+  const [contribute, setContribute] = useState(true)
   const fileRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!barcode) return
+    let alive = true
+    api.foods
+      .offConfig()
+      .then((c) => { if (alive) setOffEnabled(c.contributeEnabled) })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [barcode])
 
   const handlePhoto = async (file: File) => {
     setError(null)
@@ -107,7 +121,13 @@ export function CustomFoodSheet({ barcode, onCreated, onClose }: Props) {
         salt: num(values.salt),
         ...(serving ? { servings: [{ label: 'Portion', grams: serving }] } : {}),
       }
-      onCreated(await api.foods.create(body))
+      const created = await api.foods.create(body)
+      // Beitrag an OFF ist „nice to have" — Fehler dürfen das Anlegen nie
+      // blockieren, deshalb best-effort und verschluckt.
+      if (barcode && offEnabled && contribute) {
+        await api.foods.contribute(created.id).catch(() => {})
+      }
+      onCreated(created)
     } catch (e) {
       if (e instanceof ApiError) setError(e.message)
       else throw e
@@ -188,6 +208,20 @@ export function CustomFoodSheet({ barcode, onCreated, onClose }: Props) {
             placeholder="z. B. 40"
           />
         </div>
+
+        {barcode && offEnabled && (
+          <label className="cf-contribute">
+            <input
+              type="checkbox"
+              checked={contribute}
+              onChange={(e) => setContribute(e.target.checked)}
+            />
+            <span>
+              Produkt zur offenen Datenbank <strong>Open Food Facts</strong> beitragen, damit
+              es alle finden — öffentlich, unter der ODbL-Lizenz.
+            </span>
+          </label>
+        )}
 
         <button type="button" className="btn btn-primary btn-lg" onClick={() => { void handleSave() }} disabled={!canSave}>
           <IconCheck />

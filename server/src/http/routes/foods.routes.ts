@@ -2,7 +2,13 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import type { DB } from '../../db/client.js'
 import { requireAuth } from '../auth-guard.js'
-import { getFood, lookupBarcode, matchFoodText, searchSmart } from '../../modules/foods/foods.service.js'
+import {
+  contributeFood,
+  getFood,
+  lookupBarcode,
+  matchFoodText,
+  searchSmart,
+} from '../../modules/foods/foods.service.js'
 import {
   createCustomFood,
   softDeleteCustomFood,
@@ -10,6 +16,7 @@ import {
 } from '../../modules/foods/foods.repo.js'
 import { toDetail } from '../../modules/foods/foods.service.js'
 import { OffUnavailableError } from '../../modules/foods/off.client.js'
+import { offContributeEnabled } from '../../modules/foods/off.write.js'
 import { scanNutritionLabel } from '../../modules/foods/label-scan.js'
 import { analyzeMealPhoto, itemsToText } from '../../modules/foods/meal-photo.js'
 import { isPremium } from '../../modules/billing/entitlements.js'
@@ -132,6 +139,29 @@ export function registerFoodRoutes(app: FastifyInstance, db: DB): void {
     const row = createCustomFood(db, req.user!.id, body)
     return reply.status(201).send(toDetail(row, req.user!.id))
   })
+
+  // Ob der Rückbeitrag an Open Food Facts serverseitig aktiv ist (Credentials
+  // gesetzt) — die UI blendet die Beitrags-Option sonst aus.
+  app.get('/api/foods/off/config', { preHandler: requireAuth }, async (_req, reply) => {
+    return reply.send({ contributeEnabled: offContributeEnabled() })
+  })
+
+  // Eigenes, barcodiertes Produkt an Open Food Facts beitragen (ODbL, öffentlich).
+  // Nur auf ausdrücklichen Nutzerwunsch (Consent in der UI).
+  app.post(
+    '/api/foods/:id/contribute',
+    { preHandler: requireAuth, config: { rateLimit: { max: 20, timeWindow: '1 minute' } } },
+    async (req, reply) => {
+      if (!offContributeEnabled()) {
+        return reply.status(503).send({ error: 'off_contribute_unavailable' })
+      }
+      const { id } = z.object({ id: z.string() }).parse(req.params)
+      const result = await contributeFood(db, req.user!.id, id)
+      if (result.kind === 'not_found') return reply.status(404).send({ error: 'not_found' })
+      if (result.kind === 'no_barcode') return reply.status(400).send({ error: 'no_barcode' })
+      return reply.send({ status: result.status, detail: result.detail })
+    },
+  )
 
   app.patch('/api/foods/:id', { preHandler: requireAuth }, async (req, reply) => {
     const { id } = z.object({ id: z.string() }).parse(req.params)

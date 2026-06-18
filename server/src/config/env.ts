@@ -69,6 +69,17 @@ const schema = z.object({
   MAIL_FROM: z.string().default('Tellerwert <noreply@tellerwert.de>'),
   // Basis-URL für Links in Mails (Passwort-Reset-Seite).
   PUBLIC_BASE_URL: z.string().default('https://tellerwert.de'),
+  // Open Food Facts: Rückbeitrag fehlender Produkte (Add-Product-API). LESEN
+  // braucht keine Credentials; SCHREIBEN schon. Ohne OFF_USER_ID/PASSWORD bleibt
+  // das Feature inert (Route 503, UI blendet die Option aus). Default-Base ist
+  // bewusst der OFF-TEST-Server (.net) — Produktivbeiträge erst nach explizitem
+  // OFF_WRITE_BASE=https://world.openfoodfacts.org. Der .net-Testserver verlangt
+  // zusätzlich HTTP-Basic-Auth `off:off` (OFF_WRITE_BASIC=off:off).
+  OFF_WRITE_BASE: z.string().default('https://world.openfoodfacts.net'),
+  OFF_USER_ID: z.string().optional(),
+  OFF_PASSWORD: z.string().optional(),
+  OFF_APP_NAME: z.string().default('Tellerwert'),
+  OFF_WRITE_BASIC: z.string().optional(), // "user:pass" → Basic-Header (Testserver: off:off)
 })
 
 const parsed = schema.safeParse(process.env)

@@ -2077,6 +2077,23 @@ input[type='search']:focus {
 }
 .cf-sheet .banner { margin: 0; }
 .cf-barcode { color: var(--ink-2); font-size: 0.85rem; margin-top: -0.35rem; }
+.cf-contribute {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  line-height: 1.35;
+  cursor: pointer;
+}
+.cf-contribute input { margin-top: 0.15rem; flex: 0 0 auto; }
+.cf-contribute strong { color: var(--ink-1); }
+.off-credit {
+  font-size: 0.78rem;
+  text-align: center;
+  margin: 0.6rem 0 0;
+}
+.off-credit a { color: inherit; text-decoration: underline; }
 .cf-section {
   font-weight: 700;
   font-size: 0.85rem;

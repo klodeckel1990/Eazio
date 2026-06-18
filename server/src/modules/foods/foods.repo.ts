@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { DB } from '../../db/client.js'
-import { foods, matchCache } from '../../db/schema.js'
+import { foods, matchCache, offContributions } from '../../db/schema.js'
 import { buildFtsQuery, buildSearchTerms } from './search-terms.js'
 
 export type FoodRow = typeof foods.$inferSelect
@@ -247,4 +247,29 @@ export function softDeleteCustomFood(db: DB, userId: string, id: string): boolea
     .where(ownedCustom(id, userId))
     .run()
   return res.changes > 0
+}
+
+/** Beitragsstatus eines Produkts (für Idempotenz: bereits gesendet?). */
+export function getOffContribution(db: DB, foodId: string): { status: string } | null {
+  const row = db
+    .select({ status: offContributions.status })
+    .from(offContributions)
+    .where(eq(offContributions.foodId, foodId))
+    .get()
+  return row ?? null
+}
+
+/** Protokolliert einen OFF-Beitrag (eine Zeile pro food, idempotent per foodId). */
+export function recordOffContribution(
+  db: DB,
+  input: { userId: string; foodId: string; barcode: string; status: string; offStatus: string | null },
+): void {
+  const now = Date.now()
+  db.insert(offContributions)
+    .values({ id: randomUUID(), ...input, createdAt: now, updatedAt: now })
+    .onConflictDoUpdate({
+      target: offContributions.foodId,
+      set: { status: input.status, offStatus: input.offStatus, updatedAt: now },
+    })
+    .run()
 }

@@ -3,6 +3,8 @@ import {
   findFoodByBarcode,
   getCachedMatch,
   getFoodById,
+  getOffContribution,
+  recordOffContribution,
   searchFoods as searchRepo,
   upsertCachedMatch,
   upsertSourcedFood,
@@ -11,6 +13,7 @@ import {
 } from './foods.repo.js'
 import { aiRerank, type AiRerank } from './ai-match.js'
 import { fetchOffProduct, searchOffProducts, type FetchOffProduct, type SearchOffProducts } from './off.client.js'
+import { contributeOffProduct, type ContributeOffProduct } from './off.write.js'
 import { mapOffProduct } from './off.mapper.js'
 import { parseIngredients } from '../parsing/parser.js'
 import { resolveAmount, type NormalizedUnit } from '../parsing/units.js'
@@ -438,4 +441,55 @@ async function refreshOffFood(db: DB, ean: string, fetchProduct: FetchOffProduct
   if (!product) return // keep the stale row; deletion would break diary references
   const food = mapOffProduct(ean, product)
   if (food) upsertSourcedFood(db, food)
+}
+
+export type ContributeResult =
+  | { kind: 'not_found' } // kein eigenes Produkt mit dieser id
+  | { kind: 'no_barcode' } // ohne Barcode kann OFF es nicht aufnehmen
+  | { kind: 'done'; status: 'sent' | 'failed' | 'already'; detail: string | null }
+
+/**
+ * Trägt ein eigenes, barcodiertes Produkt an Open Food Facts bei. Nur der
+ * Besitzer eines `custom`-Produkts kann beitragen; BLS/OFF-Zeilen sind nicht
+ * beitragbar (sie stammen nicht vom Nutzer). Bereits gesendete Produkte werden
+ * nicht erneut gepostet. Die Konfigurations-/503-Prüfung macht die Route — hier
+ * ist der Writer injizierbar (Tests). Wirft nicht bei OFF-Ausfall: das Ergebnis
+ * wird protokolliert und der Status zurückgegeben.
+ */
+export async function contributeFood(
+  db: DB,
+  userId: string,
+  foodId: string,
+  write: ContributeOffProduct = contributeOffProduct,
+): Promise<ContributeResult> {
+  const row = getFoodById(db, foodId, userId)
+  if (!row || row.source !== 'custom' || row.ownerUserId !== userId) return { kind: 'not_found' }
+  if (!row.barcode) return { kind: 'no_barcode' }
+
+  if (getOffContribution(db, foodId)?.status === 'sent') {
+    return { kind: 'done', status: 'already', detail: null }
+  }
+
+  const result = await write({
+    barcode: row.barcode,
+    name: row.name,
+    brand: row.brand,
+    baseUnit: row.baseUnit,
+    kcal: row.kcal,
+    protein: row.protein,
+    fat: row.fat,
+    saturatedFat: row.saturatedFat,
+    carbs: row.carbs,
+    sugar: row.sugar,
+    fiber: row.fiber,
+    salt: row.salt,
+  })
+  recordOffContribution(db, {
+    userId,
+    foodId,
+    barcode: row.barcode,
+    status: result.ok ? 'sent' : 'failed',
+    offStatus: result.statusVerbose || null,
+  })
+  return { kind: 'done', status: result.ok ? 'sent' : 'failed', detail: result.statusVerbose || null }
 }

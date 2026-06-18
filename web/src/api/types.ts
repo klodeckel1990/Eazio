@@ -124,6 +124,17 @@ export interface FoodMatchLine {
   selectedFoodId: string | null
 }
 
+/** Ob der Rückbeitrag an Open Food Facts serverseitig aktiv ist. */
+export interface OffContributeConfig {
+  contributeEnabled: boolean
+}
+
+/** Ergebnis eines OFF-Beitrags. `already` = war bereits gesendet. */
+export interface OffContributeResult {
+  status: 'sent' | 'failed' | 'already'
+  detail: string | null
+}
+
 /** Eingabe für POST /api/foods — Nährwerte pro 100 g/ml. */
 export interface CustomFoodInput {
   name: string

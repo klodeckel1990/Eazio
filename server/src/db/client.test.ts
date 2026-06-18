@@ -21,6 +21,7 @@ describe('db client + migrations', () => {
         'foods',
         'log_events',
         'match_cache',
+        'off_contributions',
         'pantry_items',
         'preset_items',
         'presets',

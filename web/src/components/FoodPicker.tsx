@@ -198,6 +198,11 @@ export function FoodPicker({
                   </button>
                 )}
               </div>
+              <p className="off-credit muted">
+                Produktdaten u. a. von{' '}
+                <a href="https://openfoodfacts.org" target="_blank" rel="noreferrer noopener">Open Food Facts</a>
+                {' '}(ODbL)
+              </p>
             </>
           )}
 

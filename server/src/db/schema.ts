@@ -405,3 +405,26 @@ export const pantryItems = sqliteTable(
   },
   (t) => [unique('pantry_user_food_unq').on(t.userId, t.foodId), index('pantry_user_idx').on(t.userId)],
 )
+
+// Rückbeiträge an Open Food Facts: protokolliert, welches (eigene, barcodierte)
+// Produkt ein Nutzer in die offene Datenbank eingetragen hat. Eine Zeile pro
+// food — erneuter Beitrag aktualisiert nur den Status (idempotent). Trägt keine
+// personenbezogenen Daten außer der Zuordnung zum beitragenden Nutzer.
+export const offContributions = sqliteTable(
+  'off_contributions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    foodId: text('food_id')
+      .notNull()
+      .references(() => foods.id),
+    barcode: text('barcode').notNull(),
+    status: text('status').notNull(), // sent|failed
+    offStatus: text('off_status'), // OFF status_verbose / Fehlertext
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [unique('off_contrib_food_unq').on(t.foodId), index('off_contrib_user_idx').on(t.userId)],
+)

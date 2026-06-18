@@ -4,6 +4,7 @@ import type {
   DiaryDay, DiaryLogLine, DiaryLogResult, DiaryEntry, FoodMatchLine, FoodSummary, Goals,
   ImportHistoryResult, StatsResult, OnboardingInput, OnboardingPlan, DiaryMonth,
   CustomFoodInput, LabelScanResult, OAuthConfig, SocialProvider, BillingStatus, RecentFood, PantryItem, RecipeMatch, WizardRecipe,
+  OffContributeConfig, OffContributeResult,
 } from './types'
 
 export class ApiError extends Error {
@@ -174,6 +175,9 @@ export const api = {
     create: (body: CustomFoodInput) => req<FoodSummary>('POST', '/foods', body),
     labelScan: (image: string, mediaType: string) =>
       req<LabelScanResult>('POST', '/foods/label-scan', { image, mediaType }),
+    // Open Food Facts: Rückbeitrag fehlender Produkte
+    offConfig: () => req<OffContributeConfig>('GET', '/foods/off/config'),
+    contribute: (id: string) => req<OffContributeResult>('POST', `/foods/${id}/contribute`),
   },
   diary: {
     day: (date?: string) => req<DiaryDay>('GET', date ? `/diary?date=${date}` : '/diary'),
