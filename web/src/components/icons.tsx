@@ -194,6 +194,17 @@ export function IconSettings(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+/** Horizontal ellipsis — "Mehr"-Tab (versteckt weitere Navigation). */
+export function IconMore(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Svg {...props}>
+      <circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    </Svg>
+  )
+}
+
 export function IconClock(props: SVGProps<SVGSVGElement>) {
   return (
     <Svg {...props}>

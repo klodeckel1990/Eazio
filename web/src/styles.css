@@ -334,7 +334,8 @@ button { font: inherit; color: inherit; }
   -webkit-backdrop-filter: saturate(1.4) blur(16px);
   border-top: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
 }
-.tabbar a {
+.tabbar a,
+.tabbar .tab-more {
   display: grid;
   justify-items: center;
   gap: 0.12rem;
@@ -346,16 +347,23 @@ button { font: inherit; color: inherit; }
   letter-spacing: 0;
   transition: color 0.15s, background 0.15s;
   min-width: 0; /* erlaubt der Spalte zu schrumpfen statt das Label überlaufen zu lassen */
+  /* der „Mehr"-Tab ist ein <button> — Default-Look zurücksetzen */
+  background: none;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
 }
 /* Label bleibt in seiner Spalte; lange Wörter werden mit „…" gekürzt, statt
    die Leiste zu sprengen — robust gegen jede iOS-Schriftgröße. */
-.tabbar a .lbl {
+.tabbar a .lbl,
+.tabbar .tab-more .lbl {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tabbar a .ico {
+.tabbar a .ico,
+.tabbar .tab-more .ico {
   display: grid;
   place-items: center;
   width: 38px;
@@ -363,10 +371,61 @@ button { font: inherit; color: inherit; }
   border-radius: var(--r-pill);
   transition: background 0.18s, transform 0.18s;
 }
-.tabbar a svg { width: 22px; height: 22px; }
-.tabbar a.active { color: var(--primary-700); }
-.tabbar a.active .ico { background: var(--primary-100); }
-.tabbar a:active .ico { transform: scale(0.9); }
+.tabbar a svg,
+.tabbar .tab-more svg { width: 22px; height: 22px; }
+.tabbar a.active,
+.tabbar .tab-more.active { color: var(--primary-700); }
+.tabbar a.active .ico,
+.tabbar .tab-more.active .ico { background: var(--primary-100); }
+.tabbar a:active .ico,
+.tabbar .tab-more:active .ico { transform: scale(0.9); }
+
+/* "Mehr"-Menü: fängt Außerhalb-Klicks (liegt unter der Leiste, z<Leiste,
+   damit Tabs tippbar bleiben) und zeigt das Popup darüber. */
+.tabbar-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.tabbar-more {
+  position: fixed;
+  right: 0.6rem;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 6px);
+  z-index: 31;
+  min-width: 220px;
+  max-width: calc(100vw - 1.2rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--sh-3);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  animation: tabbar-more-in 0.14s ease-out;
+}
+@keyframes tabbar-more-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tabbar-more a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.tabbar-more a svg { width: 20px; height: 20px; color: var(--ink-2); }
+.tabbar-more a.active { color: var(--primary-700); background: var(--primary-100); }
+.tabbar-more a.active svg { color: var(--primary-700); }
+.tabbar-more a:active { background: var(--surface-2); }
 
 /* ---- Page header --------------------------------------------------------- */
 .page { display: flex; flex-direction: column; gap: 1.1rem; }
