@@ -323,7 +323,10 @@ button { font: inherit; color: inherit; }
   z-index: 30;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  /* minmax(0,1fr) statt 1fr: sonst zwingt das auto-Minimum eines langen,
+     unteilbaren Labels ("Einstellungen") seine Spalte breiter als 1/7 und die
+     Leiste läuft rechts aus dem Bild — bei großer iOS-Schrift sichtbar. */
+  grid-auto-columns: minmax(0, 1fr);
   gap: 0.25rem;
   padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--bg) 88%, transparent);
@@ -342,6 +345,15 @@ button { font: inherit; color: inherit; }
   font-weight: 600;
   letter-spacing: 0;
   transition: color 0.15s, background 0.15s;
+  min-width: 0; /* erlaubt der Spalte zu schrumpfen statt das Label überlaufen zu lassen */
+}
+/* Label bleibt in seiner Spalte; lange Wörter werden mit „…" gekürzt, statt
+   die Leiste zu sprengen — robust gegen jede iOS-Schriftgröße. */
+.tabbar a .lbl {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .tabbar a .ico {
   display: grid;

@@ -65,7 +65,7 @@ export function TabBar() {
       {NAV_ITEMS.map(({ to, label, Icon }) => (
         <NavLink key={to} to={to} end={to === '/'}>
           <span className="ico"><Icon /></span>
-          {label}
+          <span className="lbl">{label}</span>
         </NavLink>
       ))}
     </nav>
