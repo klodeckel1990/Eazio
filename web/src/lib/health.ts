@@ -1,10 +1,15 @@
-// Apple-Health-Brücke: Die native Seite (HealthSync.swift) hängt einen eigenen
-// WKScriptMessageHandler 'eazioHealth' an die WebView — bewusst NICHT der
-// Capacitor-Plugin-Bridge (deren Dispatch für handregistrierte Plugins in
-// dieser App nie ankam). JS fordert einen Sync an; native fragt HealthKit ab
-// und antwortet per CustomEvent 'eazio:health' mit Tageswerten + Gewicht.
-// Auf Web/Android ist alles ein No-op.
+// Health-Brücke. Zwei native Kanäle, EIN JS-Vertrag:
+//  - iOS: HealthSync.swift hängt einen eigenen WKScriptMessageHandler
+//    'eazioHealth' an die WebView (bewusst nicht die Capacitor-Bridge, deren
+//    Dispatch für handregistrierte Plugins auf iOS nie ankam) und antwortet
+//    per CustomEvent 'eazio:health'.
+//  - Android: das Capacitor-Plugin 'Health' (HealthPlugin.kt) liest Health
+//    Connect und liefert dieselben Felder als Promise zurück — wir übersetzen
+//    sie hier in genau dasselbe 'eazio:health'-Event.
+// Dadurch bleiben Listener (initHealthSync), Server und DB plattformneutral.
+// Auf Web ist alles ein No-op.
 
+import { Capacitor, registerPlugin } from '@capacitor/core'
 import { api } from '../api/client'
 import { isNativeApp } from './barcode'
 import { todayStr } from './dates'
@@ -18,12 +23,36 @@ interface HealthPayload {
   error?: string
 }
 
+interface HealthWriteDay {
+  date: string
+  kcal: number
+  protein: number
+  fat: number
+  carbs: number
+  waterMl: number
+}
+
+interface HealthPlugin {
+  sync(): Promise<HealthPayload>
+  writeDay(day: HealthWriteDay): Promise<void>
+}
+
+// Android-Plugin (nur dort registriert); auf iOS/Web bleibt es ungenutzt.
+const AndroidHealth =
+  Capacitor.getPlatform() === 'android' ? registerPlugin<HealthPlugin>('Health') : null
+
+function iosHandler(): { postMessage: (m: unknown) => void } | null {
+  return window.webkit?.messageHandlers?.eazioHealth ?? null
+}
+
 // window.webkit-Deklaration lebt zentral in lib/live-activity.ts
 
 const OPT_IN_KEY = 'eazio.healthOptIn'
 
 export function healthAvailable(): boolean {
-  return isNativeApp() && !!window.webkit?.messageHandlers?.eazioHealth
+  if (!isNativeApp()) return false
+  if (iosHandler()) return true // iOS: nativer Handler hängt an der WebView
+  return AndroidHealth !== null // Android: Capacitor-Plugin registriert
 }
 
 export function healthOptedIn(): boolean {
@@ -43,15 +72,23 @@ export function setHealthOptIn(on: boolean): void {
   if (on) requestHealthSync()
 }
 
-/** Asks native for fresh HealthKit data (triggers the permission sheet on
- *  first use). The response arrives via the 'eazio:health' event. */
+/** Asks native for fresh health data (triggers the permission sheet on first
+ *  use). The response always arrives via the 'eazio:health' event. */
 export function requestHealthSync(): void {
   if (!healthAvailable() || !healthOptedIn()) return
-  try {
-    window.webkit!.messageHandlers!.eazioHealth!.postMessage({ action: 'sync' })
-  } catch {
-    // handler vanished (webview teardown) — next foreground retries
+  const ios = iosHandler()
+  if (ios) {
+    try {
+      ios.postMessage({ action: 'sync' })
+    } catch {
+      // handler vanished (webview teardown) — next foreground retries
+    }
+    return
   }
+  // Android: Plugin liefert die Tageswerte als Promise → in dasselbe Event gießen
+  AndroidHealth?.sync()
+    .then((detail) => window.dispatchEvent(new CustomEvent('eazio:health', { detail })))
+    .catch(() => {})
 }
 
 export interface HealthDayTotals {
@@ -68,19 +105,24 @@ export interface HealthDayTotals {
 export function pushDayToHealth(day: HealthDayTotals): void {
   if (!healthAvailable() || !healthOptedIn()) return
   if (day.date > todayStr()) return
-  try {
-    window.webkit!.messageHandlers!.eazioHealth!.postMessage({
-      action: 'writeDay',
-      date: day.date,
-      kcal: Math.round(day.kcal),
-      protein: Math.round(day.protein * 10) / 10,
-      fat: Math.round(day.fat * 10) / 10,
-      carbs: Math.round(day.carbs * 10) / 10,
-      waterMl: Math.round(day.waterMl),
-    })
-  } catch {
-    // handler weg (Teardown) — nächster Refresh gleicht ab
+  const payload: HealthWriteDay = {
+    date: day.date,
+    kcal: Math.round(day.kcal),
+    protein: Math.round(day.protein * 10) / 10,
+    fat: Math.round(day.fat * 10) / 10,
+    carbs: Math.round(day.carbs * 10) / 10,
+    waterMl: Math.round(day.waterMl),
   }
+  const ios = iosHandler()
+  if (ios) {
+    try {
+      ios.postMessage({ action: 'writeDay', ...payload })
+    } catch {
+      // handler weg (Teardown) — nächster Refresh gleicht ab
+    }
+    return
+  }
+  AndroidHealth?.writeDay(payload).catch(() => {})
 }
 
 let wired = false

@@ -8,9 +8,20 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
 
+    // Health Connect zeigt diese Activity, wenn der Nutzer die Health-Berechti-
+    // gungen prüft — wir leiten dann auf die Datenschutzerklärung. Pflicht für
+    // den Permission-Flow und die Play-Freigabe.
+    private static final String ACTION_HEALTH_RATIONALE = "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE";
+    private static final String ACTION_VIEW_PERMISSION_USAGE = "android.intent.action.VIEW_PERMISSION_USAGE";
+    private static final String PRIVACY_URL = "https://tellerwert.de/datenschutz";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Vor super.onCreate registrieren, damit Capacitor den JS-Proxy noch vor
+        // dem Laden der WebView injiziert.
+        registerPlugin(HealthPlugin.class);
         super.onCreate(savedInstanceState);
+        if (routeHealthRationale(getIntent())) return;
         routeShare(getIntent());
     }
 
@@ -18,7 +29,19 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        if (routeHealthRationale(intent)) return;
         routeShare(intent);
+    }
+
+    /** Bei den Health-Connect-Rationale-Intents die Datenschutzseite öffnen. */
+    private boolean routeHealthRationale(Intent intent) {
+        if (intent == null) return false;
+        String action = intent.getAction();
+        if (!ACTION_HEALTH_RATIONALE.equals(action) && !ACTION_VIEW_PERMISSION_USAGE.equals(action)) {
+            return false;
+        }
+        getBridge().getWebView().post(() -> getBridge().getWebView().loadUrl(PRIVACY_URL));
+        return true;
     }
 
     /**
