@@ -143,13 +143,29 @@ Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</p>
 <p>Deine Einträge (Mahlzeiten, Lebensmittel, Mengen, Wasser, Ziele) speichern wir, um die
 Tagebuch-Funktion bereitzustellen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.</p>
 
-<h2>5. Gesundheits- &amp; Fitnessdaten (optional)</h2>
-<p>Wenn du es in den Einstellungen aktivierst, liest die App Schritte, Aktivitätskalorien
-und Gewicht aus Apple Health bzw. Android Health Connect und überträgt sie an unseren
-Server, um sie im Tagebuch anzuzeigen. Dabei handelt es sich um Gesundheitsdaten
-(besondere Kategorie). Rechtsgrundlage ist deine <strong>ausdrückliche Einwilligung</strong>
-(Art. 9 Abs. 2 lit. a DSGVO), die du jederzeit durch Deaktivieren widerrufen kannst.
-Diese Daten werden nicht für Werbung verwendet und nicht an Dritte weitergegeben.</p>
+<h2>5. Gesundheits- &amp; Fitnessdaten – Apple Health / Health Connect (optional)</h2>
+<p>Nur wenn du es in den Einstellungen <strong>ausdrücklich aktivierst</strong>, verbindet sich
+die App mit <strong>Apple Health</strong> (iOS) bzw. <strong>Health Connect</strong> (Android)
+und verarbeitet die folgenden Gesundheits- und Fitnessdaten:</p>
+<ul>
+  <li><strong>Lesen:</strong> Schritte, Aktivitätskalorien (Aktivenergie) und Körpergewicht –
+      um sie in deinem Tagebuch anzuzeigen und in die Tages- und Zielberechnung einzubeziehen.</li>
+  <li><strong>Zurückschreiben:</strong> die von dir erfassten Tageswerte für Energie (kcal),
+      Eiweiß, Fett, Kohlenhydrate und Wasser – damit deine Ernährung auch in Apple Health bzw.
+      Health Connect sichtbar ist.</li>
+</ul>
+<p>Die aus Apple Health bzw. Health Connect <em>gelesenen</em> Werte werden an unseren Server in
+Deutschland übertragen, um sie im Tagebuch darzustellen. Es handelt sich um Gesundheitsdaten
+(besondere Kategorie personenbezogener Daten). Rechtsgrundlage ist deine
+<strong>ausdrückliche Einwilligung</strong> (Art. 9 Abs. 2 lit. a DSGVO), die du jederzeit
+durch Deaktivieren in den App-Einstellungen oder durch Entzug der Berechtigung in Apple Health
+bzw. Health Connect mit Wirkung für die Zukunft widerrufen kannst.</p>
+<p>Diese Daten werden <strong>ausschließlich</strong> für die genannten Tagebuch-Funktionen
+verwendet. Sie werden <strong>nicht für Werbung</strong> genutzt, <strong>nicht verkauft</strong>
+und <strong>nicht an Dritte weitergegeben</strong>; eine Verarbeitung zu anderen Zwecken findet
+nicht statt. Über Health Connect bezogene Daten behandeln wir im Einklang mit den
+Health-Connect-Richtlinien von Google. Bei einer Kontolöschung werden die auf unserem Server
+gespeicherten Gesundheitswerte mit gelöscht.</p>
 
 <h2>6. Push-Benachrichtigungen (optional)</h2>
 <p>Aktivierst du Erinnerungen, speichern wir ein Geräte-Token und versenden Push-Nachrichten
